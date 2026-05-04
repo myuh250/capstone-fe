@@ -31,20 +31,48 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
+  # State Management
+  flutter_riverpod: ^2.6.0
+  riverpod_annotation: ^2.6.0
+
+  # Routing
+  go_router: ^14.0.0
+
+  # Networking
+  dio: ^5.7.0
+
+  # Images
+  cached_network_image: ^3.4.0
+  flutter_svg: ^2.0.0
+
+  # Code Generation
+  freezed_annotation: ^2.4.0
+  json_annotation: ^4.9.0
+
+  # UI
+  google_fonts: ^6.2.0
+  gap: ^3.0.0
+  shimmer: ^3.0.0
+
+  # Utilities
+  shared_preferences: ^2.3.0
+  infinite_scroll_pagination: ^4.0.0
+
+  # Icons
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
-  flutter_lints: ^6.0.0
+  # Code Generation
+  build_runner: ^2.4.0
+  freezed: ^2.5.0
+  json_serializable: ^6.8.0
+  riverpod_generator: ^2.6.0
+
+  # Linting
+  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
