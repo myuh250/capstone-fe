@@ -10,18 +10,20 @@ class TagChip extends StatelessWidget {
     this.backgroundColor,
     this.textColor,
     this.onTap,
+    this.compact = false,
   });
 
   final String label;
   final Color? backgroundColor;
   final Color? textColor;
   final VoidCallback? onTap;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final chip = Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? AppSpacing.sm : AppSpacing.md,
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(

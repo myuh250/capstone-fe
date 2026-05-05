@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/extensions/context_extensions.dart';
+import '../../providers/auth_providers.dart';
 
-class AppShell extends StatefulWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({
     super.key,
     required this.child,
@@ -15,10 +17,10 @@ class AppShell extends StatefulWidget {
   final Widget child;
 
   @override
-  State<AppShell> createState() => _AppShellState();
+  ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends ConsumerState<AppShell> {
   int _selectedIndex = 0;
 
   final List<_NavItem> _navItems = [
@@ -121,9 +123,44 @@ class _AppShellState extends State<AppShell> {
               },
             ),
           ),
+          const Divider(height: 1),
+          _SidebarLogoutButton(
+            onTap: () => _confirmLogout(context),
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _confirmLogout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+        title: const Text('Đăng xuất'),
+        content: const Text('Bạn có chắc muốn đăng xuất?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text(
+              'Hủy',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await ref.read(authStateProvider.notifier).logout();
+    }
   }
 
   Widget _buildBottomNavigationBar() {
@@ -190,6 +227,50 @@ class _SidebarNavItem extends StatelessWidget {
                         ? AppColors.textPrimary
                         : AppColors.textSecondary,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarLogoutButton extends StatelessWidget {
+  const _SidebarLogoutButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.md,
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.logout, color: AppColors.error, size: 24),
+                SizedBox(width: AppSpacing.md),
+                Text(
+                  'Đăng xuất',
+                  style: TextStyle(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
                   ),
                 ),
               ],
