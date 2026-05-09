@@ -1,0 +1,552 @@
+import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
+
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+
+enum ChatRole { user, bot }
+
+class ChatMessage {
+  const ChatMessage({
+    required this.role,
+    required this.text,
+    required this.timestamp,
+  });
+
+  final ChatRole role;
+  final String text;
+  final DateTime timestamp;
+}
+
+class ChatbotPanel extends StatefulWidget {
+  const ChatbotPanel({super.key, this.initialContext});
+
+  final String? initialContext;
+
+  static Future<void> show(BuildContext context, {String? initialContext}) {
+    return showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => ChatbotPanel(initialContext: initialContext),
+    );
+  }
+
+  @override
+  State<ChatbotPanel> createState() => _ChatbotPanelState();
+}
+
+class _ChatbotPanelState extends State<ChatbotPanel> {
+  final _controller = TextEditingController();
+  final _scrollController = ScrollController();
+  bool _isLoading = false;
+  final List<ChatMessage> _messages = [];
+
+  static const _suggestions = [
+    'Gợi ý manga hành động',
+    'Manga hoàn thành hay nhất',
+    'Manga tương tự One Piece',
+    'Manga ngắn để đọc nhanh',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _messages.add(ChatMessage(
+      role: ChatRole.bot,
+      text: widget.initialContext != null
+          ? 'Xin chào! Tôi có thể giúp bạn tìm hiểu về "${widget.initialContext}" hoặc gợi ý manga khác. Bạn muốn biết gì?'
+          : 'Xin chào! Tôi là trợ lý AI của MangaApp. Tôi có thể giúp bạn tìm manga phù hợp, trả lời câu hỏi về nội dung, hoặc gợi ý dựa trên sở thích của bạn. Bạn cần gì?',
+      timestamp: DateTime.now(),
+    ));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendMessage(String text) async {
+    if (text.trim().isEmpty) return;
+    setState(() {
+      _messages.add(ChatMessage(
+        role: ChatRole.user,
+        text: text,
+        timestamp: DateTime.now(),
+      ));
+      _isLoading = true;
+    });
+    _controller.clear();
+    _scrollToBottom();
+
+    await Future.delayed(const Duration(milliseconds: 1200));
+    if (!mounted) return;
+
+    setState(() {
+      _messages.add(ChatMessage(
+        role: ChatRole.bot,
+        text: _generateFakeResponse(text),
+        timestamp: DateTime.now(),
+      ));
+      _isLoading = false;
+    });
+    _scrollToBottom();
+  }
+
+  String _generateFakeResponse(String query) {
+    final q = query.toLowerCase();
+    if (q.contains('hành động') || q.contains('action')) {
+      return 'Dựa trên sở thích của bạn, tôi gợi ý:\n\n'
+          '• **One Piece** — Hành trình tìm kho báu huyền thoại\n'
+          '• **Attack on Titan** — Nhân loại chiến đấu với người khổng lồ\n'
+          '• **Chainsaw Man** — Thợ diệt quỷ độc đáo và bạo lực\n\n'
+          'Bạn muốn biết thêm về manga nào?';
+    }
+    if (q.contains('hoàn thành') || q.contains('completed')) {
+      return 'Những manga đã hoàn thành xuất sắc:\n\n'
+          '• **Fullmetal Alchemist** — 108 chương\n'
+          '• **Death Note** — 108 chương\n'
+          '• **Berserk** — Huyền thoại fantasy dark\n\n'
+          'Tất cả đều rất đáng đọc!';
+    }
+    if (q.contains('one piece')) {
+      return 'Nếu bạn thích One Piece, hãy thử:\n\n'
+          '• **Fairy Tail** — Hội pháp sư phiêu lưu\n'
+          '• **Hunter x Hunter** — Thế giới kỳ bí và phong phú\n'
+          '• **Black Clover** — Phép thuật và hành trình của kẻ không có năng lực\n\n'
+          'Cả ba đều có cốt truyện dài kỳ và thú vị!';
+    }
+    return 'Đây là câu trả lời mô phỏng cho: "$query".\n\n'
+        'Trong phiên bản thực tế, AI sẽ phân tích sở thích của bạn và đưa ra gợi ý cá nhân hóa. '
+        'Bạn có muốn tôi gợi ý thể loại nào khác không?';
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.75,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      builder: (_, scrollController) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppSpacing.radiusXl),
+          ),
+        ),
+        child: Column(
+          children: [
+            _Header(onClose: () => Navigator.of(context).pop()),
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.sm,
+                ),
+                itemCount: _messages.length +
+                    (_messages.length == 1 ? 1 : 0) +
+                    (_isLoading ? 1 : 0),
+                itemBuilder: (_, i) {
+                  if (_messages.length == 1 && i == 1) {
+                    return SuggestedQuestions(
+                      questions: _suggestions,
+                      onTap: _sendMessage,
+                    );
+                  }
+                  if (_isLoading && i == _messages.length + (_messages.length == 1 ? 1 : 0)) {
+                    return const _TypingIndicator();
+                  }
+                  return ChatBubble(message: _messages[i]);
+                },
+              ),
+            ),
+            ChatInput(
+              controller: _controller,
+              isLoading: _isLoading,
+              onSend: _sendMessage,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header({required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withAlpha(30),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+            child: const Icon(
+              Icons.smart_toy_outlined,
+              color: AppColors.primary,
+              size: 20,
+            ),
+          ),
+          const Gap(AppSpacing.sm),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Trợ lý AI',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+              ),
+              Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: AppColors.statusGreen,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Trực tuyến',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: onClose,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ChatBubble extends StatelessWidget {
+  const ChatBubble({super.key, required this.message});
+
+  final ChatMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final isBot = message.role == ChatRole.bot;
+    return Padding(
+      padding: EdgeInsets.only(
+        top: AppSpacing.xs,
+        bottom: AppSpacing.xs,
+        left: isBot ? 0 : 48,
+        right: isBot ? 48 : 0,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment:
+            isBot ? MainAxisAlignment.start : MainAxisAlignment.end,
+        children: [
+          if (isBot) ...[
+            Container(
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(right: AppSpacing.sm, top: 2),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withAlpha(25),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+              child: const Icon(
+                Icons.smart_toy_outlined,
+                size: 18,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
+              decoration: BoxDecoration(
+                color: isBot ? AppColors.surfaceAlt : AppColors.primary,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd).subtract(
+                  BorderRadius.only(
+                    topLeft: isBot
+                        ? const Radius.circular(AppSpacing.radiusMd)
+                        : Radius.zero,
+                    topRight: !isBot
+                        ? const Radius.circular(AppSpacing.radiusMd)
+                        : Radius.zero,
+                  ),
+                ),
+              ),
+              child: Text(
+                message.text,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isBot ? AppColors.textPrimary : Colors.white,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TypingIndicator extends StatefulWidget {
+  const _TypingIndicator();
+
+  @override
+  State<_TypingIndicator> createState() => _TypingIndicatorState();
+}
+
+class _TypingIndicatorState extends State<_TypingIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: AppSpacing.xs,
+        bottom: AppSpacing.xs,
+        right: 48,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            margin: const EdgeInsets.only(right: AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withAlpha(25),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+            child: const Icon(
+              Icons.smart_toy_outlined,
+              size: 18,
+              color: AppColors.primary,
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceAlt,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (_, __) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(
+                  3,
+                  (i) => Container(
+                    width: 6,
+                    height: 6,
+                    margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primary.withAlpha(
+                        ((_controller.value + i / 3) % 1 < 0.5 ? 200 : 80)
+                            .toInt(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ChatInput extends StatelessWidget {
+  const ChatInput({
+    super.key,
+    required this.controller,
+    required this.isLoading,
+    required this.onSend,
+  });
+
+  final TextEditingController controller;
+  final bool isLoading;
+  final ValueChanged<String> onSend;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.sm + MediaQuery.of(context).viewInsets.bottom,
+      ),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.divider)),
+        color: AppColors.surface,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: controller,
+              textInputAction: TextInputAction.send,
+              onSubmitted: isLoading ? null : onSend,
+              decoration: InputDecoration(
+                hintText: 'Hỏi gì đó...',
+                hintStyle: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
+                filled: true,
+                fillColor: AppColors.surfaceAlt,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(AppSpacing.radiusFull),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+          const Gap(AppSpacing.xs),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              minimumSize: const Size(44, 44),
+              padding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(AppSpacing.radiusFull),
+              ),
+            ),
+            onPressed: isLoading
+                ? null
+                : () => onSend(controller.text),
+            child: isLoading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Icon(Icons.send_rounded, size: 18),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class SuggestedQuestions extends StatelessWidget {
+  const SuggestedQuestions({
+    super.key,
+    required this.questions,
+    required this.onTap,
+  });
+
+  final List<String> questions;
+  final ValueChanged<String> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: questions
+            .map(
+              (q) => GestureDetector(
+                onTap: () => onTap(q),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(20),
+                    borderRadius:
+                        BorderRadius.circular(AppSpacing.radiusFull),
+                    border: Border.all(
+                      color: AppColors.primary.withAlpha(80),
+                    ),
+                  ),
+                  child: Text(
+                    q,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
