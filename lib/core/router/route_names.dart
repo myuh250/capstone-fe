@@ -33,6 +33,12 @@ abstract class RouteNames {
   // Notifications
   static const String notifications = '/notifications';
 
+  // Downloads
+  static const String downloads = '/library/downloads';
+
+  // Premium (alias)
+  static const String premium = '/premium';
+
   // Admin
   static const String admin = '/admin';
   static const String adminUsers = '/admin/users';
@@ -40,4 +46,5 @@ abstract class RouteNames {
   static String adminMangaEdit(String id) => '/admin/content/manga/$id/edit';
   static const String adminReports = '/admin/reports';
   static const String adminModeration = '/admin/moderation';
+  static String adminReportDetail(String id) => '/admin/reports/$id';
 }

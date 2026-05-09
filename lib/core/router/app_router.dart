@@ -5,16 +5,33 @@ import 'package:go_router/go_router.dart';
 import '../../features/admin/admin_dashboard.dart';
 import '../../features/admin/content_management_screen.dart';
 import '../../features/admin/manga_edit_screen.dart';
+import '../../features/admin/moderation_screen.dart';
+import '../../features/admin/report_dashboard.dart';
+import '../../features/admin/report_detail_screen.dart';
 import '../../features/admin/user_management_screen.dart';
 import '../../features/admin/widgets/admin_shell.dart';
 import '../../features/auth/email_verification_screen.dart';
+import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/register_screen.dart';
+import '../../features/auth/reset_password_screen.dart';
+import '../../features/downloads/downloads_screen.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/library/library_screen.dart';
+import '../../features/library/reading_history_screen.dart';
 import '../../features/manga_detail/manga_detail_screen.dart';
+import '../../features/notifications/notifications_screen.dart';
+import '../../features/premium/payment_history_screen.dart';
+import '../../features/premium/payment_result_screen.dart';
+import '../../features/premium/payment_screen.dart';
+import '../../features/premium/subscription_screen.dart';
+import '../../features/profile/account_settings_screen.dart';
+import '../../features/profile/change_password_screen.dart';
+import '../../features/profile/edit_profile_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/reader/reader_screen.dart';
 import '../../features/search/search_screen.dart';
+import '../../models/payment.dart';
 import '../../models/user.dart';
 import '../../providers/auth_providers.dart';
 import '../../shared/widgets/app_shell.dart';
@@ -81,6 +98,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'verifyEmail',
         builder: (_, __) => const EmailVerificationScreen(),
       ),
+      GoRoute(
+        path: RouteNames.forgotPassword,
+        name: 'forgotPassword',
+        builder: (_, __) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.resetPassword,
+        name: 'resetPassword',
+        builder: (_, __) => const ResetPasswordScreen(),
+      ),
 
       // ── User routes (AppShell) ────────────────────────────────
       ShellRoute(
@@ -99,13 +126,74 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: RouteNames.library,
             name: 'library',
-            builder: (_, __) =>
-                const _PlaceholderScreen(title: 'Thư viện'),
+            builder: (_, __) => const LibraryScreen(),
           ),
           GoRoute(
             path: RouteNames.profile,
             name: 'profile',
             builder: (_, __) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.editProfile,
+            name: 'editProfile',
+            builder: (_, __) => const EditProfileScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.changePassword,
+            name: 'changePassword',
+            builder: (_, __) => const ChangePasswordScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.settings,
+            name: 'accountSettings',
+            builder: (_, __) => const AccountSettingsScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.readingHistory,
+            name: 'readingHistory',
+            builder: (_, __) => const ReadingHistoryScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.downloads,
+            name: 'downloads',
+            builder: (_, __) => const DownloadsScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.notifications,
+            name: 'notifications',
+            builder: (_, __) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.subscription,
+            name: 'subscription',
+            builder: (_, __) => const SubscriptionScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.payment,
+            name: 'payment',
+            builder: (context, state) {
+              final plan = state.extra as SubscriptionPlan? ??
+                  SubscriptionPlan.monthly;
+              return PaymentScreen(plan: plan);
+            },
+          ),
+          GoRoute(
+            path: RouteNames.paymentResult,
+            name: 'paymentResult',
+            builder: (context, state) {
+              final extra = state.extra
+                  as ({bool success, SubscriptionPlan plan, PaymentMethod method})?;
+              return PaymentResultScreen(
+                success: extra?.success ?? false,
+                plan: extra?.plan ?? SubscriptionPlan.monthly,
+                method: extra?.method ?? PaymentMethod.momo,
+              );
+            },
+          ),
+          GoRoute(
+            path: RouteNames.paymentHistory,
+            name: 'paymentHistory',
+            builder: (_, __) => const PaymentHistoryScreen(),
           ),
         ],
       ),
@@ -158,14 +246,21 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: RouteNames.adminModeration,
             name: 'adminModeration',
-            builder: (_, __) =>
-                const _PlaceholderScreen(title: 'Kiểm duyệt'),
+            builder: (_, __) => const ModerationScreen(),
           ),
           GoRoute(
             path: RouteNames.adminReports,
             name: 'adminReports',
-            builder: (_, __) =>
-                const _PlaceholderScreen(title: 'Báo cáo'),
+            builder: (_, __) => const ReportDashboard(),
+            routes: [
+              GoRoute(
+                path: ':reportId',
+                name: 'reportDetail',
+                builder: (context, state) => ReportDetailScreen(
+                  reportId: state.pathParameters['reportId']!,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -195,30 +290,3 @@ class _AuthRefreshListenable extends ChangeNotifier {
   void notify() => notifyListeners();
 }
 
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.construction, size: 64, color: Colors.orange),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 8),
-            const Text('Đang phát triển...'),
-          ],
-        ),
-      ),
-    );
-  }
-}
