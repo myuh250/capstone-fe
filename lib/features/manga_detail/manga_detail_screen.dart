@@ -7,11 +7,17 @@ import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/chapter.dart';
+import '../../providers/comment_providers.dart';
 import '../../providers/manga_providers.dart';
+import '../../providers/recommendation_providers.dart';
 import '../../shared/widgets/error_view.dart';
+import '../../shared/widgets/recommendation_section.dart';
 import 'widgets/chapter_list.dart';
+import 'widgets/comment_section.dart';
 import 'widgets/manga_description.dart';
 import 'widgets/manga_header.dart';
+import 'widgets/rating_dialog.dart';
+import 'widgets/rating_display.dart';
 import 'widgets/related_manga_section.dart';
 
 class MangaDetailScreen extends ConsumerWidget {
@@ -23,6 +29,7 @@ class MangaDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mangaAsync = ref.watch(mangaDetailProvider(mangaId));
     final isFavorite = ref.watch(favoriteProvider(mangaId));
+    final recsAsync = ref.watch(mangaRecommendationsProvider(mangaId));
 
     return Scaffold(
       body: mangaAsync.when(
@@ -63,11 +70,38 @@ class MangaDetailScreen extends ConsumerWidget {
             ),
             const SliverToBoxAdapter(child: _SectionDivider()),
             SliverToBoxAdapter(
+              child: _RatingSection(
+                mangaId: mangaId,
+                manga: manga,
+              ),
+            ),
+            const SliverToBoxAdapter(child: _SectionDivider()),
+            SliverToBoxAdapter(
+              child: CommentSection(mangaId: mangaId),
+            ),
+            const SliverToBoxAdapter(child: _SectionDivider()),
+            SliverToBoxAdapter(
               child: RelatedMangaSection(
                 mangaId: mangaId,
                 onTapManga: (id) =>
                     context.pushReplacement(RouteNames.mangaDetail(id)),
               ),
+            ),
+            recsAsync.maybeWhen(
+              data: (recs) => SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    const _SectionDivider(),
+                    RecommendationSection(
+                      title: 'Có thể bạn cũng thích',
+                      recommendations: recs,
+                      onTapManga: (id) =>
+                          context.pushReplacement(RouteNames.mangaDetail(id)),
+                    ),
+                  ],
+                ),
+              ),
+              orElse: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
             ),
           ],
         ),
@@ -85,6 +119,54 @@ class MangaDetailScreen extends ConsumerWidget {
   }
 }
 
+
+class _RatingSection extends ConsumerWidget {
+  const _RatingSection({
+    required this.mangaId,
+    required this.manga,
+  });
+
+  final String mangaId;
+  final dynamic manga;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userRatingAsync = ref.watch(userRatingProvider(mangaId));
+    final userRating = userRatingAsync.valueOrNull;
+
+    return Container(
+      color: AppColors.surface,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Đánh giá',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          RatingDisplay(
+            averageRating: manga.averageRating,
+            ratingCount: 1240,
+            userRating: userRating,
+            onRate: () => showRatingDialog(
+              context,
+              ref: ref,
+              mangaId: mangaId,
+              mangaTitle: manga.title,
+            ),
+          ),
+          if (userRating != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            UserRatingBadge(rating: userRating),
+          ],
+        ],
+      ),
+    );
+  }
+}
 
 class _SectionDivider extends StatelessWidget {
   const _SectionDivider();

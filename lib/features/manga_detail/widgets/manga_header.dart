@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../models/manga.dart';
 import '../../../shared/widgets/cover_image.dart';
+import '../../../shared/widgets/share_button.dart';
 import '../../../shared/widgets/star_rating.dart';
 import '../../../shared/widgets/tag_chip.dart';
 
@@ -92,6 +93,9 @@ class MangaHeader extends StatelessWidget {
                 _ActionRow(
                   isFavorite: isFavorite,
                   onToggleFavorite: onToggleFavorite,
+                  mangaTitle: manga.title,
+                  shareUrl:
+                      'https://mangaapp.example.com/manga/${manga.id}',
                 ),
               ],
             ),
@@ -147,10 +151,14 @@ class _ActionRow extends StatelessWidget {
   const _ActionRow({
     required this.isFavorite,
     required this.onToggleFavorite,
+    required this.mangaTitle,
+    required this.shareUrl,
   });
 
   final bool isFavorite;
   final VoidCallback onToggleFavorite;
+  final String mangaTitle;
+  final String shareUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -175,9 +183,11 @@ class _ActionRow extends StatelessWidget {
           ),
           onPressed: onToggleFavorite,
         ),
-        IconButton(
-          icon: const Icon(Icons.share_outlined, color: AppColors.textSecondary),
-          onPressed: () {},
+        ShareButton(
+          title: mangaTitle,
+          url: shareUrl,
+          compact: true,
+          color: AppColors.textSecondary,
         ),
       ],
     );
