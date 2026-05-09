@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/user.dart';
@@ -40,17 +42,68 @@ class _ProfileContent extends ConsumerWidget {
               _SettingsTile(
                 icon: Icons.person_outline,
                 label: 'Chỉnh sửa hồ sơ',
-                onTap: () {},
+                onTap: () => context.push(RouteNames.editProfile),
               ),
               _SettingsTile(
                 icon: Icons.lock_outline,
                 label: 'Đổi mật khẩu',
-                onTap: () {},
+                onTap: () => context.push(RouteNames.changePassword),
+              ),
+              _SettingsTile(
+                icon: Icons.history_outlined,
+                label: 'Lịch sử đọc',
+                onTap: () => context.push(RouteNames.readingHistory),
+              ),
+              _SettingsTile(
+                icon: Icons.settings_outlined,
+                label: 'Cài đặt tài khoản',
+                onTap: () => context.push(RouteNames.settings),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _SettingsSection(
+            items: [
+              _SettingsTile(
+                icon: Icons.workspace_premium_outlined,
+                label: 'Nâng cấp Premium',
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                    ),
+                    borderRadius:
+                        BorderRadius.circular(AppSpacing.radiusFull),
+                  ),
+                  child: const Text(
+                    'PRO',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                onTap: () => context.push(RouteNames.premium),
+              ),
+              _SettingsTile(
+                icon: Icons.receipt_long_outlined,
+                label: 'Lịch sử thanh toán',
+                onTap: () => context.push(RouteNames.paymentHistory),
+              ),
+              _SettingsTile(
+                icon: Icons.download_outlined,
+                label: 'Manga đã tải',
+                onTap: () => context.push(RouteNames.downloads),
               ),
               _SettingsTile(
                 icon: Icons.notifications_outlined,
                 label: 'Thông báo',
-                onTap: () {},
+                onTap: () => context.push(RouteNames.notifications),
               ),
             ],
           ),
@@ -271,6 +324,7 @@ class _SettingsTile extends StatelessWidget {
     required this.onTap,
     this.iconColor,
     this.labelColor,
+    this.trailing,
   });
 
   final IconData icon;
@@ -278,6 +332,7 @@ class _SettingsTile extends StatelessWidget {
   final VoidCallback onTap;
   final Color? iconColor;
   final Color? labelColor;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -295,11 +350,12 @@ class _SettingsTile extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
       ),
-      trailing: const Icon(
-        Icons.chevron_right,
-        color: AppColors.textSecondary,
-        size: 20,
-      ),
+      trailing: trailing ??
+          const Icon(
+            Icons.chevron_right,
+            color: AppColors.textSecondary,
+            size: 20,
+          ),
       minLeadingWidth: 28,
     );
   }
