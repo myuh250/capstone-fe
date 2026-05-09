@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/reader/widgets/reader_settings_panel.dart';
 import '../models/chapter.dart';
 import '../models/chapter_page.dart';
 import '../repositories/chapter_repository.dart';
@@ -58,21 +59,33 @@ class ReaderState {
     this.currentPage = 0,
     this.isOverlayVisible = true,
     this.isVerticalMode = true,
+    this.brightness = 1.0,
+    this.readerTheme = ReaderTheme.dark,
+    this.autoNextChapter = false,
   });
 
   final int currentPage;
   final bool isOverlayVisible;
   final bool isVerticalMode;
+  final double brightness;
+  final ReaderTheme readerTheme;
+  final bool autoNextChapter;
 
   ReaderState copyWith({
     int? currentPage,
     bool? isOverlayVisible,
     bool? isVerticalMode,
+    double? brightness,
+    ReaderTheme? readerTheme,
+    bool? autoNextChapter,
   }) {
     return ReaderState(
       currentPage: currentPage ?? this.currentPage,
       isOverlayVisible: isOverlayVisible ?? this.isOverlayVisible,
       isVerticalMode: isVerticalMode ?? this.isVerticalMode,
+      brightness: brightness ?? this.brightness,
+      readerTheme: readerTheme ?? this.readerTheme,
+      autoNextChapter: autoNextChapter ?? this.autoNextChapter,
     );
   }
 }
@@ -90,6 +103,18 @@ class ReaderNotifier extends StateNotifier<ReaderState> {
 
   void toggleReadingMode() {
     state = state.copyWith(isVerticalMode: !state.isVerticalMode);
+  }
+
+  void setBrightness(double value) {
+    state = state.copyWith(brightness: value);
+  }
+
+  void setTheme(ReaderTheme theme) {
+    state = state.copyWith(readerTheme: theme);
+  }
+
+  void setAutoNextChapter(bool value) {
+    state = state.copyWith(autoNextChapter: value);
   }
 }
 

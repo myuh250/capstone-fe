@@ -8,6 +8,7 @@ import '../../shared/widgets/error_view.dart';
 import 'widgets/page_viewer.dart';
 import 'widgets/reader_app_bar.dart';
 import 'widgets/reader_bottom_bar.dart';
+import 'widgets/reader_settings_panel.dart';
 
 class ReaderScreen extends ConsumerWidget {
   const ReaderScreen({
@@ -34,23 +35,28 @@ class ReaderScreen extends ConsumerWidget {
     );
     final adjacentAsync = ref.watch(adjacentChaptersProvider(adjacentParams));
 
+    final bgColor = readerState.readerTheme.backgroundColor;
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: bgColor,
       extendBodyBehindAppBar: true,
       appBar: readerState.isOverlayVisible
           ? ReaderAppBar(
               mangaTitle: mangaAsync.valueOrNull?.title ?? 'Manga',
               chapterTitle: 'Ch.${chapterNumber.toInt()}',
               onBack: () => context.pop(),
+              onSettings: () => _showSettings(context, ref, readerKey),
+              shareUrl:
+                  'https://mangaapp.example.com/manga/$mangaId/chapter/$chapterId',
             )
           : null,
       body: pagesAsync.when(
         data: (pages) {
           if (pages.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'Không có trang nào',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: readerState.readerTheme.textColor),
               ),
             );
           }
@@ -63,6 +69,16 @@ class ReaderScreen extends ConsumerWidget {
                 onPageChanged: readerNotifier.setPage,
                 onTap: readerNotifier.toggleOverlay,
               ),
+              // Brightness overlay
+              if (readerState.brightness < 1.0)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      color: Colors.black
+                          .withAlpha(((1 - readerState.brightness) * 180).toInt()),
+                    ),
+                  ),
+                ),
               if (readerState.isOverlayVisible)
                 Positioned(
                   bottom: 0,
@@ -97,9 +113,7 @@ class ReaderScreen extends ConsumerWidget {
             ],
           );
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorView(
           message: 'Không thể tải trang manga.',
           onRetry: () => ref.invalidate(chapterPagesProvider(chapterId)),
@@ -118,5 +132,29 @@ class ReaderScreen extends ConsumerWidget {
 
   void _navigateToChapter(BuildContext context, String newChapterId) {
     context.pushReplacement('/manga/$mangaId/chapter/$newChapterId');
+  }
+
+  void _showSettings(
+    BuildContext context,
+    WidgetRef ref,
+    ReaderKey readerKey,
+  ) {
+    final state = ref.read(readerProvider(readerKey));
+    final notifier = ref.read(readerProvider(readerKey).notifier);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => ReaderSettingsPanel(
+        isVerticalMode: state.isVerticalMode,
+        brightness: state.brightness,
+        readerTheme: state.readerTheme,
+        autoNextChapter: state.autoNextChapter,
+        onToggleReadingMode: notifier.toggleReadingMode,
+        onBrightnessChanged: notifier.setBrightness,
+        onThemeChanged: notifier.setTheme,
+        onAutoNextChanged: notifier.setAutoNextChapter,
+      ),
+    );
   }
 }

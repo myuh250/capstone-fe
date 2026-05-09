@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/share_button.dart';
 
 class ReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ReaderAppBar({
@@ -8,11 +9,15 @@ class ReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.mangaTitle,
     required this.chapterTitle,
     required this.onBack,
+    this.onSettings,
+    this.shareUrl,
   });
 
   final String mangaTitle;
   final String chapterTitle;
   final VoidCallback onBack;
+  final VoidCallback? onSettings;
+  final String? shareUrl;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -49,9 +54,16 @@ class ReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: [
+        if (shareUrl != null)
+          ShareButton(
+            title: mangaTitle,
+            url: shareUrl!,
+            compact: true,
+            color: Colors.white,
+          ),
         IconButton(
           icon: const Icon(Icons.settings_outlined, color: Colors.white),
-          onPressed: () {},
+          onPressed: onSettings,
         ),
       ],
     );
