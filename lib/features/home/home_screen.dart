@@ -7,7 +7,11 @@ import '../../core/router/route_names.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/manga.dart';
 import '../../providers/manga_providers.dart';
+import '../../providers/notification_providers.dart';
+import '../../providers/recommendation_providers.dart';
 import '../../shared/widgets/error_view.dart';
+import '../../shared/widgets/recommendation_section.dart';
+import '../notifications/widgets/notification_card.dart';
 import 'widgets/featured_carousel.dart';
 import 'widgets/home_screen_skeleton.dart';
 import 'widgets/manga_horizontal_list.dart';
@@ -22,6 +26,7 @@ class HomeScreen extends ConsumerWidget {
     final latestAsync = ref.watch(latestMangaProvider);
     final popularAsync = ref.watch(popularMangaProvider);
     final completedAsync = ref.watch(completedMangaProvider);
+    final recsAsync = ref.watch(recommendationsProvider);
 
     final isLoading = featuredAsync.isLoading ||
         latestAsync.isLoading ||
@@ -73,6 +78,19 @@ class HomeScreen extends ConsumerWidget {
                   icon: const Icon(Icons.search),
                   onPressed: () => context.go(RouteNames.search),
                 ),
+                Consumer(
+                  builder: (_, ref, __) {
+                    final unread = ref.watch(unreadCountProvider);
+                    return IconButton(
+                      icon: NotificationBadge(
+                        count: unread,
+                        child: const Icon(Icons.notifications_outlined),
+                      ),
+                      onPressed: () =>
+                          context.push(RouteNames.notifications),
+                    );
+                  },
+                ),
                 const SizedBox(width: AppSpacing.sm),
               ],
             ),
@@ -110,6 +128,16 @@ class HomeScreen extends ConsumerWidget {
                 onTapManga: (m) =>
                     context.push(RouteNames.mangaDetail(m.id)),
               ),
+            ),
+            recsAsync.maybeWhen(
+              data: (recs) => SliverToBoxAdapter(
+                child: RecommendationSection(
+                  recommendations: recs,
+                  onTapManga: (id) =>
+                      context.push(RouteNames.mangaDetail(id)),
+                ),
+              ),
+              orElse: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
             ),
             const SliverToBoxAdapter(child: Gap(AppSpacing.xl)),
           ],
