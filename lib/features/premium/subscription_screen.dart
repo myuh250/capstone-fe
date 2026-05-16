@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,20 +7,24 @@ import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/payment.dart';
+import '../../providers/subscription_providers.dart';
 import 'widgets/plan_card.dart';
 
-class SubscriptionScreen extends StatefulWidget {
+class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
 
   @override
-  State<SubscriptionScreen> createState() => _SubscriptionScreenState();
+  ConsumerState<SubscriptionScreen> createState() => _SubscriptionScreenState();
 }
 
-class _SubscriptionScreenState extends State<SubscriptionScreen> {
+class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   SubscriptionPlan _selected = SubscriptionPlan.yearly;
 
   @override
   Widget build(BuildContext context) {
+    final subscriptionState = ref.watch(activeSubscriptionProvider);
+    final activeSub = subscriptionState.valueOrNull;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nâng cấp Premium'),
@@ -39,60 +44,113 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _PremiumHeroSection(),
-            const Gap(AppSpacing.xl),
-            Text(
-              'Chọn gói',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const Gap(AppSpacing.md),
-            ...SubscriptionPlan.values.map((plan) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                  child: PlanCard(
-                    plan: plan,
-                    isSelected: _selected == plan,
-                    onSelect: () => setState(() => _selected = plan),
-                  ),
-                )),
-            const Gap(AppSpacing.lg),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.md + 2,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusMd),
-                  ),
-                ),
-                onPressed: () =>
-                    context.push(RouteNames.payment, extra: _selected),
-                child: Text(
-                  'Tiếp tục — ${_selected.formattedPrice}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-            const Gap(AppSpacing.lg),
-            Center(
-              child: Text(
-                'Bạn có thể hủy bất cứ lúc nào. '
-                'Bằng cách tiếp tục, bạn đồng ý với Điều khoản dịch vụ.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
+            if (activeSub != null) ...[
+              const Gap(AppSpacing.xl),
+              _ActiveSubscriptionBanner(subscription: activeSub),
+            ] else ...[
+              const Gap(AppSpacing.xl),
+              Text(
+                'Chọn gói',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
-                textAlign: TextAlign.center,
               ),
-            ),
+              const Gap(AppSpacing.md),
+              ...SubscriptionPlan.values.map((plan) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: PlanCard(
+                      plan: plan,
+                      isSelected: _selected == plan,
+                      onSelect: () => setState(() => _selected = plan),
+                    ),
+                  )),
+              const Gap(AppSpacing.lg),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.md + 2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                  ),
+                  onPressed: () =>
+                      context.push(RouteNames.payment, extra: _selected),
+                  child: Text(
+                    'Tiếp tục — ${_selected.formattedPrice}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              const Gap(AppSpacing.lg),
+              Center(
+                child: Text(
+                  'Bạn có thể hủy bất cứ lúc nào. '
+                  'Bằng cách tiếp tục, bạn đồng ý với Điều khoản dịch vụ.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ActiveSubscriptionBanner extends StatelessWidget {
+  const _ActiveSubscriptionBanner({required this.subscription});
+
+  final SubscriptionInfo subscription;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.statusGreen.withAlpha(20),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.statusGreen.withAlpha(80)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.check_circle, color: AppColors.statusGreen, size: 20),
+              const Gap(AppSpacing.sm),
+              Text(
+                'Gói Premium đang hoạt động',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.statusGreen,
+                    ),
+              ),
+            ],
+          ),
+          const Gap(AppSpacing.md),
+          Text(
+            'Gói: Premium ${subscription.plan.label}',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const Gap(AppSpacing.xs),
+          Text(
+            'Hết hạn: ${subscription.expiryDate.day}/${subscription.expiryDate.month}/${subscription.expiryDate.year}',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+          ),
+        ],
       ),
     );
   }

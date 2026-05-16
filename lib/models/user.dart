@@ -50,21 +50,26 @@ class User {
   final DateTime? createdAt;
 
   factory User.fromJson(Map<String, dynamic> json) {
+    final roleStr = (json['role'] as String?)?.toLowerCase() ?? 'user';
+    final role = UserRole.values.firstWhere(
+      (r) => r.name == roleStr,
+      orElse: () => UserRole.user,
+    );
+    final isPremium = json['isPremium'] as bool? ??
+        roleStr == 'premium';
+
     return User(
-      id: json['id'] as String,
+      id: json['id'].toString(),
       email: json['email'] as String,
-      displayName: json['displayName'] as String,
+      displayName: json['displayName'] ?? json['username'] as String? ?? '',
       avatarUrl: json['avatarUrl'] as String?,
       bio: json['bio'] as String?,
-      role: UserRole.values.firstWhere(
-        (r) => r.name == json['role'],
-        orElse: () => UserRole.user,
-      ),
+      role: role,
       status: UserStatus.values.firstWhere(
-        (s) => s.name == json['status'],
+        (s) => s.name == (json['status'] as String?)?.toLowerCase(),
         orElse: () => UserStatus.active,
       ),
-      isPremium: json['isPremium'] as bool? ?? false,
+      isPremium: isPremium,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String)
           : null,

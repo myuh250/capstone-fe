@@ -59,11 +59,8 @@ abstract class ApiEndpoints {
   static const String notifications = '/users/me/notifications';
   static String markNotificationRead(String id) => '/notifications/$id/read';
 
-  // Premium
+  // Premium / Subscriptions
   static const String subscriptions = '/subscriptions';
-  static const String createPayment = '/payments/create';
-  static const String paymentCallback = '/payments/callback';
-  static const String paymentHistory = '/users/me/payments';
 
   // Admin
   static const String adminUsers = '/admin/users';

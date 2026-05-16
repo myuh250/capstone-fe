@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,30 +7,49 @@ import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/payment.dart';
+import '../../providers/subscription_providers.dart';
 import 'widgets/payment_method_selector.dart';
 
-class PaymentScreen extends StatefulWidget {
+class PaymentScreen extends ConsumerStatefulWidget {
   const PaymentScreen({super.key, required this.plan});
 
   final SubscriptionPlan plan;
 
   @override
-  State<PaymentScreen> createState() => _PaymentScreenState();
+  ConsumerState<PaymentScreen> createState() => _PaymentScreenState();
 }
 
-class _PaymentScreenState extends State<PaymentScreen> {
+class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   PaymentMethod _method = PaymentMethod.momo;
   bool _isLoading = false;
 
   Future<void> _processPayment() async {
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-    context.pushReplacement(
-      RouteNames.paymentResult,
-      extra: (success: true, plan: widget.plan, method: _method),
-    );
+    try {
+      final repo = ref.read(subscriptionRepositoryProvider);
+      final result = await repo.createPayment(
+        plan: widget.plan,
+        method: _method,
+      );
+      if (!mounted) return;
+
+      if (result.isSuccess) {
+        ref.read(activeSubscriptionProvider.notifier).load();
+      }
+
+      context.pushReplacement(
+        RouteNames.paymentResult,
+        extra: (success: result.isSuccess, plan: widget.plan, method: _method),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      context.pushReplacement(
+        RouteNames.paymentResult,
+        extra: (success: false, plan: widget.plan, method: _method),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override

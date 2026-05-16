@@ -1,63 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 import '../../core/theme/app_spacing.dart';
 import '../../models/payment.dart';
+import '../../providers/subscription_providers.dart';
 import '../../shared/widgets/empty_state.dart';
 import 'widgets/transaction_card.dart';
 
-class PaymentHistoryScreen extends StatelessWidget {
+class PaymentHistoryScreen extends ConsumerWidget {
   const PaymentHistoryScreen({super.key});
 
-  static final List<Transaction> _fakeTransactions = [
-    Transaction(
-      id: 't1',
-      plan: SubscriptionPlan.yearly,
-      method: PaymentMethod.momo,
-      status: PaymentStatus.success,
-      amount: SubscriptionPlan.yearly.priceVnd,
-      createdAt: DateTime.now().subtract(const Duration(days: 5)),
-    ),
-    Transaction(
-      id: 't2',
-      plan: SubscriptionPlan.monthly,
-      method: PaymentMethod.vnpay,
-      status: PaymentStatus.success,
-      amount: SubscriptionPlan.monthly.priceVnd,
-      createdAt: DateTime.now().subtract(const Duration(days: 35)),
-    ),
-    Transaction(
-      id: 't3',
-      plan: SubscriptionPlan.monthly,
-      method: PaymentMethod.momo,
-      status: PaymentStatus.failed,
-      amount: SubscriptionPlan.monthly.priceVnd,
-      createdAt: DateTime.now().subtract(const Duration(days: 65)),
-    ),
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final historyState = ref.watch(paymentHistoryProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Lịch sử thanh toán')),
-      body: _fakeTransactions.isEmpty
-          ? const EmptyState(
+      body: historyState.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Lỗi: $e')),
+        data: (transactions) {
+          if (transactions.isEmpty) {
+            return const EmptyState(
               icon: Icons.receipt_long_outlined,
               message: 'Chưa có giao dịch nào',
-            )
-          : Column(
-              children: [
-                _SummaryBanner(transactions: _fakeTransactions),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    itemCount: _fakeTransactions.length,
-                    itemBuilder: (_, i) =>
-                        TransactionCard(transaction: _fakeTransactions[i]),
-                  ),
+            );
+          }
+          return Column(
+            children: [
+              _SummaryBanner(transactions: transactions),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  itemCount: transactions.length,
+                  itemBuilder: (_, i) =>
+                      TransactionCard(transaction: transactions[i]),
                 ),
-              ],
-            ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
