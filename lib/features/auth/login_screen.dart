@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
@@ -32,14 +33,54 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  static const _googleClientId =
+      '41764157266-ucn2amkv1glm6jhg4c0jil8177g8e8qv.apps.googleusercontent.com';
+
   Future<void> _onGoogleSignIn() async {
     setState(() => _isGoogleLoading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    setState(() => _isGoogleLoading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Google Sign-In chưa được tích hợp')),
-    );
+    try {
+      final googleSignIn = GoogleSignIn(serverClientId: _googleClientId);
+      final account = await googleSignIn.signIn();
+      if (account == null) {
+        if (mounted) setState(() => _isGoogleLoading = false);
+        return;
+      }
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null) {
+        throw Exception('Failed to get Google ID token');
+      }
+
+      await ref.read(authStateProvider.notifier).googleLogin(idToken: idToken);
+
+      if (!mounted) return;
+      final authState = ref.read(authStateProvider);
+      authState.whenOrNull(
+        data: (user) {
+          if (user != null) context.go(RouteNames.home);
+        },
+        error: (e, _) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Google Sign-In thất bại: ${e.toString()}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google Sign-In thất bại: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
+    }
   }
 
   Future<void> _onSubmit() async {

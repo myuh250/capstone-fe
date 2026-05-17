@@ -7,6 +7,7 @@ abstract class AuthRepository {
     required String password,
     required String displayName,
   });
+  Future<User> googleLogin({required String idToken});
   Future<void> logout();
   Future<void> verifyEmail(String otp);
   Future<void> forgotPassword(String email);
@@ -62,6 +63,16 @@ class FakeAuthRepository implements AuthRepository {
       displayName: displayName,
       role: UserRole.user,
       status: UserStatus.pending,
+    );
+    return _currentUser!;
+  }
+
+  @override
+  Future<User> googleLogin({required String idToken}) async {
+    await Future.delayed(const Duration(seconds: 1));
+    _currentUser = _fakeUser.copyWith(
+      email: 'google@gmail.com',
+      displayName: 'Google User',
     );
     return _currentUser!;
   }

@@ -58,6 +58,9 @@ dependencies:
   shared_preferences: ^2.3.0
   infinite_scroll_pagination: ^4.0.0
 
+  # Google Sign-In
+  google_sign_in: ^6.2.0
+
   # Icons
   cupertino_icons: ^1.0.8
 

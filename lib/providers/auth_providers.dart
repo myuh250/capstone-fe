@@ -55,6 +55,16 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     }
   }
 
+  Future<void> googleLogin({required String idToken}) async {
+    state = const AsyncValue.loading();
+    try {
+      final user = await _repository.googleLogin(idToken: idToken);
+      state = AsyncValue.data(user);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
   Future<void> logout() async {
     await _repository.logout();
     state = const AsyncValue.data(null);
