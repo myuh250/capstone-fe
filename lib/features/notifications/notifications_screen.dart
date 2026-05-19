@@ -58,31 +58,37 @@ class NotificationsScreen extends ConsumerWidget {
             ),
         ],
       ),
-      body: notifications.isEmpty
-          ? const EmptyState(
-              icon: Icons.notifications_none,
-              message: 'Bạn chưa có thông báo nào',
-            )
-          : ListView.separated(
-              itemCount: notifications.length,
-              separatorBuilder: (_, __) => const Divider(
-                height: 1,
-                color: AppColors.divider,
+      body: notifications.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Lỗi: $e')),
+        data: (items) => items.isEmpty
+            ? const EmptyState(
+                icon: Icons.notifications_none,
+                message: 'Bạn chưa có thông báo nào',
+              )
+            : ListView.separated(
+                itemCount: items.length,
+                separatorBuilder: (_, __) => const Divider(
+                  height: 1,
+                  color: AppColors.divider,
+                ),
+                itemBuilder: (_, i) {
+                  final n = items[i];
+                  return NotificationCard(
+                    notification: n,
+                    onTap: () {
+                      ref
+                          .read(notificationsProvider.notifier)
+                          .markAsRead(n.id);
+                      _handleTap(context, n);
+                    },
+                    onDismiss: () => ref
+                        .read(notificationsProvider.notifier)
+                        .markAsRead(n.id),
+                  );
+                },
               ),
-              itemBuilder: (_, i) {
-                final n = notifications[i];
-                return NotificationCard(
-                  notification: n,
-                  onTap: () {
-                    ref.read(notificationsProvider.notifier).markAsRead(n.id);
-                    _handleTap(context, n);
-                  },
-                  onDismiss: () => ref
-                      .read(notificationsProvider.notifier)
-                      .removeNotification(n.id),
-                );
-              },
-            ),
+      ),
     );
   }
 

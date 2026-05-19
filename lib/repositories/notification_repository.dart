@@ -22,7 +22,7 @@ class RealNotificationRepository implements NotificationRepository {
   }) async {
     final response = await _apiClient.get(
       ApiEndpoints.notifications,
-      queryParameters: if (unreadOnly) {'unreadOnly': true} else {},
+      queryParameters: unreadOnly ? {'unreadOnly': true} : null,
     );
     final data = response.data;
     List<dynamic> list;

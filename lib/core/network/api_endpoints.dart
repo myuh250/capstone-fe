@@ -1,6 +1,8 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 abstract class ApiEndpoints {
-  // Base URL — replace with actual backend URL
-  static const String baseUrl = 'http://localhost:9000/api';
+  static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'http://localhost:9000/api';
+  static String get wsUrl => dotenv.env['WS_URL'] ?? 'ws://localhost:9000/ws';
 
   // Auth
   static const String login = '/auth/login';
@@ -112,6 +114,8 @@ abstract class ApiEndpoints {
   static const String adminSyncDashboard = '/admin/sync/dashboard';
   static const String adminSyncLogs = '/admin/sync/logs';
   static const String adminSyncConfig = '/admin/sync/config';
+  static String adminSyncTrigger(String jobType) =>
+      '/admin/sync/trigger/$jobType';
 
   // AI Chatbot
   static const String aiChat = '/ai/chat';
@@ -129,12 +133,6 @@ abstract class ApiEndpoints {
   static const String offlineMyDownloads = '/offline/my-downloads';
   static String offlineRemove(String chapterId) =>
       '/offline/chapters/$chapterId';
-
-  // Admin - Sync Dashboard
-  static const String adminSyncDashboard = '/admin/sync/dashboard';
-  static const String adminSyncLogs = '/admin/sync/logs';
-  static const String adminSyncConfig = '/admin/sync/config';
-  static String adminSyncTrigger(String jobType) => '/admin/sync/trigger/$jobType';
 
   // Admin - Chapter early access
   static String chapterEarlyAccess(String id) => '/chapters/$id/early-access';
