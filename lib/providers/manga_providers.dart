@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/network/api_client.dart';
 import '../models/chapter.dart';
 import '../models/manga.dart';
 import '../repositories/manga_repository.dart';
 
 final mangaRepositoryProvider = Provider<MangaRepository>((ref) {
-  return FakeMangaRepository();
+  return RealMangaRepository(ref.watch(apiClientProvider));
 });
 
 final featuredMangaProvider = FutureProvider<List<Manga>>((ref) {

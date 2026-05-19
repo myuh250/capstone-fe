@@ -1,10 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/network/api_client.dart';
 import '../models/report.dart';
 import '../repositories/moderation_repository.dart';
 
 final moderationRepositoryProvider = Provider<ModerationRepository>((ref) {
-  return FakeModerationRepository();
+  return RealModerationRepository(ref.watch(apiClientProvider));
 });
 
 final reportsFilterProvider = StateProvider<ReportStatus?>((ref) => null);

@@ -1,10 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/network/api_client.dart';
 import '../models/comment.dart';
 import '../repositories/comment_repository.dart';
 
 final commentRepositoryProvider = Provider<CommentRepository>((ref) {
-  return FakeCommentRepository();
+  return RealCommentRepository(ref.watch(apiClientProvider));
 });
 
 final commentsProvider =

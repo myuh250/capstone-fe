@@ -82,6 +82,36 @@ class Report {
     return DateTime.now().difference(reportedAt).inHours > 48;
   }
 
+  factory Report.fromJson(Map<String, dynamic> json) {
+    return Report(
+      id: json['id'].toString(),
+      type: ReportType.values.firstWhere(
+        (t) => t.name == (json['type'] as String?)?.toLowerCase(),
+        orElse: () => ReportType.comment,
+      ),
+      reason: ReportReason.values.firstWhere(
+        (r) => r.name == (json['reason'] as String?)?.toLowerCase(),
+        orElse: () => ReportReason.other,
+      ),
+      reportedBy: json['reportedBy']?.toString() ?? '',
+      reportedAt: DateTime.parse(json['reportedAt'] as String),
+      status: ReportStatus.values.firstWhere(
+        (s) => s.name == (json['status'] as String?)?.toLowerCase(),
+        orElse: () => ReportStatus.pending,
+      ),
+      targetId: json['targetId']?.toString(),
+      targetTitle: json['targetTitle'] as String?,
+      description: json['description'] as String?,
+      resolvedBy: json['resolvedBy']?.toString(),
+      resolvedAt: json['resolvedAt'] != null
+          ? DateTime.tryParse(json['resolvedAt'] as String)
+          : null,
+      resolution: json['resolution'] as String?,
+      aiConfidence: (json['aiConfidence'] as num?)?.toDouble(),
+      aiDetected: json['aiDetected'] as bool? ?? false,
+    );
+  }
+
   Report copyWith({
     String? id,
     ReportType? type,

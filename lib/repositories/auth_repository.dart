@@ -1,3 +1,6 @@
+import '../core/network/api_client.dart';
+import '../core/network/api_endpoints.dart';
+import '../core/storage/local_storage.dart';
 import '../models/user.dart';
 
 abstract class AuthRepository {
@@ -15,39 +18,22 @@ abstract class AuthRepository {
   Future<User?> getCurrentUser();
 }
 
-class FakeAuthRepository implements AuthRepository {
-  User? _currentUser;
+class RealAuthRepository implements AuthRepository {
+  RealAuthRepository(this._apiClient, this._storage);
 
-  static const _fakeAdmin = User(
-    id: 'admin_1',
-    email: 'admin@manga.com',
-    displayName: 'Admin',
-    role: UserRole.admin,
-    status: UserStatus.active,
-    isPremium: true,
-  );
-
-  static const _fakeUser = User(
-    id: 'user_1',
-    email: 'user@manga.com',
-    displayName: 'Manga Reader',
-    role: UserRole.user,
-    status: UserStatus.active,
-    isPremium: false,
-  );
+  final ApiClient _apiClient;
+  final LocalStorage _storage;
 
   @override
-  Future<User> login({
-    required String email,
-    required String password,
-  }) async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (email == 'admin@manga.com') {
-      _currentUser = _fakeAdmin;
-    } else {
-      _currentUser = _fakeUser.copyWith(email: email);
-    }
-    return _currentUser!;
+  Future<User> login({required String email, required String password}) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.login,
+      data: {'email': email, 'password': password},
+    );
+    final data = response.data as Map<String, dynamic>;
+    await _storage.saveAccessToken(data['accessToken'] as String);
+    await _storage.saveRefreshToken(data['refreshToken'] as String);
+    return User.fromJson(data['user'] as Map<String, dynamic>);
   }
 
   @override
@@ -56,47 +42,58 @@ class FakeAuthRepository implements AuthRepository {
     required String password,
     required String displayName,
   }) async {
-    await Future.delayed(const Duration(seconds: 1));
-    _currentUser = User(
-      id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-      email: email,
-      displayName: displayName,
-      role: UserRole.user,
-      status: UserStatus.pending,
+    final response = await _apiClient.post(
+      ApiEndpoints.register,
+      data: {
+        'email': email,
+        'password': password,
+        'displayName': displayName,
+      },
     );
-    return _currentUser!;
+    final data = response.data as Map<String, dynamic>;
+    await _storage.saveAccessToken(data['accessToken'] as String);
+    await _storage.saveRefreshToken(data['refreshToken'] as String);
+    return User.fromJson(data['user'] as Map<String, dynamic>);
   }
 
   @override
   Future<User> googleLogin({required String idToken}) async {
-    await Future.delayed(const Duration(seconds: 1));
-    _currentUser = _fakeUser.copyWith(
-      email: 'google@gmail.com',
-      displayName: 'Google User',
+    final response = await _apiClient.post(
+      ApiEndpoints.googleLogin,
+      data: {'idToken': idToken},
     );
-    return _currentUser!;
+    final data = response.data as Map<String, dynamic>;
+    await _storage.saveAccessToken(data['accessToken'] as String);
+    await _storage.saveRefreshToken(data['refreshToken'] as String);
+    return User.fromJson(data['user'] as Map<String, dynamic>);
   }
 
   @override
   Future<void> logout() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _currentUser = null;
+    final refreshToken = await _storage.getRefreshToken();
+    if (refreshToken != null) {
+      await _apiClient.post(
+        ApiEndpoints.logout,
+        data: {'refreshToken': refreshToken},
+      );
+    }
+    await _storage.clearTokens();
   }
 
   @override
   Future<void> verifyEmail(String otp) async {
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (otp != '123456') {
-      throw Exception('OTP không hợp lệ');
-    }
-    if (_currentUser != null) {
-      _currentUser = _currentUser!.copyWith(status: UserStatus.active);
-    }
+    await _apiClient.post(
+      ApiEndpoints.verifyOtp,
+      data: {'otp': otp},
+    );
   }
 
   @override
   Future<void> forgotPassword(String email) async {
-    await Future.delayed(const Duration(seconds: 1));
+    await _apiClient.post(
+      ApiEndpoints.forgotPassword,
+      data: {'email': email},
+    );
   }
 
   @override
@@ -104,15 +101,17 @@ class FakeAuthRepository implements AuthRepository {
     required String otp,
     required String newPassword,
   }) async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (otp != '123456') {
-      throw Exception('OTP không hợp lệ');
-    }
+    await _apiClient.post(
+      ApiEndpoints.resetPassword,
+      data: {'otp': otp, 'newPassword': newPassword},
+    );
   }
 
   @override
   Future<User?> getCurrentUser() async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    return _currentUser;
+    final token = await _storage.getAccessToken();
+    if (token == null) return null;
+    final response = await _apiClient.get(ApiEndpoints.profile);
+    return User.fromJson(response.data as Map<String, dynamic>);
   }
 }

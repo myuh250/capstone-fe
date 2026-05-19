@@ -1,7 +1,9 @@
+import '../core/network/api_client.dart';
+import '../core/network/api_endpoints.dart';
 import '../models/comment.dart';
 
 abstract class CommentRepository {
-  Future<List<Comment>> getComments(String mangaId, {int page = 1});
+  Future<List<Comment>> getComments(String mangaId, {int page = 0});
   Future<Comment> addComment(String mangaId, String content, {String? parentId});
   Future<void> editComment(String commentId, String content);
   Future<void> deleteComment(String commentId);
@@ -9,96 +11,27 @@ abstract class CommentRepository {
   Future<void> ratemanga(String mangaId, int rating);
 }
 
-class FakeCommentRepository implements CommentRepository {
-  final Map<String, List<Comment>> _comments = {};
-  final Map<String, int> _ratings = {};
-  int _idCounter = 100;
+class RealCommentRepository implements CommentRepository {
+  RealCommentRepository(this._apiClient);
+
+  final ApiClient _apiClient;
 
   @override
-  Future<List<Comment>> getComments(String mangaId, {int page = 1}) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!_comments.containsKey(mangaId)) {
-      _comments[mangaId] = _generateFakeComments(mangaId);
+  Future<List<Comment>> getComments(String mangaId, {int page = 0}) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.commentsByManga(mangaId),
+      queryParameters: {'page': page},
+    );
+    final data = response.data;
+    List<dynamic> list;
+    if (data is List) {
+      list = data;
+    } else {
+      list = (data as Map<String, dynamic>)['content'] as List<dynamic>? ?? [];
     }
-    return List.from(_comments[mangaId]!);
-  }
-
-  List<Comment> _generateFakeComments(String mangaId) {
-    final now = DateTime.now();
-    return [
-      Comment(
-        id: '${mangaId}_c1',
-        mangaId: mangaId,
-        userId: 'u1',
-        userName: 'TrungKiên',
-        content:
-            'Bộ này đỉnh quá! Arc mới siêu hay, tác giả vẽ đẹp và nội dung rất ý nghĩa. Highly recommend cho mọi người!',
-        createdAt: now.subtract(const Duration(hours: 3)),
-        replies: [
-          Comment(
-            id: '${mangaId}_c1_r1',
-            mangaId: mangaId,
-            userId: 'u2',
-            userName: 'MinhAnh',
-            content: 'Đồng ý với bạn! Mình cũng vừa đọc xong và cảm thấy rất tuyệt vời.',
-            createdAt: now.subtract(const Duration(hours: 2)),
-            parentId: '${mangaId}_c1',
-          ),
-          Comment(
-            id: '${mangaId}_c1_r2',
-            mangaId: mangaId,
-            userId: 'u3',
-            userName: 'HồngNhung',
-            content: 'Bạn đọc arc nào rồi? Mình mới đọc đến arc 3 thôi.',
-            createdAt: now.subtract(const Duration(hours: 1)),
-            parentId: '${mangaId}_c1',
-          ),
-        ],
-      ),
-      Comment(
-        id: '${mangaId}_c2',
-        mangaId: mangaId,
-        userId: 'u4',
-        userName: 'PhúcLong',
-        content: 'Cốt truyện rất hay nhưng hơi kéo dài. Tuy nhiên character development rất tốt!',
-        createdAt: now.subtract(const Duration(days: 1)),
-      ),
-      Comment(
-        id: '${mangaId}_c3',
-        mangaId: mangaId,
-        userId: 'u5',
-        userName: 'ThảoVân',
-        content: 'Vừa bắt đầu đọc, không biết có hay như mọi người nói không. Xem tiếp đã!',
-        createdAt: now.subtract(const Duration(days: 2)),
-        replies: [
-          Comment(
-            id: '${mangaId}_c3_r1',
-            mangaId: mangaId,
-            userId: 'u1',
-            userName: 'TrungKiên',
-            content: 'Kiên nhẫn đọc đến chapter 50 trở đi là sẽ thấy hay ngay á bạn!',
-            createdAt: now.subtract(const Duration(days: 1, hours: 20)),
-            parentId: '${mangaId}_c3',
-          ),
-        ],
-      ),
-      Comment(
-        id: '${mangaId}_c4',
-        mangaId: mangaId,
-        userId: 'u6',
-        userName: 'QuangHuy',
-        content: '10/10, không có gì để chê. Một trong những bộ manga hay nhất mình từng đọc.',
-        createdAt: now.subtract(const Duration(days: 5)),
-      ),
-      Comment(
-        id: '${mangaId}_c5',
-        mangaId: mangaId,
-        userId: 'u7',
-        userName: 'LanPhuong',
-        content: 'Artwork rất đẹp, đặc biệt là những cảnh hành động siêu mãn nhãn!',
-        createdAt: now.subtract(const Duration(days: 7)),
-      ),
-    ];
+    return list
+        .map((e) => Comment.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -107,56 +40,55 @@ class FakeCommentRepository implements CommentRepository {
     String content, {
     String? parentId,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final comment = Comment(
-      id: 'new_${_idCounter++}',
-      mangaId: mangaId,
-      userId: 'current_user',
-      userName: 'Bạn',
-      content: content,
-      createdAt: DateTime.now(),
-      parentId: parentId,
+    final response = await _apiClient.post(
+      ApiEndpoints.commentsCreate,
+      data: {
+        'mangaId': mangaId,
+        'content': content,
+        if (parentId != null) 'parentId': parentId,
+      },
     );
-    if (!_comments.containsKey(mangaId)) {
-      _comments[mangaId] = _generateFakeComments(mangaId);
-    }
-    if (parentId != null) {
-      final parentIdx =
-          _comments[mangaId]!.indexWhere((c) => c.id == parentId);
-      if (parentIdx >= 0) {
-        final parent = _comments[mangaId]![parentIdx];
-        _comments[mangaId]![parentIdx] = parent.copyWith(
-          replies: [...parent.replies, comment],
-        );
-      }
-    } else {
-      _comments[mangaId]!.insert(0, comment);
-    }
-    return comment;
+    return Comment.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
   Future<void> editComment(String commentId, String content) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await _apiClient.put(
+      ApiEndpoints.commentUpdate(commentId),
+      data: {'content': content},
+    );
   }
 
   @override
   Future<void> deleteComment(String commentId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    for (final mangaId in _comments.keys) {
-      _comments[mangaId]!.removeWhere((c) => c.id == commentId);
-    }
+    await _apiClient.delete(ApiEndpoints.commentDelete(commentId));
   }
 
   @override
   Future<int?> getUserRating(String mangaId) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    return _ratings[mangaId];
+    // Rating lives under /ratings — need userId from current user context
+    // Return null if not rated; caller handles via separate rating provider
+    try {
+      final response = await _apiClient.get(
+        ApiEndpoints.ratingsCreate,
+        queryParameters: {'mangaId': mangaId},
+      );
+      final data = response.data;
+      if (data == null) return null;
+      if (data is Map<String, dynamic>) {
+        return data['score'] as int?;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
   Future<void> ratemanga(String mangaId, int rating) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    _ratings[mangaId] = rating;
+    await _apiClient.post(
+      ApiEndpoints.ratingsCreate,
+      data: {'mangaId': mangaId, 'score': rating},
+    );
   }
 }

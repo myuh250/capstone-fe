@@ -25,6 +25,27 @@ class Comment {
   final List<Comment> replies;
   final bool isEdited;
 
+  factory Comment.fromJson(Map<String, dynamic> json) {
+    return Comment(
+      id: json['id'].toString(),
+      mangaId: json['mangaId']?.toString() ?? '',
+      userId: json['userId']?.toString() ?? '',
+      userName: json['userName'] as String? ?? json['userDisplayName'] as String? ?? '',
+      userAvatarUrl: json['userAvatarUrl'] as String?,
+      content: json['content'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'] as String)
+          : null,
+      parentId: json['parentId']?.toString(),
+      replies: (json['replies'] as List<dynamic>?)
+              ?.map((e) => Comment.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      isEdited: json['isEdited'] as bool? ?? false,
+    );
+  }
+
   Comment copyWith({
     String? id,
     String? mangaId,

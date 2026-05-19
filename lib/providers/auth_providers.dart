@@ -1,10 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/network/api_client.dart';
+import '../core/storage/local_storage.dart';
 import '../models/user.dart';
 import '../repositories/auth_repository.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return FakeAuthRepository();
+  return RealAuthRepository(
+    ref.watch(apiClientProvider),
+    ref.watch(localStorageProvider),
+  );
 });
 
 final authStateProvider =

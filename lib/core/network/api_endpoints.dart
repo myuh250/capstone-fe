@@ -37,19 +37,16 @@ abstract class ApiEndpoints {
   static String authorById(String id) => '/authors/$id';
   static const String authorsSearch = '/authors/search';
 
-  // Library (favorites/bookmarks)
-  static String libraryByUser(String userId) => '/library/user/$userId';
-  static String libraryByStatus(String userId, String status) =>
-      '/library/user/$userId/status/$status';
+  // Library (favorites/bookmarks) — resolved from JWT on BE, no userId in path
+  static const String libraryMe = '/library/me';
+  static String libraryMeByStatus(String status) => '/library/me/status/$status';
   static const String libraryAdd = '/library';
   static String libraryUpdate(String id) => '/library/$id';
   static String libraryDelete(String id) => '/library/$id';
 
-  // Reading History
-  static String historyByUser(String userId) => '/history/user/$userId';
-  static String historyByUserManga(String userId, String mangaId) =>
-      '/history/user/$userId/manga/$mangaId';
-  static const String historyCreate = '/history';
+  // Reading History — resolved from JWT on BE, no userId in path
+  static const String historyMe = '/history/user/me';
+  static String historyMeByManga(String mangaId) => '/history/user/me/manga/$mangaId';
   static const String historyProgress = '/history/progress';
   static String historyProgressByManga(String mangaId) =>
       '/history/progress/manga/$mangaId';
@@ -79,6 +76,9 @@ abstract class ApiEndpoints {
   static String notificationMarkRead(String id) => '/notifications/$id/read';
   static const String notificationsReadAll = '/notifications/read-all';
   static const String notificationPreferences = '/notifications/preferences';
+  static const String notificationDeviceToken = '/notifications/device-token';
+  static String notificationDeviceTokenDelete(String deviceId) =>
+      '/notifications/device-token/$deviceId';
 
   // Premium / Subscriptions
   static const String subscriptions = '/subscriptions';
@@ -115,6 +115,8 @@ abstract class ApiEndpoints {
 
   // AI Chatbot
   static const String aiChat = '/ai/chat';
+  static const String aiSync = '/ai/sync';
+  static String aiSyncJob(String jobId) => '/ai/sync/$jobId';
 
   // Image Proxy
   static const String proxyImage = '/proxy/image';
@@ -127,4 +129,13 @@ abstract class ApiEndpoints {
   static const String offlineMyDownloads = '/offline/my-downloads';
   static String offlineRemove(String chapterId) =>
       '/offline/chapters/$chapterId';
+
+  // Admin - Sync Dashboard
+  static const String adminSyncDashboard = '/admin/sync/dashboard';
+  static const String adminSyncLogs = '/admin/sync/logs';
+  static const String adminSyncConfig = '/admin/sync/config';
+  static String adminSyncTrigger(String jobType) => '/admin/sync/trigger/$jobType';
+
+  // Admin - Chapter early access
+  static String chapterEarlyAccess(String id) => '/chapters/$id/early-access';
 }

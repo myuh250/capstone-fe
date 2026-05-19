@@ -26,6 +26,22 @@ class ReadingHistory {
     return (chaptersRead / totalChapters).clamp(0.0, 1.0);
   }
 
+  factory ReadingHistory.fromJson(Map<String, dynamic> json) {
+    return ReadingHistory(
+      mangaId: json['mangaId']?.toString() ?? '',
+      mangaTitle: json['mangaTitle'] as String? ?? '',
+      coverUrl: json['coverUrl'] as String? ?? '',
+      lastChapterId: json['lastChapterId']?.toString() ?? '',
+      lastChapterNumber: (json['lastChapterNumber'] as num?)?.toDouble() ?? 0,
+      lastReadAt: json['lastReadAt'] != null
+          ? DateTime.parse(json['lastReadAt'] as String)
+          : DateTime.now(),
+      totalChapters: json['totalChapters'] as int? ?? 0,
+      chaptersRead: json['chaptersRead'] as int? ?? 0,
+      lastPageRead: json['lastPageRead'] as int? ?? 0,
+    );
+  }
+
   ReadingHistory copyWith({
     String? mangaId,
     String? mangaTitle,

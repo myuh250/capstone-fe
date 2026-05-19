@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/network/api_client.dart';
 import '../models/manga.dart';
 import '../models/reading_history.dart';
 import '../repositories/library_repository.dart';
 
 final libraryRepositoryProvider = Provider<LibraryRepository>((ref) {
-  return FakeLibraryRepository();
+  return RealLibraryRepository(ref.watch(apiClientProvider));
 });
 
 final readingHistoryProvider =

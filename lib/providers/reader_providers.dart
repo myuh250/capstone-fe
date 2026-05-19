@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/network/api_client.dart';
 import '../features/reader/widgets/reader_settings_panel.dart';
 import '../models/chapter.dart';
 import '../models/chapter_page.dart';
 import '../repositories/chapter_repository.dart';
 
 final chapterRepositoryProvider = Provider<ChapterRepository>((ref) {
-  return FakeChapterRepository();
+  return RealChapterRepository(ref.watch(apiClientProvider));
 });
 
 final chapterPagesProvider =

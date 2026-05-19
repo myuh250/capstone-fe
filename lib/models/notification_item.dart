@@ -35,6 +35,22 @@ class NotificationItem {
   final String? imageUrl;
   final String? targetId;
 
+  factory NotificationItem.fromJson(Map<String, dynamic> json) {
+    return NotificationItem(
+      id: json['id'].toString(),
+      type: NotificationType.values.firstWhere(
+        (t) => t.name == (json['type'] as String?)?.toLowerCase(),
+        orElse: () => NotificationType.system,
+      ),
+      title: json['title'] as String,
+      body: json['body'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      isRead: json['isRead'] as bool? ?? false,
+      imageUrl: json['imageUrl'] as String?,
+      targetId: json['targetId']?.toString(),
+    );
+  }
+
   NotificationItem copyWith({
     String? id,
     NotificationType? type,
