@@ -24,16 +24,24 @@ class RealAuthRepository implements AuthRepository {
   final ApiClient _apiClient;
   final LocalStorage _storage;
 
+  /// Backend returns a flat auth payload (tokens + username/email/role), not a nested `user`.
+  Future<User> _sessionFromAuthResponse(Map<String, dynamic> data) async {
+    await _storage.saveAccessToken(data['accessToken'] as String);
+    await _storage.saveRefreshToken(data['refreshToken'] as String);
+    final user = await getCurrentUser();
+    if (user == null) {
+      throw StateError('Failed to load user profile after authentication');
+    }
+    return user;
+  }
+
   @override
   Future<User> login({required String email, required String password}) async {
     final response = await _apiClient.post(
       ApiEndpoints.login,
       data: {'email': email, 'password': password},
     );
-    final data = response.data as Map<String, dynamic>;
-    await _storage.saveAccessToken(data['accessToken'] as String);
-    await _storage.saveRefreshToken(data['refreshToken'] as String);
-    return User.fromJson(data['user'] as Map<String, dynamic>);
+    return _sessionFromAuthResponse(response.data as Map<String, dynamic>);
   }
 
   @override
@@ -50,10 +58,7 @@ class RealAuthRepository implements AuthRepository {
         'displayName': displayName,
       },
     );
-    final data = response.data as Map<String, dynamic>;
-    await _storage.saveAccessToken(data['accessToken'] as String);
-    await _storage.saveRefreshToken(data['refreshToken'] as String);
-    return User.fromJson(data['user'] as Map<String, dynamic>);
+    return _sessionFromAuthResponse(response.data as Map<String, dynamic>);
   }
 
   @override
@@ -62,10 +67,7 @@ class RealAuthRepository implements AuthRepository {
       ApiEndpoints.googleLogin,
       data: {'idToken': idToken},
     );
-    final data = response.data as Map<String, dynamic>;
-    await _storage.saveAccessToken(data['accessToken'] as String);
-    await _storage.saveRefreshToken(data['refreshToken'] as String);
-    return User.fromJson(data['user'] as Map<String, dynamic>);
+    return _sessionFromAuthResponse(response.data as Map<String, dynamic>);
   }
 
   @override

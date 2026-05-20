@@ -36,27 +36,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _onSubmit() async {
     if (!_formKey.currentState!.validate()) return;
-    await ref.read(authStateProvider.notifier).register(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          displayName: _nameController.text.trim(),
-        );
-
-    if (!mounted) return;
-    final authState = ref.read(authStateProvider);
-    authState.whenOrNull(
-      data: (user) {
-        if (user != null) context.go(RouteNames.verifyEmail);
-      },
-      error: (e, _) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Đăng ký thất bại: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      },
-    );
+    try {
+      await ref.read(authRepositoryProvider).register(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            displayName: _nameController.text.trim(),
+          );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đăng ký thành công!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      context.go(RouteNames.login);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đăng ký thất bại: ${e.toString()}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   @override

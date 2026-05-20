@@ -22,13 +22,13 @@ class Manga with _$Manga {
 }
 
 enum MangaStatus {
-  @JsonValue('ongoing')
+  @JsonValue('ONGOING')
   ongoing,
-  @JsonValue('completed')
+  @JsonValue('COMPLETED')
   completed,
-  @JsonValue('hiatus')
+  @JsonValue('HIATUS')
   hiatus,
-  @JsonValue('cancelled')
+  @JsonValue('CANCELLED')
   cancelled,
 }
 

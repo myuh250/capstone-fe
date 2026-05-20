@@ -81,7 +81,9 @@ class RealMangaRepository implements MangaRepository {
   @override
   Future<Manga> getById(String id) async {
     final response = await _apiClient.get(ApiEndpoints.mangaById(id));
-    return Manga.fromJson(response.data as Map<String, dynamic>);
+    final map = response.data as Map<String, dynamic>;
+    final data = map['data'] as Map<String, dynamic>? ?? map;
+    return Manga.fromJson(data);
   }
 
   @override

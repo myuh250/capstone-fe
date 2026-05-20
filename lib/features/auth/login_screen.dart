@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -39,7 +40,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _onGoogleSignIn() async {
     setState(() => _isGoogleLoading = true);
     try {
-      final googleSignIn = GoogleSignIn(serverClientId: _googleClientId);
+      final googleSignIn = GoogleSignIn(
+        clientId: kIsWeb ? _googleClientId : null,
+        serverClientId: kIsWeb ? null : _googleClientId,
+        // On web, requesting OIDC scopes is required to reliably get an `idToken`.
+        // Empty scopes can result in `idToken == null`.
+        scopes: const ['openid', 'email', 'profile'],
+      );
       final account = await googleSignIn.signIn();
       if (account == null) {
         if (mounted) setState(() => _isGoogleLoading = false);
@@ -49,7 +56,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final auth = await account.authentication;
       final idToken = auth.idToken;
       if (idToken == null) {
-        throw Exception('Failed to get Google ID token');
+        throw Exception(
+          'Failed to get Google ID token. '
+          'Ensure the OAuth client is type "Web application" in Google Cloud Console.',
+        );
       }
 
       await ref.read(authStateProvider.notifier).googleLogin(idToken: idToken);

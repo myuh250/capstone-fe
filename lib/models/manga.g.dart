@@ -40,8 +40,8 @@ Map<String, dynamic> _$$MangaImplToJson(_$MangaImpl instance) =>
     };
 
 const _$MangaStatusEnumMap = {
-  MangaStatus.ongoing: 'ongoing',
-  MangaStatus.completed: 'completed',
-  MangaStatus.hiatus: 'hiatus',
-  MangaStatus.cancelled: 'cancelled',
+  MangaStatus.ongoing: 'ONGOING',
+  MangaStatus.completed: 'COMPLETED',
+  MangaStatus.hiatus: 'HIATUS',
+  MangaStatus.cancelled: 'CANCELLED',
 };
