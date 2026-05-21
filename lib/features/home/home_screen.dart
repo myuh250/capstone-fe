@@ -4,16 +4,15 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/route_names.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/manga.dart';
 import '../../providers/manga_providers.dart';
 import '../../providers/notification_providers.dart';
 import '../../providers/recommendation_providers.dart';
-import '../../shared/widgets/error_view.dart';
 import '../../shared/widgets/recommendation_section.dart';
 import '../notifications/widgets/notification_card.dart';
 import 'widgets/featured_carousel.dart';
-import 'widgets/home_screen_skeleton.dart';
 import 'widgets/manga_horizontal_list.dart';
 import 'widgets/manga_section_header.dart';
 
@@ -27,34 +26,6 @@ class HomeScreen extends ConsumerWidget {
     final popularAsync = ref.watch(popularMangaProvider);
     final completedAsync = ref.watch(completedMangaProvider);
     final recsAsync = ref.watch(recommendationsProvider);
-
-    final isLoading = featuredAsync.isLoading ||
-        latestAsync.isLoading ||
-        popularAsync.isLoading ||
-        completedAsync.isLoading;
-
-    if (isLoading) {
-      return const Scaffold(body: HomeScreenSkeleton());
-    }
-
-    if (featuredAsync.hasError) {
-      return Scaffold(
-        body: ErrorView(
-          message: 'Không thể tải dữ liệu. Vui lòng thử lại.',
-          onRetry: () {
-            ref.invalidate(featuredMangaProvider);
-            ref.invalidate(latestMangaProvider);
-            ref.invalidate(popularMangaProvider);
-            ref.invalidate(completedMangaProvider);
-          },
-        ),
-      );
-    }
-
-    final featured = featuredAsync.valueOrNull ?? [];
-    final latest = latestAsync.valueOrNull ?? [];
-    final popular = popularAsync.valueOrNull ?? [];
-    final completed = completedAsync.valueOrNull ?? [];
 
     return Scaffold(
       body: RefreshIndicator(
@@ -94,39 +65,57 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.sm),
               ],
             ),
-            if (featured.isNotEmpty)
-              SliverToBoxAdapter(
-                child: FeaturedCarousel(
-                  items: featured,
+            // Each section renders independently — a slow section won't block others
+            SliverToBoxAdapter(
+              child: featuredAsync.when(
+                data: (featured) => featured.isEmpty
+                    ? const SizedBox.shrink()
+                    : FeaturedCarousel(
+                        items: featured,
+                        onTapManga: (m) =>
+                            context.push(RouteNames.mangaDetail(m.id)),
+                      ),
+                loading: () => const _SectionSkeleton(height: 220),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: latestAsync.when(
+                data: (latest) => _HomeSection(
+                  title: 'Mới Cập Nhật',
+                  items: latest,
+                  onSeeAll: () => context.push(RouteNames.search),
                   onTapManga: (m) =>
                       context.push(RouteNames.mangaDetail(m.id)),
                 ),
-              ),
-            SliverToBoxAdapter(
-              child: _HomeSection(
-                title: 'Mới Cập Nhật',
-                items: latest,
-                onSeeAll: () => context.push(RouteNames.search),
-                onTapManga: (m) =>
-                    context.push(RouteNames.mangaDetail(m.id)),
+                loading: () => const _SectionSkeleton(),
+                error: (_, __) => const SizedBox.shrink(),
               ),
             ),
             SliverToBoxAdapter(
-              child: _HomeSection(
-                title: 'Phổ Biến',
-                items: popular,
-                onSeeAll: () => context.push(RouteNames.search),
-                onTapManga: (m) =>
-                    context.push(RouteNames.mangaDetail(m.id)),
+              child: popularAsync.when(
+                data: (popular) => _HomeSection(
+                  title: 'Phổ Biến',
+                  items: popular,
+                  onSeeAll: () => context.push(RouteNames.search),
+                  onTapManga: (m) =>
+                      context.push(RouteNames.mangaDetail(m.id)),
+                ),
+                loading: () => const _SectionSkeleton(),
+                error: (_, __) => const SizedBox.shrink(),
               ),
             ),
             SliverToBoxAdapter(
-              child: _HomeSection(
-                title: 'Hoàn Thành',
-                items: completed,
-                onSeeAll: () => context.push(RouteNames.search),
-                onTapManga: (m) =>
-                    context.push(RouteNames.mangaDetail(m.id)),
+              child: completedAsync.when(
+                data: (completed) => _HomeSection(
+                  title: 'Hoàn Thành',
+                  items: completed,
+                  onSeeAll: () => context.push(RouteNames.search),
+                  onTapManga: (m) =>
+                      context.push(RouteNames.mangaDetail(m.id)),
+                ),
+                loading: () => const _SectionSkeleton(),
+                error: (_, __) => const SizedBox.shrink(),
               ),
             ),
             recsAsync.maybeWhen(
@@ -181,3 +170,56 @@ class _HomeSection extends StatelessWidget {
     );
   }
 }
+
+// Lightweight inline skeleton shown per-section while loading,
+// instead of blanking the whole screen.
+class _SectionSkeleton extends StatelessWidget {
+  const _SectionSkeleton({this.height = 160});
+
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: Container(
+              height: 18,
+              width: 120,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceAlt,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ),
+            ),
+          ),
+          const Gap(AppSpacing.md),
+          SizedBox(
+            height: height,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              itemCount: 4,
+              itemBuilder: (_, __) => Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.md),
+                child: Container(
+                  width: 110,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceAlt,
+                    borderRadius:
+                        BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
