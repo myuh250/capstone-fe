@@ -67,7 +67,7 @@ class ChapterListTile extends StatelessWidget {
                     if (_isLocked) ...[
                       const SizedBox(height: 2),
                       const Text(
-                        'Nâng cấp Premium để đọc trước',
+                        'Upgrade to Premium for early access',
                         style: TextStyle(
                           fontSize: 11,
                           color: AppColors.ratingYellow,
@@ -140,11 +140,11 @@ class ChapterListTile extends StatelessWidget {
 
   String _timeAgo(DateTime date) {
     final diff = DateTime.now().difference(date);
-    if (diff.inDays > 365) return '${(diff.inDays / 365).floor()} năm trước';
-    if (diff.inDays > 30) return '${(diff.inDays / 30).floor()} tháng trước';
-    if (diff.inDays > 0) return '${diff.inDays} ngày trước';
-    if (diff.inHours > 0) return '${diff.inHours} giờ trước';
-    return 'Vừa cập nhật';
+    if (diff.inDays > 365) return '${(diff.inDays / 365).floor()} years ago';
+    if (diff.inDays > 30) return '${(diff.inDays / 30).floor()} months ago';
+    if (diff.inDays > 0) return '${diff.inDays} days ago';
+    if (diff.inHours > 0) return '${diff.inHours} hours ago';
+    return 'Just updated';
   }
 }
 
@@ -239,15 +239,15 @@ class _PremiumGateSheet extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                'Nội dung Premium',
+                'Premium Content',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Chương này là nội dung đọc trước dành riêng cho thành viên Premium. '
-                'Nâng cấp để đọc ngay hôm nay!',
+                'This chapter is early-access content exclusive to Premium members. '
+                'Upgrade to read it today!',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -270,7 +270,7 @@ class _PremiumGateSheet extends StatelessWidget {
                   onPressed: onUpgrade,
                   icon: const Icon(Icons.workspace_premium, size: 20),
                   label: const Text(
-                    'Nâng cấp Premium',
+                    'Upgrade to Premium',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -282,7 +282,7 @@ class _PremiumGateSheet extends StatelessWidget {
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text(
-                  'Để sau',
+                  'Maybe Later',
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
               ),

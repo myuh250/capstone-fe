@@ -44,10 +44,10 @@ class _ChatbotPanelState extends State<ChatbotPanel> {
   final List<ChatMessage> _messages = [];
 
   static const _suggestions = [
-    'Gợi ý manga hành động',
-    'Manga hoàn thành hay nhất',
-    'Manga tương tự One Piece',
-    'Manga ngắn để đọc nhanh',
+    'Suggest action manga',
+    'Best completed manga',
+    'Manga similar to One Piece',
+    'Short manga for quick reads',
   ];
 
   @override
@@ -56,8 +56,8 @@ class _ChatbotPanelState extends State<ChatbotPanel> {
     _messages.add(ChatMessage(
       role: ChatRole.bot,
       text: widget.initialContext != null
-          ? 'Xin chào! Tôi có thể giúp bạn tìm hiểu về "${widget.initialContext}" hoặc gợi ý manga khác. Bạn muốn biết gì?'
-          : 'Xin chào! Tôi là trợ lý AI của MangaApp. Tôi có thể giúp bạn tìm manga phù hợp, trả lời câu hỏi về nội dung, hoặc gợi ý dựa trên sở thích của bạn. Bạn cần gì?',
+          ? 'Hello! I can help you learn about "${widget.initialContext}" or suggest other manga. What would you like to know?'
+          : 'Hello! I\'m the AI assistant for MangaApp. I can help you find manga, answer questions about content, or give recommendations based on your preferences. How can I help?',
       timestamp: DateTime.now(),
     ));
   }
@@ -98,30 +98,30 @@ class _ChatbotPanelState extends State<ChatbotPanel> {
 
   String _generateFakeResponse(String query) {
     final q = query.toLowerCase();
-    if (q.contains('hành động') || q.contains('action')) {
-      return 'Dựa trên sở thích của bạn, tôi gợi ý:\n\n'
-          '• **One Piece** — Hành trình tìm kho báu huyền thoại\n'
-          '• **Attack on Titan** — Nhân loại chiến đấu với người khổng lồ\n'
-          '• **Chainsaw Man** — Thợ diệt quỷ độc đáo và bạo lực\n\n'
-          'Bạn muốn biết thêm về manga nào?';
+    if (q.contains('action') || q.contains('action')) {
+      return 'Based on your preferences, I recommend:\n\n'
+          '• **One Piece** — An epic journey to find the legendary treasure\n'
+          '• **Attack on Titan** — Humanity battles against giants\n'
+          '• **Chainsaw Man** — A unique and brutal demon hunter story\n\n'
+          'Which manga would you like to know more about?';
     }
-    if (q.contains('hoàn thành') || q.contains('completed')) {
-      return 'Những manga đã hoàn thành xuất sắc:\n\n'
-          '• **Fullmetal Alchemist** — 108 chương\n'
-          '• **Death Note** — 108 chương\n'
-          '• **Berserk** — Huyền thoại fantasy dark\n\n'
-          'Tất cả đều rất đáng đọc!';
+    if (q.contains('completed') || q.contains('completed')) {
+      return 'Excellent completed manga:\n\n'
+          '• **Fullmetal Alchemist** — 108 chapters\n'
+          '• **Death Note** — 108 chapters\n'
+          '• **Berserk** — Legendary dark fantasy\n\n'
+          'All highly recommended!';
     }
     if (q.contains('one piece')) {
-      return 'Nếu bạn thích One Piece, hãy thử:\n\n'
-          '• **Fairy Tail** — Hội pháp sư phiêu lưu\n'
-          '• **Hunter x Hunter** — Thế giới kỳ bí và phong phú\n'
-          '• **Black Clover** — Phép thuật và hành trình của kẻ không có năng lực\n\n'
-          'Cả ba đều có cốt truyện dài kỳ và thú vị!';
+      return 'If you like One Piece, try:\n\n'
+          '• **Fairy Tail** — A wizard guild on adventures\n'
+          '• **Hunter x Hunter** — A rich and mysterious world\n'
+          '• **Black Clover** — Magic and the journey of a powerless boy\n\n'
+          'All three have long-running and engaging storylines!';
     }
-    return 'Đây là câu trả lời mô phỏng cho: "$query".\n\n'
-        'Trong phiên bản thực tế, AI sẽ phân tích sở thích của bạn và đưa ra gợi ý cá nhân hóa. '
-        'Bạn có muốn tôi gợi ý thể loại nào khác không?';
+    return 'This is a simulated response for: "$query".\n\n'
+        'In the production version, AI will analyze your preferences and provide personalized recommendations. '
+        'Would you like me to suggest another genre?';
   }
 
   void _scrollToBottom() {
@@ -222,7 +222,7 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Trợ lý AI',
+                'AI Assistant',
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
               ),
               Row(
@@ -237,7 +237,7 @@ class _Header extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   const Text(
-                    'Trực tuyến',
+                    'Online',
                     style: TextStyle(
                       fontSize: 11,
                       color: AppColors.textSecondary,
@@ -449,7 +449,7 @@ class ChatInput extends StatelessWidget {
               textInputAction: TextInputAction.send,
               onSubmitted: isLoading ? null : onSend,
               decoration: InputDecoration(
-                hintText: 'Hỏi gì đó...',
+                hintText: 'Ask something...',
                 hintStyle: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 14,

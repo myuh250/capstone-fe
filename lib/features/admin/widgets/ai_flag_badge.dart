@@ -21,9 +21,9 @@ class AIFlagBadge extends StatelessWidget {
   }
 
   String get _label {
-    if (confidence >= 0.8) return 'AI: Nguy cơ cao';
-    if (confidence >= 0.5) return 'AI: Đáng ngờ';
-    return 'AI: Bình thường';
+    if (confidence >= 0.8) return 'AI: High Risk';
+    if (confidence >= 0.5) return 'AI: Suspicious';
+    return 'AI: Normal';
   }
 
   @override
@@ -73,7 +73,7 @@ class AIFlagBadge extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Đánh giá AI',
+                  'AI Assessment',
                   style: TextStyle(
                     fontSize: 12,
                     color: _color,
@@ -99,7 +99,7 @@ class AIFlagBadge extends StatelessWidget {
                 ),
               ),
               Text(
-                'tin cậy',
+                'confidence',
                 style: TextStyle(
                   fontSize: 10,
                   color: _color.withAlpha(180),

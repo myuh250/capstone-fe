@@ -22,14 +22,14 @@ class ModerationScreen extends ConsumerWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Kiểm duyệt nội dung'),
+          title: const Text('Content Moderation'),
           bottom: const TabBar(
             indicatorColor: AppColors.primary,
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.textSecondary,
             tabs: [
-              Tab(text: 'Chờ xử lý'),
-              Tab(text: 'Bình luận'),
+              Tab(text: 'Pending'),
+              Tab(text: 'Comments'),
               Tab(text: 'Manga'),
             ],
           ),
@@ -59,7 +59,7 @@ class _ModerationTab extends ConsumerWidget {
     return reportsAsync.when(
       loading: () => const _ModerationSkeleton(),
       error: (e, _) => ErrorView(
-        message: 'Không thể tải nội dung kiểm duyệt',
+        message: 'Failed to load moderation content',
         onRetry: () => ref.invalidate(reportsProvider),
       ),
       data: (allReports) {
@@ -72,7 +72,7 @@ class _ModerationTab extends ConsumerWidget {
         if (reports.isEmpty) {
           return const EmptyState(
             icon: Icons.check_circle_outline,
-            message: 'Tất cả báo cáo đã được xử lý hoặc không có nội dung cần kiểm duyệt',
+            message: 'All reports have been handled or there is no content to moderate',
           );
         }
 

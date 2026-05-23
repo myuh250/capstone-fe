@@ -99,22 +99,55 @@ class CommentsNotifier extends StateNotifier<CommentsState> {
   }
 }
 
-final userRatingProvider =
-    StateNotifierProvider.family<UserRatingNotifier, AsyncValue<int?>, String>(
-  (ref, mangaId) => UserRatingNotifier(
+final mangaRatingStatsProvider = StateNotifierProvider.family<
+    MangaRatingStatsNotifier, AsyncValue<RatingStats>, String>(
+  (ref, mangaId) => MangaRatingStatsNotifier(
     ref.read(commentRepositoryProvider),
     mangaId,
   ),
 );
 
-class UserRatingNotifier extends StateNotifier<AsyncValue<int?>> {
-  UserRatingNotifier(this._repo, this._mangaId)
+class MangaRatingStatsNotifier extends StateNotifier<AsyncValue<RatingStats>> {
+  MangaRatingStatsNotifier(this._repo, this._mangaId)
       : super(const AsyncValue.loading()) {
     _load();
   }
 
   final CommentRepository _repo;
   final String _mangaId;
+
+  Future<void> _load() async {
+    try {
+      final stats = await _repo.getRatingStats(_mangaId);
+      state = AsyncValue.data(stats);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  void update(RatingStats stats) {
+    state = AsyncValue.data(stats);
+  }
+}
+
+final userRatingProvider =
+    StateNotifierProvider.family<UserRatingNotifier, AsyncValue<int?>, String>(
+  (ref, mangaId) => UserRatingNotifier(
+    ref.read(commentRepositoryProvider),
+    mangaId,
+    ref.read(mangaRatingStatsProvider(mangaId).notifier),
+  ),
+);
+
+class UserRatingNotifier extends StateNotifier<AsyncValue<int?>> {
+  UserRatingNotifier(this._repo, this._mangaId, this._statsNotifier)
+      : super(const AsyncValue.loading()) {
+    _load();
+  }
+
+  final CommentRepository _repo;
+  final String _mangaId;
+  final MangaRatingStatsNotifier _statsNotifier;
 
   Future<void> _load() async {
     try {
@@ -126,7 +159,8 @@ class UserRatingNotifier extends StateNotifier<AsyncValue<int?>> {
   }
 
   Future<void> submitRating(int rating) async {
-    await _repo.ratemanga(_mangaId, rating);
     state = AsyncValue.data(rating);
+    final stats = await _repo.ratemanga(_mangaId, rating);
+    _statsNotifier.update(stats);
   }
 }

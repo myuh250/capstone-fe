@@ -22,6 +22,7 @@ abstract class ApiEndpoints {
   // Manga
   static const String mangas = '/mangas';
   static String mangaById(String id) => '/mangas/$id';
+  static String mangaBySlug(String slug) => '/mangas/by-slug/$slug';
   static const String mangasTrending = '/mangas/trending';
   static const String mangasRecent = '/mangas/recent';
 

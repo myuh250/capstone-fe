@@ -5,6 +5,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../models/comment.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/comment_providers.dart';
 import 'comment_card.dart';
@@ -34,7 +35,7 @@ class CommentSection extends ConsumerWidget {
           child: Row(
             children: [
               Text(
-                'Bình luận',
+                'Comments',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -72,7 +73,7 @@ class CommentSection extends ConsumerWidget {
                 onPressed: () =>
                     ref.read(commentsProvider(mangaId).notifier).refresh(),
                 icon: const Icon(Icons.refresh, size: 16),
-                label: const Text('Tải lại bình luận'),
+                label: const Text('Reload comments'),
               ),
             ),
           )
@@ -84,7 +85,7 @@ class CommentSection extends ConsumerWidget {
             ),
             child: Center(
               child: Text(
-                'Chưa có bình luận nào. Hãy là người đầu tiên!',
+                'No comments yet. Be the first!',
                 style: TextStyle(color: AppColors.textSecondary),
                 textAlign: TextAlign.center,
               ),
@@ -102,27 +103,9 @@ class CommentSection extends ConsumerWidget {
             ),
             itemBuilder: (_, i) {
               final comment = commentsState.comments[i];
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CommentCard(
-                      comment: comment,
-                      onReply: () {},
-                      onDelete: comment.userId == 'current_user'
-                          ? () => ref
-                              .read(commentsProvider(mangaId).notifier)
-                              .deleteComment(comment.id)
-                          : null,
-                    ),
-                    if (comment.replies.isNotEmpty || true)
-                      ReplyThread(
-                        parentComment: comment,
-                        mangaId: mangaId,
-                      ),
-                  ],
-                ),
+              return _CommentItem(
+                comment: comment,
+                mangaId: mangaId,
               );
             },
           ),
@@ -137,7 +120,7 @@ class CommentSection extends ConsumerWidget {
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Center(
               child: Text(
-                'Đăng nhập để bình luận',
+                'Sign in to comment',
                 style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 14,
@@ -147,6 +130,67 @@ class CommentSection extends ConsumerWidget {
           ),
         const Gap(AppSpacing.md),
       ],
+    );
+  }
+}
+
+class _CommentItem extends ConsumerStatefulWidget {
+  const _CommentItem({
+    required this.comment,
+    required this.mangaId,
+  });
+
+  final Comment comment;
+  final String mangaId;
+
+  @override
+  ConsumerState<_CommentItem> createState() => _CommentItemState();
+}
+
+class _CommentItemState extends ConsumerState<_CommentItem> {
+  bool _showReplyInput = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CommentCard(
+            comment: widget.comment,
+            onReply: () => setState(() => _showReplyInput = true),
+            onDelete: widget.comment.userId == 'current_user'
+                ? () => ref
+                    .read(commentsProvider(widget.mangaId).notifier)
+                    .deleteComment(widget.comment.id)
+                : null,
+          ),
+          ReplyThread(
+            parentComment: widget.comment,
+            mangaId: widget.mangaId,
+          ),
+          if (_showReplyInput)
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.xxl + AppSpacing.md,
+                top: AppSpacing.sm,
+              ),
+              child: CommentInput(
+                hintText: 'Reply to ${widget.comment.userName}...',
+                onSubmit: (text) async {
+                  final ok = await ref
+                      .read(commentsProvider(widget.mangaId).notifier)
+                      .replyToComment(widget.comment.id, text);
+                  if (ok) setState(() => _showReplyInput = false);
+                  return ok;
+                },
+                onCancel: () => setState(() => _showReplyInput = false),
+                isCompact: true,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

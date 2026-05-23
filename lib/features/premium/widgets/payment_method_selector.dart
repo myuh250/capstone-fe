@@ -53,8 +53,8 @@ class PaymentMethodSelector extends StatelessWidget {
                         ),
                         Text(
                           method == PaymentMethod.momo
-                              ? 'Thanh toán qua ví MoMo'
-                              : 'Thanh toán qua VNPAY',
+                              ? 'Pay with MoMo'
+                              : 'Pay with VNPAY',
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary,

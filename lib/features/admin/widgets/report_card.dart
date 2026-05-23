@@ -56,7 +56,7 @@ class ReportCard extends StatelessWidget {
                       size: 12, color: AppColors.error),
                   const SizedBox(width: 3),
                   Text(
-                    'Quá 48h chưa xử lý',
+                    'Unresolved for over 48h',
                     style: TextStyle(
                       fontSize: 11,
                       color: AppColors.error,
@@ -98,7 +98,7 @@ class ReportCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 3),
                 Text(
-                  'Báo cáo bởi ${report.reportedBy}',
+                  'Reported by ${report.reportedBy}',
                   style: const TextStyle(
                     fontSize: 11,
                     color: AppColors.textSecondary,
@@ -122,10 +122,10 @@ class ReportCard extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
-    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
-    if (diff.inDays < 7) return '${diff.inDays} ngày trước';
-    return '${(diff.inDays / 7).floor()} tuần trước';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} minutes ago';
+    if (diff.inHours < 24) return '${diff.inHours} hours ago';
+    if (diff.inDays < 7) return '${diff.inDays} days ago';
+    return '${(diff.inDays / 7).floor()} weeks ago';
   }
 }
 
@@ -204,9 +204,9 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, label) = switch (status) {
-      ReportStatus.pending => (AppColors.warning, 'Chờ xử lý'),
-      ReportStatus.resolved => (AppColors.statusGreen, 'Đã xử lý'),
-      ReportStatus.dismissed => (AppColors.textSecondary, 'Bỏ qua'),
+      ReportStatus.pending => (AppColors.warning, 'Pending'),
+      ReportStatus.resolved => (AppColors.statusGreen, 'Resolved'),
+      ReportStatus.dismissed => (AppColors.textSecondary, 'Dismissed'),
     };
     return Container(
       padding: const EdgeInsets.symmetric(

@@ -73,7 +73,7 @@ class AvatarPickerBottomSheet extends StatelessWidget {
               vertical: AppSpacing.sm,
             ),
             child: Text(
-              'Thay đổi ảnh đại diện',
+              'Change Avatar',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -81,18 +81,18 @@ class AvatarPickerBottomSheet extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.photo_camera_outlined),
-            title: const Text('Chụp ảnh'),
+            title: const Text('Take Photo'),
             onTap: () => Navigator.of(context).pop('camera'),
           ),
           ListTile(
             leading: const Icon(Icons.photo_library_outlined),
-            title: const Text('Chọn từ thư viện'),
+            title: const Text('Choose from Gallery'),
             onTap: () => Navigator.of(context).pop('gallery'),
           ),
           ListTile(
             leading: Icon(Icons.delete_outline, color: AppColors.error),
             title: Text(
-              'Xóa ảnh đại diện',
+              'Remove Avatar',
               style: TextStyle(color: AppColors.error),
             ),
             onTap: () => Navigator.of(context).pop('remove'),

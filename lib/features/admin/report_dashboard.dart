@@ -22,7 +22,7 @@ class ReportDashboard extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Báo cáo'),
+        title: const Text('Reports'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -41,14 +41,14 @@ class ReportDashboard extends ConsumerWidget {
       body: reportsAsync.when(
         loading: () => const _ReportsSkeleton(),
         error: (e, _) => ErrorView(
-          message: 'Không thể tải danh sách báo cáo',
+          message: 'Failed to load report list',
           onRetry: () => ref.invalidate(reportsProvider),
         ),
         data: (reports) {
           if (reports.isEmpty) {
             return const EmptyState(
               icon: Icons.flag_outlined,
-              message: 'Tất cả báo cáo đã được xử lý hoặc chưa có báo cáo mới',
+              message: 'All reports have been handled or there are no new reports',
             );
           }
           return ListView.separated(

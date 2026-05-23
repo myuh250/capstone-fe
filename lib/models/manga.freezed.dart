@@ -23,6 +23,7 @@ Manga _$MangaFromJson(Map<String, dynamic> json) {
 mixin _$Manga {
   String get id => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
+  String? get slug => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   String get coverUrl => throw _privateConstructorUsedError;
   List<String> get tags => throw _privateConstructorUsedError;
@@ -49,6 +50,7 @@ abstract class $MangaCopyWith<$Res> {
   $Res call({
     String id,
     String title,
+    String? slug,
     String? description,
     String coverUrl,
     List<String> tags,
@@ -77,6 +79,7 @@ class _$MangaCopyWithImpl<$Res, $Val extends Manga>
   $Res call({
     Object? id = null,
     Object? title = null,
+    Object? slug = freezed,
     Object? description = freezed,
     Object? coverUrl = null,
     Object? tags = null,
@@ -96,6 +99,10 @@ class _$MangaCopyWithImpl<$Res, $Val extends Manga>
                 ? _value.title
                 : title // ignore: cast_nullable_to_non_nullable
                       as String,
+            slug: freezed == slug
+                ? _value.slug
+                : slug // ignore: cast_nullable_to_non_nullable
+                      as String?,
             description: freezed == description
                 ? _value.description
                 : description // ignore: cast_nullable_to_non_nullable
@@ -145,6 +152,7 @@ abstract class _$$MangaImplCopyWith<$Res> implements $MangaCopyWith<$Res> {
   $Res call({
     String id,
     String title,
+    String? slug,
     String? description,
     String coverUrl,
     List<String> tags,
@@ -172,6 +180,7 @@ class __$$MangaImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? title = null,
+    Object? slug = freezed,
     Object? description = freezed,
     Object? coverUrl = null,
     Object? tags = null,
@@ -191,6 +200,10 @@ class __$$MangaImplCopyWithImpl<$Res>
             ? _value.title
             : title // ignore: cast_nullable_to_non_nullable
                   as String,
+        slug: freezed == slug
+            ? _value.slug
+            : slug // ignore: cast_nullable_to_non_nullable
+                  as String?,
         description: freezed == description
             ? _value.description
             : description // ignore: cast_nullable_to_non_nullable
@@ -234,6 +247,7 @@ class _$MangaImpl implements _Manga {
   const _$MangaImpl({
     required this.id,
     required this.title,
+    this.slug,
     this.description,
     required this.coverUrl,
     final List<String> tags = const [],
@@ -251,6 +265,8 @@ class _$MangaImpl implements _Manga {
   final String id;
   @override
   final String title;
+  @override
+  final String? slug;
   @override
   final String? description;
   @override
@@ -280,7 +296,7 @@ class _$MangaImpl implements _Manga {
 
   @override
   String toString() {
-    return 'Manga(id: $id, title: $title, description: $description, coverUrl: $coverUrl, tags: $tags, status: $status, averageRating: $averageRating, totalChapters: $totalChapters, author: $author, updatedAt: $updatedAt)';
+    return 'Manga(id: $id, title: $title, slug: $slug, description: $description, coverUrl: $coverUrl, tags: $tags, status: $status, averageRating: $averageRating, totalChapters: $totalChapters, author: $author, updatedAt: $updatedAt)';
   }
 
   @override
@@ -290,6 +306,7 @@ class _$MangaImpl implements _Manga {
             other is _$MangaImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.title, title) || other.title == title) &&
+            (identical(other.slug, slug) || other.slug == slug) &&
             (identical(other.description, description) ||
                 other.description == description) &&
             (identical(other.coverUrl, coverUrl) ||
@@ -311,6 +328,7 @@ class _$MangaImpl implements _Manga {
     runtimeType,
     id,
     title,
+    slug,
     description,
     coverUrl,
     const DeepCollectionEquality().hash(_tags),
@@ -339,6 +357,7 @@ abstract class _Manga implements Manga {
   const factory _Manga({
     required final String id,
     required final String title,
+    final String? slug,
     final String? description,
     required final String coverUrl,
     final List<String> tags,
@@ -355,6 +374,8 @@ abstract class _Manga implements Manga {
   String get id;
   @override
   String get title;
+  @override
+  String? get slug;
   @override
   String? get description;
   @override

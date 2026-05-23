@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -8,12 +9,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/manga.dart';
 import '../../providers/manga_providers.dart';
-import '../../providers/notification_providers.dart';
 import '../../providers/recommendation_providers.dart';
-import '../../shared/widgets/recommendation_section.dart';
-import '../notifications/widgets/notification_card.dart';
+import '../../shared/widgets/manga_card.dart';
 import 'widgets/featured_carousel.dart';
-import 'widgets/manga_horizontal_list.dart';
 import 'widgets/manga_section_header.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -44,26 +42,6 @@ class HomeScreen extends ConsumerWidget {
                 'MangaApp',
                 style: TextStyle(fontWeight: FontWeight.w700),
               ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () => context.go(RouteNames.search),
-                ),
-                Consumer(
-                  builder: (_, ref, __) {
-                    final unread = ref.watch(unreadCountProvider);
-                    return IconButton(
-                      icon: NotificationBadge(
-                        count: unread,
-                        child: const Icon(Icons.notifications_outlined),
-                      ),
-                      onPressed: () =>
-                          context.push(RouteNames.notifications),
-                    );
-                  },
-                ),
-                const SizedBox(width: AppSpacing.sm),
-              ],
             ),
             // Each section renders independently — a slow section won't block others
             SliverToBoxAdapter(
@@ -73,7 +51,7 @@ class HomeScreen extends ConsumerWidget {
                     : FeaturedCarousel(
                         items: featured,
                         onTapManga: (m) =>
-                            context.push(RouteNames.mangaDetail(m.id)),
+                            context.push(RouteNames.mangaDetail(m.slug ?? m.id)),
                       ),
                 loading: () => const _SectionSkeleton(height: 220),
                 error: (_, __) => const SizedBox.shrink(),
@@ -82,11 +60,10 @@ class HomeScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: latestAsync.when(
                 data: (latest) => _HomeSection(
-                  title: 'Mới Cập Nhật',
+                  title: 'Latest Updates',
                   items: latest,
-                  onSeeAll: () => context.push(RouteNames.search),
                   onTapManga: (m) =>
-                      context.push(RouteNames.mangaDetail(m.id)),
+                      context.push(RouteNames.mangaDetail(m.slug ?? m.id)),
                 ),
                 loading: () => const _SectionSkeleton(),
                 error: (_, __) => const SizedBox.shrink(),
@@ -95,11 +72,10 @@ class HomeScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: popularAsync.when(
                 data: (popular) => _HomeSection(
-                  title: 'Phổ Biến',
+                  title: 'Popular',
                   items: popular,
-                  onSeeAll: () => context.push(RouteNames.search),
                   onTapManga: (m) =>
-                      context.push(RouteNames.mangaDetail(m.id)),
+                      context.push(RouteNames.mangaDetail(m.slug ?? m.id)),
                 ),
                 loading: () => const _SectionSkeleton(),
                 error: (_, __) => const SizedBox.shrink(),
@@ -108,11 +84,10 @@ class HomeScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: completedAsync.when(
                 data: (completed) => _HomeSection(
-                  title: 'Hoàn Thành',
+                  title: 'Completed',
                   items: completed,
-                  onSeeAll: () => context.push(RouteNames.search),
                   onTapManga: (m) =>
-                      context.push(RouteNames.mangaDetail(m.id)),
+                      context.push(RouteNames.mangaDetail(m.slug ?? m.id)),
                 ),
                 loading: () => const _SectionSkeleton(),
                 error: (_, __) => const SizedBox.shrink(),
@@ -120,10 +95,12 @@ class HomeScreen extends ConsumerWidget {
             ),
             recsAsync.maybeWhen(
               data: (recs) => SliverToBoxAdapter(
-                child: RecommendationSection(
-                  recommendations: recs,
-                  onTapManga: (id) =>
-                      context.push(RouteNames.mangaDetail(id)),
+                child: _HomeSection(
+                  title: 'Recommended for You',
+                  items: recs.map((r) => r.manga).toList(),
+                  onTapManga: (m) =>
+                      context.push(RouteNames.mangaDetail(m.slug ?? m.id)),
+                  showRating: false,
                 ),
               ),
               orElse: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
@@ -136,37 +113,120 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _HomeSection extends StatelessWidget {
+class _HomeSection extends StatefulWidget {
   const _HomeSection({
     required this.title,
     required this.items,
-    this.onSeeAll,
     this.onTapManga,
+    this.showRating = true,
   });
 
   final String title;
   final List<Manga> items;
-  final VoidCallback? onSeeAll;
   final void Function(Manga manga)? onTapManga;
+  final bool showRating;
+
+  @override
+  State<_HomeSection> createState() => _HomeSectionState();
+}
+
+class _HomeSectionState extends State<_HomeSection> {
+  int _currentPage = 0;
+  static const double _cardWidth = 130;
+  static const double _cardSpacing = AppSpacing.md;
+  static const double _horizontalPadding = AppSpacing.lg;
+
+  int _itemsPerPage(double availableWidth) {
+    final usable = availableWidth - _horizontalPadding * 2;
+    return ((usable + _cardSpacing) / (_cardWidth + _cardSpacing)).floor().clamp(1, widget.items.length);
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) return const SizedBox.shrink();
+    if (widget.items.isEmpty) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: MangaSectionHeader(title: title, onSeeAll: onSeeAll),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final perPage = _itemsPerPage(constraints.maxWidth);
+        final pageCount = (widget.items.length / perPage).ceil();
+
+        return Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: MangaSectionHeader(title: widget.title),
+              ),
+              const Gap(AppSpacing.md),
+              SizedBox(
+                height: 260,
+                child: ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(
+                    dragDevices: {
+                      PointerDeviceKind.touch,
+                      PointerDeviceKind.mouse,
+                    },
+                  ),
+                  child: PageView.builder(
+                    itemCount: pageCount,
+                    onPageChanged: (i) => setState(() => _currentPage = i),
+                    itemBuilder: (_, pageIndex) {
+                      final start = pageIndex * perPage;
+                      final end = (start + perPage)
+                          .clamp(0, widget.items.length);
+                      final pageItems = widget.items.sublist(start, end);
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: _horizontalPadding),
+                        child: Row(
+                          children: [
+                            for (int i = 0; i < pageItems.length; i++) ...[
+                              if (i > 0)
+                                const SizedBox(width: _cardSpacing),
+                              Expanded(
+                                child: MangaCard(
+                                  manga: pageItems[i],
+                                  onTap: widget.onTapManga != null
+                                      ? () => widget.onTapManga!(pageItems[i])
+                                      : null,
+                                  showRating: widget.showRating,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              if (pageCount > 1) ...[
+                const Gap(AppSpacing.sm),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(pageCount, (i) {
+                    final isActive = i == _currentPage;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: isActive ? 16 : 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: isActive ? AppColors.primary : AppColors.divider,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ],
           ),
-          const Gap(AppSpacing.md),
-          MangaHorizontalList(items: items, onTapManga: onTapManga),
-        ],
-      ),
+        );
+      },
     );
   }
 }

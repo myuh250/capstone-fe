@@ -47,7 +47,7 @@ class RatingDisplay extends StatelessWidget {
               ],
             ),
             Text(
-              '$ratingCount đánh giá',
+              '$ratingCount ratings',
               style: const TextStyle(
                 fontSize: 11,
                 color: AppColors.textSecondary,
@@ -69,7 +69,7 @@ class RatingDisplay extends StatelessWidget {
                   size: 28,
                 ),
                 Text(
-                  userRating != null ? 'Đã đánh giá' : 'Đánh giá',
+                  userRating != null ? 'Rated' : 'Rate',
                   style: TextStyle(
                     fontSize: 11,
                     color: userRating != null
@@ -130,7 +130,7 @@ class UserRatingBadge extends StatelessWidget {
           const Icon(Icons.star_rounded, color: AppColors.ratingYellow, size: 14),
           const SizedBox(width: 3),
           Text(
-            'Bạn đã đánh giá: $rating/5',
+            'You rated: $rating/5',
             style: const TextStyle(
               fontSize: 12,
               color: AppColors.ratingYellow,

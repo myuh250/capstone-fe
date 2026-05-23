@@ -73,7 +73,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         error: (e, _) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Google Sign-In thất bại: ${e.toString()}'),
+              content: Text('Google Sign-In failed: ${e.toString()}'),
               backgroundColor: AppColors.error,
             ),
           );
@@ -83,7 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Google Sign-In thất bại: ${e.toString()}'),
+            content: Text('Google Sign-In failed: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -109,7 +109,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       error: (e, _) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Đăng nhập thất bại: ${e.toString()}'),
+            content: Text('Sign in failed: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -135,14 +135,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   _AppLogo(),
                   const Gap(AppSpacing.xxxl),
                   Text(
-                    'Đăng nhập',
+                    'Sign In',
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
                   ),
                   const Gap(AppSpacing.sm),
                   Text(
-                    'Chào mừng trở lại! Đăng nhập để tiếp tục đọc manga.',
+                    'Welcome back! Sign in to continue reading manga.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -165,7 +165,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const Gap(AppSpacing.lg),
                         AuthTextField(
                           controller: _passwordController,
-                          label: 'Mật khẩu',
+                          label: 'Password',
                           hint: '••••••••',
                           prefixIcon: Icons.lock_outline,
                           isPassword: true,
@@ -185,7 +185,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       setState(() => _rememberMe = v ?? false),
                               activeColor: AppColors.primary,
                             ),
-                            const Text('Nhớ đăng nhập'),
+                            const Text('Remember me'),
                             const Spacer(),
                             TextButton(
                               onPressed: isLoading
@@ -194,7 +194,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         RouteNames.forgotPassword,
                                       ),
                               child: const Text(
-                                'Quên mật khẩu?',
+                                'Forgot password?',
                                 style: TextStyle(color: AppColors.primary),
                               ),
                             ),
@@ -222,7 +222,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ),
                                 )
                               : const Text(
-                                  'Đăng nhập',
+                                  'Sign In',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -247,7 +247,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Chưa có tài khoản? ',
+                        'Don\'t have an account? ',
                         style: TextStyle(color: AppColors.textSecondary),
                       ),
                       TextButton(
@@ -255,7 +255,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ? null
                             : () => context.push(RouteNames.register),
                         child: const Text(
-                          'Đăng ký ngay',
+                          'Sign Up',
                           style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,
@@ -287,7 +287,7 @@ class _OrDivider extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Text(
-            'hoặc',
+            'or',
             style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13,

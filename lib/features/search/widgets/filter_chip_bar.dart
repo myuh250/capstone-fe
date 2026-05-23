@@ -30,7 +30,7 @@ class FilterChipBar extends StatelessWidget {
         children: [
           _FilterButton(
             icon: Icons.tune,
-            label: 'Lọc',
+            label: 'Filter',
             isActive: hasActiveFilters,
             onTap: onFilterTap,
           ),
@@ -60,17 +60,17 @@ class FilterChipBar extends StatelessWidget {
   }
 
   String _statusLabel(MangaStatus status) => switch (status) {
-        MangaStatus.ongoing => 'Đang tiến hành',
-        MangaStatus.completed => 'Hoàn thành',
-        MangaStatus.hiatus => 'Tạm ngưng',
-        MangaStatus.cancelled => 'Đã hủy',
+        MangaStatus.ongoing => 'Ongoing',
+        MangaStatus.completed => 'Completed',
+        MangaStatus.hiatus => 'Hiatus',
+        MangaStatus.cancelled => 'Cancelled',
       };
 
   String _sortLabel(String sortBy) => switch (sortBy) {
-        'rating' => 'Đánh giá cao nhất',
-        'title' => 'Tiêu đề A-Z',
-        'latest' => 'Mới nhất',
-        _ => 'Sắp xếp',
+        'rating' => 'Highest Rated',
+        'title' => 'Title A-Z',
+        'latest' => 'Latest',
+        _ => 'Sort',
       };
 }
 

@@ -21,7 +21,7 @@ class MangaEditScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(mangaId == 'new' ? 'Thêm manga mới' : 'Chỉnh sửa manga'),
+        title: Text(mangaId == 'new' ? 'Add New Manga' : 'Edit Manga'),
       ),
       body: mangaAsync.when(
         data: (manga) => _MangaEditForm(manga: manga),
@@ -30,7 +30,7 @@ class MangaEditScreen extends ConsumerWidget {
           child: LoadingSkeleton(width: double.infinity, height: 400),
         ),
         error: (e, _) => ErrorView(
-          message: 'Không thể tải thông tin manga.',
+          message: 'Failed to load manga details.',
           onRetry: () => ref.invalidate(mangaDetailProvider(mangaId)),
         ),
       ),
@@ -85,7 +85,7 @@ class _MangaEditFormState extends ConsumerState<_MangaEditForm> {
     setState(() => _isSaving = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Đã lưu thành công!'),
+        content: Text('Saved successfully!'),
         backgroundColor: AppColors.statusGreen,
       ),
     );
@@ -104,35 +104,35 @@ class _MangaEditFormState extends ConsumerState<_MangaEditForm> {
             const Gap(AppSpacing.lg),
             _FormField(
               controller: _coverUrlController,
-              label: 'URL ảnh bìa',
+              label: 'Cover Image URL',
               validator: (v) =>
-                  v == null || v.isEmpty ? 'Không được để trống' : null,
+                  v == null || v.isEmpty ? 'This field is required' : null,
               enabled: !_isSaving,
             ),
             const Gap(AppSpacing.lg),
             _FormField(
               controller: _titleController,
-              label: 'Tiêu đề',
+              label: 'Title',
               validator: (v) =>
-                  v == null || v.isEmpty ? 'Không được để trống' : null,
+                  v == null || v.isEmpty ? 'This field is required' : null,
               enabled: !_isSaving,
             ),
             const Gap(AppSpacing.lg),
             _FormField(
               controller: _authorController,
-              label: 'Tác giả',
+              label: 'Author',
               enabled: !_isSaving,
             ),
             const Gap(AppSpacing.lg),
             _FormField(
               controller: _descriptionController,
-              label: 'Nội dung',
+              label: 'Description',
               maxLines: 5,
               enabled: !_isSaving,
             ),
             const Gap(AppSpacing.lg),
             Text(
-              'Trạng thái',
+              'Status',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
@@ -166,7 +166,7 @@ class _MangaEditFormState extends ConsumerState<_MangaEditForm> {
                         ),
                       )
                     : const Text(
-                        'Lưu thay đổi',
+                        'Save Changes',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -289,9 +289,9 @@ class _StatusSelector extends StatelessWidget {
   }
 
   String _label(MangaStatus status) => switch (status) {
-        MangaStatus.ongoing => 'Đang tiến hành',
-        MangaStatus.completed => 'Hoàn thành',
-        MangaStatus.hiatus => 'Tạm ngưng',
-        MangaStatus.cancelled => 'Đã hủy',
+        MangaStatus.ongoing => 'Ongoing',
+        MangaStatus.completed => 'Completed',
+        MangaStatus.hiatus => 'Hiatus',
+        MangaStatus.cancelled => 'Cancelled',
       };
 }

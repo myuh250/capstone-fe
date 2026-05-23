@@ -27,7 +27,7 @@ class _MangaDescriptionState extends State<MangaDescription> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Nội dung',
+            'Description',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -60,7 +60,7 @@ class _MangaDescriptionState extends State<MangaDescription> {
             child: Padding(
               padding: const EdgeInsets.only(top: AppSpacing.xs),
               child: Text(
-                _expanded ? 'Thu gọn' : 'Xem thêm',
+                _expanded ? 'Show Less' : 'Show More',
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,

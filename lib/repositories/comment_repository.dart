@@ -2,13 +2,20 @@ import '../core/network/api_client.dart';
 import '../core/network/api_endpoints.dart';
 import '../models/comment.dart';
 
+class RatingStats {
+  const RatingStats({required this.averageScore, required this.ratingCount});
+  final double averageScore;
+  final int ratingCount;
+}
+
 abstract class CommentRepository {
   Future<List<Comment>> getComments(String mangaId, {int page = 0});
   Future<Comment> addComment(String mangaId, String content, {String? parentId});
   Future<void> editComment(String commentId, String content);
   Future<void> deleteComment(String commentId);
   Future<int?> getUserRating(String mangaId);
-  Future<void> ratemanga(String mangaId, int rating);
+  Future<RatingStats> ratemanga(String mangaId, int rating);
+  Future<RatingStats> getRatingStats(String mangaId);
 }
 
 class RealCommentRepository implements CommentRepository {
@@ -66,11 +73,9 @@ class RealCommentRepository implements CommentRepository {
 
   @override
   Future<int?> getUserRating(String mangaId) async {
-    // Rating lives under /ratings — need userId from current user context
-    // Return null if not rated; caller handles via separate rating provider
     try {
       final response = await _apiClient.get(
-        ApiEndpoints.ratingsCreate,
+        '/ratings/me',
         queryParameters: {'mangaId': mangaId},
       );
       final data = response.data;
@@ -85,10 +90,27 @@ class RealCommentRepository implements CommentRepository {
   }
 
   @override
-  Future<void> ratemanga(String mangaId, int rating) async {
-    await _apiClient.post(
+  Future<RatingStats> ratemanga(String mangaId, int rating) async {
+    final response = await _apiClient.post(
       ApiEndpoints.ratingsCreate,
       data: {'mangaId': mangaId, 'score': rating},
+    );
+    final data = response.data as Map<String, dynamic>;
+    return RatingStats(
+      averageScore: (data['averageScore'] as num).toDouble(),
+      ratingCount: (data['ratingCount'] as num).toInt(),
+    );
+  }
+
+  @override
+  Future<RatingStats> getRatingStats(String mangaId) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.mangaAverageRating(mangaId),
+    );
+    final data = response.data as Map<String, dynamic>;
+    return RatingStats(
+      averageScore: (data['averageScore'] as num).toDouble(),
+      ratingCount: (data['ratingCount'] as num).toInt(),
     );
   }
 }

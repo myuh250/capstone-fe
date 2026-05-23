@@ -20,13 +20,17 @@ class CommentCard extends StatelessWidget {
   final VoidCallback? onDelete;
   final bool isReply;
 
+  static final _utc7 = Duration(hours: 7);
+
   String _formatDate(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 1) return 'vừa xong';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
-    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
-    if (diff.inDays < 7) return '${diff.inDays} ngày trước';
-    return '${(diff.inDays / 7).floor()} tuần trước';
+    final now = DateTime.now().toUtc().add(_utc7);
+    final local = date.toUtc().add(_utc7);
+    final diff = now.difference(local);
+    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} minutes ago';
+    if (diff.inHours < 24) return '${diff.inHours} hours ago';
+    if (diff.inDays < 7) return '${diff.inDays} days ago';
+    return '${local.day}/${local.month}/${local.year}';
   }
 
   @override
@@ -72,7 +76,7 @@ class CommentCard extends StatelessWidget {
                               BorderRadius.circular(AppSpacing.radiusSm),
                         ),
                         child: const Text(
-                          'Bạn',
+                          'You',
                           style: TextStyle(
                             fontSize: 10,
                             color: AppColors.primary,
@@ -102,7 +106,7 @@ class CommentCard extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
-                      '(đã chỉnh sửa)',
+                      '(edited)',
                       style: TextStyle(
                         fontSize: 11,
                         color: AppColors.textSecondary,
@@ -115,14 +119,14 @@ class CommentCard extends StatelessWidget {
                   children: [
                     _ActionButton(
                       icon: Icons.reply_outlined,
-                      label: 'Trả lời',
+                      label: 'Reply',
                       onTap: onReply,
                     ),
                     if (onDelete != null) ...[
                       const SizedBox(width: AppSpacing.md),
                       _ActionButton(
                         icon: Icons.delete_outline,
-                        label: 'Xóa',
+                        label: 'Delete',
                         onTap: onDelete!,
                         color: AppColors.error,
                       ),

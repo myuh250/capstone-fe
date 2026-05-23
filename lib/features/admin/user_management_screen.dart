@@ -24,7 +24,7 @@ class UserManagementScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quản lý người dùng'),
+        title: const Text('User Management'),
       ),
       body: Column(
         children: [
@@ -37,12 +37,12 @@ class UserManagementScreen extends ConsumerWidget {
                   )
                 : state.error != null
                     ? ErrorView(
-                        message: 'Không thể tải danh sách người dùng.',
+                        message: 'Failed to load user list.',
                         onRetry: () {},
                       )
                     : filteredUsers.isEmpty
                         ? const EmptyState(
-                            message: 'Không tìm thấy người dùng nào.',
+                            message: 'No users found.',
                           )
                         : ListView.separated(
                             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -60,11 +60,11 @@ class UserManagementScreen extends ConsumerWidget {
                                       user.status == UserStatus.banned;
                                   final confirmed = await ConfirmActionDialog.show(
                                     context,
-                                    title: isBanned ? 'Mở khóa' : 'Khóa tài khoản',
+                                    title: isBanned ? 'Unban' : 'Ban Account',
                                     message: isBanned
-                                        ? 'Mở khóa tài khoản ${user.displayName}?'
-                                        : 'Khóa tài khoản ${user.displayName}?',
-                                    confirmLabel: isBanned ? 'Mở khóa' : 'Khóa',
+                                        ? 'Unban account ${user.displayName}?'
+                                        : 'Ban account ${user.displayName}?',
+                                    confirmLabel: isBanned ? 'Unban' : 'Ban',
                                     isDangerous: !isBanned,
                                   );
                                   if (confirmed) {
@@ -94,7 +94,7 @@ class _SearchBar extends StatelessWidget {
         onChanged: onChanged,
         style: const TextStyle(color: AppColors.textPrimary),
         decoration: InputDecoration(
-          hintText: 'Tìm kiếm người dùng...',
+          hintText: 'Search users...',
           hintStyle: const TextStyle(color: AppColors.textSecondary),
           prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
           filled: true,
@@ -213,7 +213,7 @@ class _ActionMenu extends StatelessWidget {
               children: [
                 Icon(Icons.admin_panel_settings_outlined, size: 18),
                 Gap(AppSpacing.sm),
-                Text('Đặt làm Admin'),
+                Text('Set as Admin'),
               ],
             ),
           ),
@@ -224,7 +224,7 @@ class _ActionMenu extends StatelessWidget {
               children: [
                 Icon(Icons.person_outline, size: 18),
                 Gap(AppSpacing.sm),
-                Text('Đặt làm User'),
+                Text('Set as User'),
               ],
             ),
           ),
@@ -240,7 +240,7 @@ class _ActionMenu extends StatelessWidget {
                     : AppColors.error,
               ),
               const Gap(AppSpacing.sm),
-              Text(user.status == UserStatus.banned ? 'Mở khóa' : 'Khóa tài khoản'),
+              Text(user.status == UserStatus.banned ? 'Unban' : 'Ban Account'),
             ],
           ),
         ),

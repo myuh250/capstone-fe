@@ -38,8 +38,8 @@ class ChapterList extends ConsumerWidget {
             children: [
               Text(
                 state.isLoading
-                    ? 'Danh sách chương'
-                    : 'Danh sách chương (${state.chapters.length})',
+                    ? 'Chapter List'
+                    : 'Chapter List (${state.chapters.length})',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -53,8 +53,8 @@ class ChapterList extends ConsumerWidget {
                 onPressed: () =>
                     ref.read(chapterListProvider(mangaId).notifier).toggleSort(),
                 tooltip: state.ascending
-                    ? 'Sắp xếp mới nhất'
-                    : 'Sắp xếp cũ nhất',
+                    ? 'Sort Newest First'
+                    : 'Sort Oldest First',
               ),
             ],
           ),
@@ -66,22 +66,23 @@ class ChapterList extends ConsumerWidget {
           )
         else if (state.error != null)
           ErrorView(
-            message: 'Không thể tải danh sách chương.',
+            message: 'Unable to load chapter list.',
             onRetry: () =>
                 ref.read(chapterListProvider(mangaId).notifier).refresh(),
           )
         else
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: state.chapters.length,
-            itemBuilder: (context, index) {
-              return ChapterListTile(
-                key: ValueKey(state.chapters[index].id),
-                chapter: state.chapters[index],
-                onTap: () => onTapChapter(state.chapters[index]),
-              );
-            },
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 400),
+            child: ListView.builder(
+              itemCount: state.chapters.length,
+              itemBuilder: (context, index) {
+                return ChapterListTile(
+                  key: ValueKey(state.chapters[index].id),
+                  chapter: state.chapters[index],
+                  onTap: () => onTapChapter(state.chapters[index]),
+                );
+              },
+            ),
           ),
         const Gap(AppSpacing.lg),
       ],

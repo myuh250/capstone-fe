@@ -15,11 +15,13 @@ class MangaHeader extends StatelessWidget {
     required this.manga,
     required this.isFavorite,
     required this.onToggleFavorite,
+    this.onReadNow,
   });
 
   final Manga manga;
   final bool isFavorite;
   final VoidCallback onToggleFavorite;
+  final VoidCallback? onReadNow;
 
   @override
   Widget build(BuildContext context) {
@@ -73,13 +75,6 @@ class MangaHeader extends StatelessWidget {
                   ],
                 ),
                 const Gap(AppSpacing.sm),
-                Text(
-                  '${manga.totalChapters} chương',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                ),
-                const Gap(AppSpacing.sm),
                 if (manga.tags.isNotEmpty)
                   Wrap(
                     spacing: AppSpacing.xs,
@@ -93,9 +88,10 @@ class MangaHeader extends StatelessWidget {
                 _ActionRow(
                   isFavorite: isFavorite,
                   onToggleFavorite: onToggleFavorite,
+                  onReadNow: onReadNow,
                   mangaTitle: manga.title,
                   shareUrl:
-                      'https://mangaapp.example.com/manga/${manga.id}',
+                      'https://mangahubs.link/manga/${manga.id}',
                 ),
               ],
             ),
@@ -120,10 +116,10 @@ class _StatusBadge extends StatelessWidget {
       MangaStatus.cancelled => AppColors.error,
     };
     final label = switch (status) {
-      MangaStatus.ongoing => 'Đang tiến hành',
-      MangaStatus.completed => 'Hoàn thành',
-      MangaStatus.hiatus => 'Tạm ngưng',
-      MangaStatus.cancelled => 'Đã hủy',
+      MangaStatus.ongoing => 'Ongoing',
+      MangaStatus.completed => 'Completed',
+      MangaStatus.hiatus => 'Hiatus',
+      MangaStatus.cancelled => 'Cancelled',
     };
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -153,10 +149,12 @@ class _ActionRow extends StatelessWidget {
     required this.onToggleFavorite,
     required this.mangaTitle,
     required this.shareUrl,
+    this.onReadNow,
   });
 
   final bool isFavorite;
   final VoidCallback onToggleFavorite;
+  final VoidCallback? onReadNow;
   final String mangaTitle;
   final String shareUrl;
 
@@ -166,9 +164,9 @@ class _ActionRow extends StatelessWidget {
       children: [
         Expanded(
           child: FilledButton.icon(
-            onPressed: () {},
+            onPressed: onReadNow,
             icon: const Icon(Icons.menu_book, size: 18),
-            label: const Text('Đọc ngay'),
+            label: const Text('Read Now'),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),

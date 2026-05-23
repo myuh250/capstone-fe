@@ -8,8 +8,8 @@ enum ReaderTheme { dark, light, sepia }
 
 extension ReaderThemeExtension on ReaderTheme {
   String get label => switch (this) {
-        ReaderTheme.dark => 'Tối',
-        ReaderTheme.light => 'Sáng',
+        ReaderTheme.dark => 'Dark',
+        ReaderTheme.light => 'Light',
         ReaderTheme.sepia => 'Sepia',
       };
 
@@ -95,7 +95,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
               ),
               const Gap(AppSpacing.lg),
               Text(
-                'Cài đặt đọc',
+                'Reader Settings',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -103,7 +103,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
               const Gap(AppSpacing.xl),
 
               // Reading mode toggle
-              _SectionLabel('Chế độ đọc'),
+              _SectionLabel('Reading Mode'),
               const Gap(AppSpacing.sm),
               _ReadingModeToggle(
                 isVertical: widget.isVerticalMode,
@@ -112,7 +112,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
               const Gap(AppSpacing.xl),
 
               // Background theme
-              _SectionLabel('Nền đọc'),
+              _SectionLabel('Background'),
               const Gap(AppSpacing.sm),
               _ReaderThemeSelector(
                 current: widget.readerTheme,
@@ -121,7 +121,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
               const Gap(AppSpacing.xl),
 
               // Brightness (mobile only)
-              _SectionLabel('Độ sáng'),
+              _SectionLabel('Brightness'),
               const Gap(AppSpacing.xs),
               Row(
                 children: [
@@ -163,11 +163,11 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
                     horizontal: AppSpacing.md,
                   ),
                   title: const Text(
-                    'Tự động sang chương tiếp',
+                    'Auto next chapter',
                     style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                   subtitle: const Text(
-                    'Tự động chuyển chương khi đọc đến trang cuối',
+                    'Automatically advance to next chapter at the last page',
                     style: TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
@@ -218,7 +218,7 @@ class _ReadingModeToggle extends StatelessWidget {
         Expanded(
           child: _ModeButton(
             icon: Icons.swap_vert_rounded,
-            label: 'Cuộn dọc',
+            label: 'Vertical Scroll',
             selected: isVertical,
             onTap: !isVertical ? onToggle : null,
           ),
@@ -227,7 +227,7 @@ class _ReadingModeToggle extends StatelessWidget {
         Expanded(
           child: _ModeButton(
             icon: Icons.swap_horiz_rounded,
-            label: 'Lật trang',
+            label: 'Page Flip',
             selected: !isVertical,
             onTap: isVertical ? onToggle : null,
           ),

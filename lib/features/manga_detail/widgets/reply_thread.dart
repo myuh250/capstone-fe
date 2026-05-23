@@ -61,8 +61,8 @@ class _ReplyThreadState extends ConsumerState<ReplyThread> {
                     const SizedBox(width: 4),
                     Text(
                       _showReplies
-                          ? 'Ẩn ${replies.length} trả lời'
-                          : 'Xem ${replies.length} trả lời',
+                          ? 'Hide ${replies.length} replies'
+                          : 'View ${replies.length} replies',
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.primary,
@@ -99,7 +99,7 @@ class _ReplyThreadState extends ConsumerState<ReplyThread> {
               left: AppSpacing.xxl + AppSpacing.md,
             ),
             child: CommentInput(
-              hintText: 'Trả lời ${widget.parentComment.userName}...',
+              hintText: 'Reply to ${widget.parentComment.userName}...',
               onSubmit: (text) async {
                 final ok = await ref
                     .read(commentsProvider(widget.mangaId).notifier)

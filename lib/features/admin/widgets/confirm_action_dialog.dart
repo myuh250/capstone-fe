@@ -58,7 +58,7 @@ class ConfirmActionDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Hủy', style: TextStyle(color: AppColors.textSecondary)),
+          child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),

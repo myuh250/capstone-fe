@@ -42,15 +42,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Thư viện'),
+        title: const Text('Library'),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.primary,
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textSecondary,
           tabs: const [
-            Tab(text: 'Yêu thích'),
-            Tab(text: 'Lịch sử đọc'),
+            Tab(text: 'Favorites'),
+            Tab(text: 'Reading History'),
           ],
         ),
       ),
@@ -75,14 +75,14 @@ class _FavoritesTab extends ConsumerWidget {
     return favsAsync.when(
       loading: () => const _ListSkeleton(),
       error: (e, _) => ErrorView(
-        message: 'Không thể tải danh sách yêu thích',
+        message: 'Failed to load favorites',
         onRetry: () => ref.invalidate(favoritesProvider),
       ),
       data: (favs) {
         if (favs.isEmpty) {
             return const EmptyState(
               icon: Icons.favorite_border,
-              message: 'Nhấn vào biểu tượng tim trên trang manga để thêm vào yêu thích',
+              message: 'Tap the heart icon on a manga page to add it to favorites',
             );
         }
         return ListView.separated(
@@ -93,7 +93,7 @@ class _FavoritesTab extends ConsumerWidget {
             final manga = favs[i];
             return FavoritesMangaCard(
               manga: manga,
-              onTap: () => context.push(RouteNames.mangaDetail(manga.id)),
+              onTap: () => context.push(RouteNames.mangaDetail(manga.slug ?? manga.id)),
               onRemove: () =>
                   ref.read(favoriteProvider(manga.id).notifier).toggle(),
             );
@@ -115,14 +115,14 @@ class _HistoryTab extends ConsumerWidget {
     return historyAsync.when(
       loading: () => const _ListSkeleton(),
       error: (e, _) => ErrorView(
-        message: 'Không thể tải lịch sử đọc',
+        message: 'Failed to load reading history',
         onRetry: () => ref.invalidate(readingHistoryProvider),
       ),
       data: (history) {
         if (history.isEmpty) {
             return const EmptyState(
               icon: Icons.history,
-              message: 'Bắt đầu đọc manga để lịch sử hiện ở đây',
+              message: 'Start reading manga to see your history here',
             );
         }
         return ListView(
@@ -133,8 +133,8 @@ class _HistoryTab extends ConsumerWidget {
                       history: recent,
                       onTap: () => context.push(
                         RouteNames.reader(
-                          recent.mangaId,
-                          recent.lastChapterId,
+                          RouteNames.titleToSlug(recent.mangaTitle),
+                          recent.lastChapterNumber,
                         ),
                       ),
                     )
@@ -152,7 +152,7 @@ class _HistoryTab extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'TẤT CẢ (${history.length})',
+                    'ALL (${history.length})',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: AppColors.textSecondary,
                           letterSpacing: 0.8,
@@ -167,7 +167,7 @@ class _HistoryTab extends ConsumerWidget {
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     child: const Text(
-                      'Xem tất cả',
+                      'See All',
                       style: TextStyle(
                         color: AppColors.primary,
                         fontSize: 12,
@@ -190,9 +190,9 @@ class _HistoryTab extends ConsumerWidget {
                 final h = history[i];
                 return HistoryListTile(
                   history: h,
-                  onTap: () => context.push(RouteNames.mangaDetail(h.mangaId)),
+                  onTap: () => context.push(RouteNames.mangaDetail(RouteNames.titleToSlug(h.mangaTitle))),
                   onContinue: () => context.push(
-                    RouteNames.reader(h.mangaId, h.lastChapterId),
+                    RouteNames.reader(RouteNames.titleToSlug(h.mangaTitle), h.lastChapterNumber),
                   ),
                   onRemove: () => ref
                       .read(readingHistoryProvider.notifier)

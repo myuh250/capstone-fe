@@ -4,10 +4,45 @@ import '../core/network/api_client.dart';
 import '../features/reader/widgets/reader_settings_panel.dart';
 import '../models/chapter.dart';
 import '../models/chapter_page.dart';
+import '../models/manga.dart';
 import '../repositories/chapter_repository.dart';
+import 'manga_providers.dart';
 
 final chapterRepositoryProvider = Provider<ChapterRepository>((ref) {
   return RealChapterRepository(ref.watch(apiClientProvider));
+});
+
+class ReaderParams {
+  const ReaderParams({required this.mangaSlug, required this.chapterNumber});
+  final String mangaSlug;
+  final double chapterNumber;
+
+  @override
+  bool operator ==(Object other) =>
+      other is ReaderParams &&
+      other.mangaSlug == mangaSlug &&
+      other.chapterNumber == chapterNumber;
+
+  @override
+  int get hashCode => Object.hash(mangaSlug, chapterNumber);
+}
+
+class ResolvedReader {
+  const ResolvedReader({required this.manga, required this.chapter});
+  final Manga manga;
+  final Chapter chapter;
+}
+
+final resolvedReaderProvider =
+    FutureProvider.family<ResolvedReader, ReaderParams>((ref, params) async {
+  final manga = await ref.watch(mangaBySlugProvider(params.mangaSlug).future);
+  final repo = ref.watch(mangaRepositoryProvider);
+  final chapters = await repo.getChapters(manga.id);
+  final chapter = chapters.firstWhere(
+    (c) => c.number == params.chapterNumber,
+    orElse: () => chapters.first,
+  );
+  return ResolvedReader(manga: manga, chapter: chapter);
 });
 
 final chapterPagesProvider =

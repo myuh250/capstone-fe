@@ -51,7 +51,7 @@ class _RatingBottomSheetState extends ConsumerState<_RatingBottomSheet> {
   int _selectedRating = 0;
   bool _isSubmitting = false;
 
-  static const _labels = ['', 'Tệ', 'Không hay', 'Bình thường', 'Hay', 'Tuyệt vời'];
+  static const _labels = ['', 'Terrible', 'Poor', 'Average', 'Good', 'Excellent'];
 
   @override
   void initState() {
@@ -87,7 +87,7 @@ class _RatingBottomSheetState extends ConsumerState<_RatingBottomSheet> {
             ),
             const Gap(AppSpacing.xl),
             Text(
-              'Đánh giá manga này',
+              'Rate this manga',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -126,7 +126,7 @@ class _RatingBottomSheetState extends ConsumerState<_RatingBottomSheet> {
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: Text(
-                _selectedRating > 0 ? _labels[_selectedRating] : 'Chọn số sao',
+                _selectedRating > 0 ? _labels[_selectedRating] : 'Select a rating',
                 key: ValueKey(_selectedRating),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: _selectedRating > 0
@@ -151,7 +151,7 @@ class _RatingBottomSheetState extends ConsumerState<_RatingBottomSheet> {
                       ),
                     ),
                     child: const Text(
-                      'Hủy',
+                      'Cancel',
                       style: TextStyle(color: AppColors.textPrimary),
                     ),
                   ),
@@ -180,7 +180,7 @@ class _RatingBottomSheetState extends ConsumerState<_RatingBottomSheet> {
                             ),
                           )
                         : const Text(
-                            'Xác nhận',
+                            'Confirm',
                             style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                   ),

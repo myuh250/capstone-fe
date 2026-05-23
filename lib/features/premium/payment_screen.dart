@@ -55,7 +55,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Thanh toán')),
+      appBar: AppBar(title: const Text('Payment')),
       body: Column(
         children: [
           Expanded(
@@ -67,7 +67,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                   _OrderSummary(plan: widget.plan),
                   const Gap(AppSpacing.xl),
                   Text(
-                    'Phương thức thanh toán',
+                    'Payment Method',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -109,7 +109,7 @@ class _OrderSummary extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Tóm tắt đơn hàng',
+            'Order Summary',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -119,7 +119,7 @@ class _OrderSummary extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Gói Premium ${plan.label}',
+                'Premium ${plan.label} Plan',
                 style: Theme.of(context)
                     .textTheme
                     .bodyMedium
@@ -140,7 +140,7 @@ class _OrderSummary extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Tổng cộng',
+                'Total',
                 style: Theme.of(context)
                     .textTheme
                     .titleSmall
@@ -206,7 +206,7 @@ class _PayButton extends StatelessWidget {
                   ),
                 )
               : Text(
-                  'Thanh toán ${plan.formattedPrice}',
+                  'Pay ${plan.formattedPrice}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,

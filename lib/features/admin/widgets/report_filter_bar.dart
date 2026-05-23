@@ -21,7 +21,7 @@ class ReportFilterBar extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         children: [
           _FilterChip(
-            label: 'Tất cả',
+            label: 'All',
             selected: statusFilter == null,
             onTap: () => ref.read(reportsFilterProvider.notifier).state = null,
           ),

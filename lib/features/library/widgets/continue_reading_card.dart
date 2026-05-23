@@ -50,7 +50,7 @@ class ContinueReadingCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Tiếp tục đọc',
+                      'Continue Reading',
                       style: TextStyle(
                         fontSize: 11,
                         color: AppColors.primary,

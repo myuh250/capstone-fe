@@ -27,12 +27,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nâng cấp Premium'),
+        title: const Text('Upgrade to Premium'),
         actions: [
           TextButton(
             onPressed: () => context.push(RouteNames.paymentHistory),
             child: const Text(
-              'Lịch sử',
+              'History',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -50,7 +50,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             ] else ...[
               const Gap(AppSpacing.xl),
               Text(
-                'Chọn gói',
+                'Choose a Plan',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -81,7 +81,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   onPressed: () =>
                       context.push(RouteNames.payment, extra: _selected),
                   child: Text(
-                    'Tiếp tục — ${_selected.formattedPrice}',
+                    'Continue — ${_selected.formattedPrice}',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -92,8 +92,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               const Gap(AppSpacing.lg),
               Center(
                 child: Text(
-                  'Bạn có thể hủy bất cứ lúc nào. '
-                  'Bằng cách tiếp tục, bạn đồng ý với Điều khoản dịch vụ.',
+                  'You can cancel anytime. '
+                  'By continuing, you agree to the Terms of Service.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -130,7 +130,7 @@ class _ActiveSubscriptionBanner extends StatelessWidget {
               const Icon(Icons.check_circle, color: AppColors.statusGreen, size: 20),
               const Gap(AppSpacing.sm),
               Text(
-                'Gói Premium đang hoạt động',
+                'Premium Plan Active',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppColors.statusGreen,
@@ -140,12 +140,12 @@ class _ActiveSubscriptionBanner extends StatelessWidget {
           ),
           const Gap(AppSpacing.md),
           Text(
-            'Gói: Premium ${subscription.plan.label}',
+            'Plan: Premium ${subscription.plan.label}',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const Gap(AppSpacing.xs),
           Text(
-            'Hết hạn: ${subscription.expiryDate.day}/${subscription.expiryDate.month}/${subscription.expiryDate.year}',
+            'Expires: ${subscription.expiryDate.day}/${subscription.expiryDate.month}/${subscription.expiryDate.year}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -160,10 +160,10 @@ class _PremiumHeroSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const features = [
-      (Icons.block, 'Không quảng cáo', 'Đọc manga mượt mà, không gián đoạn'),
-      (Icons.download_outlined, 'Đọc offline', 'Tải về và đọc khi không có mạng'),
-      (Icons.flash_on_outlined, 'Đọc trước', 'Truy cập chương mới trước người khác'),
-      (Icons.support_agent_outlined, 'Hỗ trợ ưu tiên', 'Được hỗ trợ nhanh hơn'),
+      (Icons.block, 'Ad-free', 'Read manga smoothly without interruptions'),
+      (Icons.download_outlined, 'Offline Reading', 'Download and read without an internet connection'),
+      (Icons.flash_on_outlined, 'Early Access', 'Access new chapters before everyone else'),
+      (Icons.support_agent_outlined, 'Priority Support', 'Get faster support responses'),
     ];
 
     return Container(

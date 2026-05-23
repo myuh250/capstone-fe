@@ -53,7 +53,7 @@ class _SearchTextFieldState extends State<SearchTextField> {
       onChanged: _onChanged,
       style: const TextStyle(color: AppColors.textPrimary),
       decoration: InputDecoration(
-        hintText: 'Tìm kiếm manga...',
+        hintText: 'Search manga...',
         hintStyle: const TextStyle(color: AppColors.textSecondary),
         prefixIcon: const Icon(
           Icons.search,

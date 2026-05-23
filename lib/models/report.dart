@@ -6,9 +6,9 @@ enum ReportStatus {
 
 extension ReportStatusExtension on ReportStatus {
   String get label => switch (this) {
-        ReportStatus.pending => 'Chờ xử lý',
-        ReportStatus.resolved => 'Đã xử lý',
-        ReportStatus.dismissed => 'Đã bỏ qua',
+        ReportStatus.pending => 'Pending',
+        ReportStatus.resolved => 'Resolved',
+        ReportStatus.dismissed => 'Dismissed',
       };
 }
 
@@ -20,9 +20,9 @@ enum ReportType {
 
 extension ReportTypeExtension on ReportType {
   String get label => switch (this) {
-        ReportType.comment => 'Bình luận',
+        ReportType.comment => 'Comment',
         ReportType.manga => 'Manga',
-        ReportType.user => 'Người dùng',
+        ReportType.user => 'User',
       };
 }
 
@@ -37,10 +37,10 @@ enum ReportReason {
 extension ReportReasonExtension on ReportReason {
   String get label => switch (this) {
         ReportReason.spam => 'Spam',
-        ReportReason.inappropriate => 'Nội dung không phù hợp',
-        ReportReason.copyright => 'Vi phạm bản quyền',
-        ReportReason.harassment => 'Quấy rối',
-        ReportReason.other => 'Khác',
+        ReportReason.inappropriate => 'Inappropriate Content',
+        ReportReason.copyright => 'Copyright Violation',
+        ReportReason.harassment => 'Harassment',
+        ReportReason.other => 'Other',
       };
 }
 

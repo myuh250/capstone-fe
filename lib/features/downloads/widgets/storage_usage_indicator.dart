@@ -42,7 +42,7 @@ class StorageUsageIndicator extends ConsumerWidget {
                   ),
                   SizedBox(width: AppSpacing.xs),
                   Text(
-                    'Dung lượng lưu trữ',
+                    'Storage Usage',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
@@ -71,7 +71,7 @@ class StorageUsageIndicator extends ConsumerWidget {
           ),
           const Gap(AppSpacing.xs),
           Text(
-            '${(fraction * 100).toStringAsFixed(1)}% đã sử dụng',
+            '${(fraction * 100).toStringAsFixed(1)}% used',
             style: const TextStyle(
               fontSize: 11,
               color: AppColors.textSecondary,

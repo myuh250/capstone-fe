@@ -37,7 +37,7 @@ class ReadingProgressBar extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '$chaptersRead / $totalChapters chương',
+          '$chaptersRead / $totalChapters chapters',
           style: const TextStyle(
             fontSize: 11,
             color: AppColors.textSecondary,

@@ -44,7 +44,7 @@ class FilterBottomSheet extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Bộ lọc',
+                    'Filters',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -52,7 +52,7 @@ class FilterBottomSheet extends ConsumerWidget {
                   TextButton(
                     onPressed: notifier.reset,
                     child: const Text(
-                      'Đặt lại',
+                      'Reset',
                       style: TextStyle(color: AppColors.primary),
                     ),
                   ),
@@ -64,14 +64,14 @@ class FilterBottomSheet extends ConsumerWidget {
                 controller: scrollController,
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
-                  _SectionLabel(label: 'Trạng thái'),
+                  _SectionLabel(label: 'Status'),
                   const Gap(AppSpacing.md),
                   _StatusFilterRow(
                     selected: filters.status,
                     onSelect: notifier.setStatus,
                   ),
                   const Gap(AppSpacing.xl),
-                  _SectionLabel(label: 'Thể loại'),
+                  _SectionLabel(label: 'Genre'),
                   const Gap(AppSpacing.md),
                   Wrap(
                     spacing: AppSpacing.sm,
@@ -107,7 +107,7 @@ class FilterBottomSheet extends ConsumerWidget {
                     }).toList(),
                   ),
                   const Gap(AppSpacing.xl),
-                  _SectionLabel(label: 'Sắp xếp'),
+                  _SectionLabel(label: 'Sort'),
                   const Gap(AppSpacing.md),
                   ...sortOptions.map((opt) {
                     final isSelected = filters.sortBy == opt.$1;
@@ -145,7 +145,7 @@ class FilterBottomSheet extends ConsumerWidget {
                   ),
                 ),
                 child: const Text(
-                  'Áp dụng',
+                  'Apply',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -207,19 +207,19 @@ class _StatusFilterRow extends StatelessWidget {
     return Row(
       children: [
         _StatusChip(
-          label: 'Tất cả',
+          label: 'All',
           isSelected: selected == null,
           onTap: () => onSelect(null),
         ),
         const SizedBox(width: AppSpacing.sm),
         _StatusChip(
-          label: 'Đang tiến hành',
+          label: 'Ongoing',
           isSelected: selected == MangaStatus.ongoing,
           onTap: () => onSelect(MangaStatus.ongoing),
         ),
         const SizedBox(width: AppSpacing.sm),
         _StatusChip(
-          label: 'Hoàn thành',
+          label: 'Completed',
           isSelected: selected == MangaStatus.completed,
           onTap: () => onSelect(MangaStatus.completed),
         ),

@@ -5,7 +5,6 @@ import '../../core/theme/app_spacing.dart';
 import '../../models/manga.dart';
 import 'cover_image.dart';
 import 'star_rating.dart';
-import 'tag_chip.dart';
 
 class MangaCard extends StatelessWidget {
   const MangaCard({
@@ -29,9 +28,10 @@ class MangaCard extends StatelessWidget {
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          CoverImage(imageUrl: manga.coverUrl),
+          Expanded(
+            child: CoverImage(imageUrl: manga.coverUrl),
+          ),
           const Gap(AppSpacing.sm),
           Text(
             manga.title,
@@ -44,17 +44,6 @@ class MangaCard extends StatelessWidget {
             StarRating(
               rating: manga.averageRating,
               size: 14,
-            ),
-          ],
-          if (showTags && manga.tags.isNotEmpty) ...[
-            const Gap(AppSpacing.xs),
-            Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xs,
-              children: manga.tags
-                  .take(maxTags)
-                  .map((tag) => TagChip(label: tag))
-                  .toList(),
             ),
           ],
         ],

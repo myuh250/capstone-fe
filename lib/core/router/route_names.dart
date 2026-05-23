@@ -8,14 +8,30 @@ abstract class RouteNames {
 
   // Main
   static const String home = '/';
+  static const String browse = '/browse';
   static const String search = '/search';
   static const String library = '/library';
   static const String profile = '/profile';
 
-  // Manga
-  static String mangaDetail(String id) => '/manga/$id';
-  static String reader(String mangaId, String chapterId) =>
-      '/manga/$mangaId/chapter/$chapterId';
+  // Manga — slug-based clean URLs
+  static String mangaDetail(String slug) => '/manga/$slug';
+
+  static String reader(String mangaSlug, double chapterNumber) {
+    final chNum = chapterNumber == chapterNumber.truncateToDouble()
+        ? 'chapter-${chapterNumber.toInt()}'
+        : 'chapter-$chapterNumber';
+    return '/manga/$mangaSlug/$chNum';
+  }
+
+  /// Derive a URL slug from a title (client-side fallback when slug is not available)
+  static String titleToSlug(String title) {
+    return title
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9\s-]'), '')
+        .replaceAll(RegExp(r'\s+'), '-')
+        .replaceAll(RegExp(r'-+'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
+  }
 
   // Profile
   static const String editProfile = '/profile/edit';

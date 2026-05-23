@@ -44,9 +44,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     authRefreshListenable.notify();
   });
 
+  GoRouter.optionURLReflectsImperativeAPIs = true;
+
   return GoRouter(
     debugLogDiagnostics: true,
-    initialLocation: RouteNames.home,
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
       if (authState.isLoading) return null;
@@ -60,20 +61,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isAdminRoute = loc.startsWith('/admin');
       final isUserRoute = !isAuthRoute && !isAdminRoute;
 
-      // Chưa đăng nhập → về login
+      // Not logged in → redirect to login
       if (!isLoggedIn && !isAuthRoute) return RouteNames.login;
 
-      // Đã đăng nhập, đang ở trang auth → điều hướng theo role
+      // Logged in, on auth page → redirect by role
       if (isLoggedIn && isAuthRoute) {
         return isAdmin ? RouteNames.admin : RouteNames.home;
       }
 
-      // Admin cố vào route của user → về admin panel
+      // Admin trying to access user route → redirect to admin panel
       if (isLoggedIn && isAdmin && isUserRoute) {
         return RouteNames.admin;
       }
 
-      // User thường cố vào admin route → về trang chủ
+      // Regular user trying to access admin route → redirect to home
       if (isLoggedIn && !isAdmin && isAdminRoute) {
         return RouteNames.home;
       }
@@ -198,20 +199,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // ── Manga / Reader (không có shell nav) ──────────────────
+      // ── Manga / Reader (no shell nav) ──────────────────
       GoRoute(
-        path: '/manga/:mangaId',
+        path: '/manga/:mangaSlug',
         name: 'mangaDetail',
         builder: (context, state) => MangaDetailScreen(
-          mangaId: state.pathParameters['mangaId']!,
+          mangaSlug: state.pathParameters['mangaSlug']!,
         ),
         routes: [
           GoRoute(
-            path: 'chapter/:chapterId',
+            path: ':chapterSlug',
             name: 'reader',
             builder: (context, state) => ReaderScreen(
-              mangaId: state.pathParameters['mangaId']!,
-              chapterId: state.pathParameters['chapterId']!,
+              mangaSlug: state.pathParameters['mangaSlug']!,
+              chapterSlug: state.pathParameters['chapterSlug']!,
             ),
           ),
         ],
@@ -266,18 +267,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
-      appBar: AppBar(title: const Text('Lỗi trang')),
+      appBar: AppBar(title: const Text('Page Error')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
-            Text('Không tìm thấy trang: ${state.uri.path}'),
+            Text('Page not found: ${state.uri.path}'),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => context.go(RouteNames.home),
-              child: const Text('Về trang chủ'),
+              child: const Text('Go to Home'),
             ),
           ],
         ),
@@ -289,4 +290,3 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 class _AuthRefreshListenable extends ChangeNotifier {
   void notify() => notifyListeners();
 }
-

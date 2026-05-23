@@ -34,7 +34,7 @@ class PaymentResultScreen extends StatelessWidget {
                 _ResultIcon(success: success),
                 const Gap(AppSpacing.xl),
                 Text(
-                  success ? 'Thanh toán thành công!' : 'Thanh toán thất bại',
+                  success ? 'Payment Successful!' : 'Payment Failed',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w800,
                         color: success
@@ -46,8 +46,8 @@ class PaymentResultScreen extends StatelessWidget {
                 const Gap(AppSpacing.md),
                 Text(
                   success
-                      ? 'Chúc mừng! Bạn đã nâng cấp lên gói ${plan.label} thành công. Hãy tận hưởng trải nghiệm Premium!'
-                      : 'Giao dịch không thể hoàn thành. Vui lòng thử lại hoặc chọn phương thức thanh toán khác.',
+                      ? 'Congratulations! You have successfully upgraded to the ${plan.label} plan. Enjoy the Premium experience!'
+                      : 'The transaction could not be completed. Please try again or choose a different payment method.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -74,7 +74,7 @@ class PaymentResultScreen extends StatelessWidget {
                     ),
                     onPressed: () => context.go(RouteNames.home),
                     child: Text(
-                      success ? 'Về trang chủ' : 'Thử lại',
+                      success ? 'Go to Home' : 'Try Again',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -88,7 +88,7 @@ class PaymentResultScreen extends StatelessWidget {
                     width: double.infinity,
                     child: TextButton(
                       onPressed: () => context.pop(),
-                      child: const Text('Thử lại'),
+                      child: const Text('Try Again'),
                     ),
                   ),
                 ],
@@ -153,14 +153,14 @@ class _TransactionDetails extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _Row(label: 'Gói', value: 'Premium ${plan.label}'),
+          _Row(label: 'Plan', value: 'Premium ${plan.label}'),
           const Gap(AppSpacing.sm),
-          _Row(label: 'Phương thức', value: method.label),
+          _Row(label: 'Method', value: method.label),
           const Gap(AppSpacing.sm),
-          _Row(label: 'Số tiền', value: plan.formattedPrice),
+          _Row(label: 'Amount', value: plan.formattedPrice),
           const Gap(AppSpacing.sm),
           _Row(
-            label: 'Hết hạn',
+            label: 'Expires',
             value: '${expiry.day}/${expiry.month}/${expiry.year}',
           ),
         ],
