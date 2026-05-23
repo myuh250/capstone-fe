@@ -63,11 +63,20 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   Widget build(BuildContext context) {
     if (context.isDesktop || context.isTablet) {
-      return Row(
-        children: [
-          _buildSidebar(),
-          Expanded(child: widget.child),
-        ],
+      return Scaffold(
+        body: Row(
+          children: [
+            _buildSidebar(),
+            Expanded(child: widget.child),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton.small(
+          heroTag: 'chatbot_fab',
+          backgroundColor: AppColors.primary,
+          tooltip: 'AI Assistant',
+          onPressed: () => ChatbotPanel.show(context),
+          child: const Icon(Icons.smart_toy_outlined, color: Colors.white),
+        ),
       );
     } else {
       return Scaffold(

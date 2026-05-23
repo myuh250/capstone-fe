@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/route_names.dart';
 import '../../models/chapter.dart';
 import '../../models/manga.dart';
+import '../../providers/manga_providers.dart';
 import '../../providers/reader_providers.dart';
 import '../../shared/widgets/error_view.dart';
 import 'widgets/page_viewer.dart';
@@ -75,6 +76,7 @@ class _ReaderContent extends ConsumerWidget {
       chapterNumber: chapter.number,
     );
     final adjacentAsync = ref.watch(adjacentChaptersProvider(adjacentParams));
+    final chapterListState = ref.watch(chapterListProvider(manga.id));
 
     final bgColor = readerState.readerTheme.backgroundColor;
 
@@ -95,6 +97,11 @@ class _ReaderContent extends ConsumerWidget {
               onSettings: () => _showSettings(context, ref, readerKey),
               shareUrl:
                   'https://mangahubs.link/manga/$mangaSlug/chapter-${chapter.number.toInt()}',
+              chapters: chapterListState.chapters,
+              currentChapter: chapter,
+              onChapterSelected: (ch) => context.pushReplacement(
+                RouteNames.reader(mangaSlug, ch.number),
+              ),
             )
           : null,
       body: Center(
@@ -172,21 +179,26 @@ class _ReaderContent extends ConsumerWidget {
   }
 
   void _showSettings(BuildContext context, WidgetRef ref, ReaderKey readerKey) {
-    final state = ref.read(readerProvider(readerKey));
-    final notifier = ref.read(readerProvider(readerKey).notifier);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => ReaderSettingsPanel(
-        isVerticalMode: state.isVerticalMode,
-        brightness: state.brightness,
-        readerTheme: state.readerTheme,
-        autoNextChapter: state.autoNextChapter,
-        onToggleReadingMode: notifier.toggleReadingMode,
-        onBrightnessChanged: notifier.setBrightness,
-        onThemeChanged: notifier.setTheme,
-        onAutoNextChanged: notifier.setAutoNextChapter,
+      builder: (_) => Consumer(
+        builder: (_, ref, __) {
+          final state = ref.watch(readerProvider(readerKey));
+          final notifier = ref.read(readerProvider(readerKey).notifier);
+          return ReaderSettingsPanel(
+            isVerticalMode: state.isVerticalMode,
+            brightness: state.brightness,
+            readerTheme: state.readerTheme,
+            onToggleReadingMode: () {
+              notifier.toggleReadingMode();
+              Navigator.of(context).pop();
+            },
+            onBrightnessChanged: notifier.setBrightness,
+            onThemeChanged: notifier.setTheme,
+          );
+        },
       ),
     );
   }

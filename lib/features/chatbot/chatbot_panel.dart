@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import '../../core/network/api_client.dart';
+import '../../core/network/api_endpoints.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 
@@ -18,30 +21,33 @@ class ChatMessage {
   final DateTime timestamp;
 }
 
-class ChatbotPanel extends StatefulWidget {
-  const ChatbotPanel({super.key, this.initialContext});
+class ChatbotPanel extends ConsumerStatefulWidget {
+  const ChatbotPanel({super.key, this.initialContext, this.mangaId, this.chapterId});
 
   final String? initialContext;
+  final String? mangaId;
+  final String? chapterId;
 
-  static Future<void> show(BuildContext context, {String? initialContext}) {
+  static Future<void> show(BuildContext context, {String? initialContext, String? mangaId, String? chapterId}) {
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) => ChatbotPanel(initialContext: initialContext),
+      builder: (_) => ChatbotPanel(initialContext: initialContext, mangaId: mangaId, chapterId: chapterId),
     );
   }
 
   @override
-  State<ChatbotPanel> createState() => _ChatbotPanelState();
+  ConsumerState<ChatbotPanel> createState() => _ChatbotPanelState();
 }
 
-class _ChatbotPanelState extends State<ChatbotPanel> {
+class _ChatbotPanelState extends ConsumerState<ChatbotPanel> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   bool _isLoading = false;
   final List<ChatMessage> _messages = [];
+  String? _sessionId;
 
   static const _suggestions = [
     'Suggest action manga',
@@ -82,46 +88,44 @@ class _ChatbotPanelState extends State<ChatbotPanel> {
     _controller.clear();
     _scrollToBottom();
 
-    await Future.delayed(const Duration(milliseconds: 1200));
-    if (!mounted) return;
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      final response = await apiClient.post(
+        ApiEndpoints.aiChat,
+        data: {
+          'message': text,
+          if (widget.mangaId != null) 'mangaId': widget.mangaId,
+          if (widget.chapterId != null) 'chapterId': widget.chapterId,
+          if (_sessionId != null) 'sessionId': _sessionId,
+        },
+      );
 
-    setState(() {
-      _messages.add(ChatMessage(
-        role: ChatRole.bot,
-        text: _generateFakeResponse(text),
-        timestamp: DateTime.now(),
-      ));
-      _isLoading = false;
-    });
+      if (!mounted) return;
+
+      final data = response.data as Map<String, dynamic>;
+      _sessionId = data['sessionId'] as String?;
+      final reply = data['reply'] as String? ?? 'No response received.';
+
+      setState(() {
+        _messages.add(ChatMessage(
+          role: ChatRole.bot,
+          text: reply,
+          timestamp: DateTime.now(),
+        ));
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _messages.add(ChatMessage(
+          role: ChatRole.bot,
+          text: 'Sorry, I encountered an error. Please try again.',
+          timestamp: DateTime.now(),
+        ));
+        _isLoading = false;
+      });
+    }
     _scrollToBottom();
-  }
-
-  String _generateFakeResponse(String query) {
-    final q = query.toLowerCase();
-    if (q.contains('action') || q.contains('action')) {
-      return 'Based on your preferences, I recommend:\n\n'
-          '• **One Piece** — An epic journey to find the legendary treasure\n'
-          '• **Attack on Titan** — Humanity battles against giants\n'
-          '• **Chainsaw Man** — A unique and brutal demon hunter story\n\n'
-          'Which manga would you like to know more about?';
-    }
-    if (q.contains('completed') || q.contains('completed')) {
-      return 'Excellent completed manga:\n\n'
-          '• **Fullmetal Alchemist** — 108 chapters\n'
-          '• **Death Note** — 108 chapters\n'
-          '• **Berserk** — Legendary dark fantasy\n\n'
-          'All highly recommended!';
-    }
-    if (q.contains('one piece')) {
-      return 'If you like One Piece, try:\n\n'
-          '• **Fairy Tail** — A wizard guild on adventures\n'
-          '• **Hunter x Hunter** — A rich and mysterious world\n'
-          '• **Black Clover** — Magic and the journey of a powerless boy\n\n'
-          'All three have long-running and engaging storylines!';
-    }
-    return 'This is a simulated response for: "$query".\n\n'
-        'In the production version, AI will analyze your preferences and provide personalized recommendations. '
-        'Would you like me to suggest another genre?';
   }
 
   void _scrollToBottom() {

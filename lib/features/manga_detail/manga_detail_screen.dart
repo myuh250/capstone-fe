@@ -31,6 +31,23 @@ class MangaDetailScreen extends ConsumerWidget {
     final mangaAsync = ref.watch(mangaBySlugProvider(mangaSlug));
 
     return Scaffold(
+      appBar: mangaAsync.whenOrNull(
+        data: (manga) => AppBar(
+          title: Text(
+            manga.title,
+            overflow: TextOverflow.ellipsis,
+          ),
+          leading: BackButton(
+            onPressed: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                context.go(RouteNames.home);
+              }
+            },
+          ),
+        ),
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
@@ -40,36 +57,20 @@ class MangaDetailScreen extends ConsumerWidget {
               final recsAsync = ref.watch(mangaRecommendationsProvider(manga.id));
               return CustomScrollView(
                 slivers: [
-                  SliverAppBar(
-                    expandedHeight: 0,
-                    floating: false,
-                    pinned: true,
-                    title: Text(
-                      manga.title,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    leading: BackButton(
-                      onPressed: () {
-                        if (Navigator.of(context).canPop()) {
-                          Navigator.of(context).pop();
-                        } else {
-                          context.go(RouteNames.home);
-                        }
-                      },
-                    ),
-                  ),
                   SliverToBoxAdapter(
-                    child: MangaHeader(
-                      manga: manga,
-                      isFavorite: isFavorite,
-                      onToggleFavorite: () =>
-                          ref.read(favoriteProvider(manga.id).notifier).toggle(),
-                      onReadNow: () {
-                        final chapters = ref.read(chapterListProvider(manga.id)).chapters;
-                        if (chapters.isNotEmpty) {
-                          _navigateToReader(context, chapters.last, manga: manga);
-                        }
-                      },
+                    child: _SectionBorder(
+                      child: MangaHeader(
+                        manga: manga,
+                        isFavorite: isFavorite,
+                        onToggleFavorite: () =>
+                            ref.read(favoriteProvider(manga.id).notifier).toggle(),
+                        onReadNow: () {
+                          final chapters = ref.read(chapterListProvider(manga.id)).chapters;
+                          if (chapters.isNotEmpty) {
+                            _navigateToReader(context, chapters.last, manga: manga);
+                          }
+                        },
+                      ),
                     ),
                   ),
                   const SliverToBoxAdapter(
@@ -77,33 +78,43 @@ class MangaDetailScreen extends ConsumerWidget {
                   ),
                   if (manga.description != null && manga.description!.isNotEmpty)
                     SliverToBoxAdapter(
-                      child: MangaDescription(description: manga.description!),
+                      child: _SectionBorder(
+                        child: MangaDescription(description: manga.description!),
+                      ),
                     ),
                   const SliverToBoxAdapter(child: _SectionDivider()),
                   SliverToBoxAdapter(
-                    child: ChapterList(
-                      mangaId: manga.id,
-                      onTapChapter: (chapter) =>
-                          _navigateToReader(context, chapter, manga: manga),
-                    ),
-                  ),
-                  const SliverToBoxAdapter(child: _SectionDivider()),
-                  SliverToBoxAdapter(
-                    child: _RatingSection(
-                      mangaId: manga.id,
-                      manga: manga,
+                    child: _SectionBorder(
+                      child: ChapterList(
+                        mangaId: manga.id,
+                        onTapChapter: (chapter) =>
+                            _navigateToReader(context, chapter, manga: manga),
+                      ),
                     ),
                   ),
                   const SliverToBoxAdapter(child: _SectionDivider()),
                   SliverToBoxAdapter(
-                    child: CommentSection(mangaId: manga.id),
+                    child: _SectionBorder(
+                      child: _RatingSection(
+                        mangaId: manga.id,
+                        manga: manga,
+                      ),
+                    ),
                   ),
                   const SliverToBoxAdapter(child: _SectionDivider()),
                   SliverToBoxAdapter(
-                    child: RelatedMangaSection(
-                      mangaId: manga.id,
-                      onTapManga: (id) =>
-                          context.pushReplacement(RouteNames.mangaDetail(id)),
+                    child: _SectionBorder(
+                      child: CommentSection(mangaId: manga.id),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: _SectionDivider()),
+                  SliverToBoxAdapter(
+                    child: _SectionBorder(
+                      child: RelatedMangaSection(
+                        mangaId: manga.id,
+                        onTapManga: (id) =>
+                            context.pushReplacement(RouteNames.mangaDetail(id)),
+                      ),
                     ),
                   ),
                   recsAsync.maybeWhen(
@@ -111,11 +122,13 @@ class MangaDetailScreen extends ConsumerWidget {
                       child: Column(
                         children: [
                           const _SectionDivider(),
-                          RecommendationSection(
-                            title: 'You May Also Like',
-                            recommendations: recs,
-                            onTapManga: (id) =>
-                                context.pushReplacement(RouteNames.mangaDetail(id)),
+                          _SectionBorder(
+                            child: RecommendationSection(
+                              title: 'You May Also Like',
+                              recommendations: recs,
+                              onTapManga: (id) =>
+                                  context.pushReplacement(RouteNames.mangaDetail(id)),
+                            ),
                           ),
                         ],
                       ),
@@ -201,9 +214,28 @@ class _SectionDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return const SizedBox(height: AppSpacing.md);
+  }
+}
+
+class _SectionBorder extends StatelessWidget {
+  const _SectionBorder({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      height: AppSpacing.sm,
-      color: AppColors.background,
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: AppColors.primary.withAlpha(180),
+          width: 1.2,
+        ),
+      ),
+      child: child,
     );
   }
 }

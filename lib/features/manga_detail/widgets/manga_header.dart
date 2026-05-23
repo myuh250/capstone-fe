@@ -76,14 +76,7 @@ class MangaHeader extends StatelessWidget {
                 ),
                 const Gap(AppSpacing.sm),
                 if (manga.tags.isNotEmpty)
-                  Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xs,
-                    children: manga.tags
-                        .take(5)
-                        .map((t) => TagChip(label: t))
-                        .toList(),
-                  ),
+                  _TagsRow(tags: manga.tags),
                 const Gap(AppSpacing.md),
                 _ActionRow(
                   isFavorite: isFavorite,
@@ -139,6 +132,56 @@ class _StatusBadge extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+}
+
+class _TagsRow extends StatefulWidget {
+  const _TagsRow({required this.tags});
+
+  final List<String> tags;
+
+  @override
+  State<_TagsRow> createState() => _TagsRowState();
+}
+
+class _TagsRowState extends State<_TagsRow> {
+  static const _visibleCount = 3;
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasMore = widget.tags.length > _visibleCount;
+    final visible = _expanded ? widget.tags : widget.tags.take(_visibleCount).toList();
+
+    return Wrap(
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xs,
+      children: [
+        ...visible.map((t) => TagChip(label: t)),
+        if (hasMore && !_expanded)
+          GestureDetector(
+            onTap: () => setState(() => _expanded = true),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: 3,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceAlt,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              ),
+              child: Text(
+                '+${widget.tags.length - _visibleCount} more',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

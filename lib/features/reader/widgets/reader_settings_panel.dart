@@ -32,21 +32,17 @@ class ReaderSettingsPanel extends StatefulWidget {
     required this.isVerticalMode,
     required this.brightness,
     required this.readerTheme,
-    required this.autoNextChapter,
     required this.onToggleReadingMode,
     required this.onBrightnessChanged,
     required this.onThemeChanged,
-    required this.onAutoNextChanged,
   });
 
   final bool isVerticalMode;
   final double brightness;
   final ReaderTheme readerTheme;
-  final bool autoNextChapter;
   final VoidCallback onToggleReadingMode;
   final ValueChanged<double> onBrightnessChanged;
   final ValueChanged<ReaderTheme> onThemeChanged;
-  final ValueChanged<bool> onAutoNextChanged;
 
   @override
   State<ReaderSettingsPanel> createState() => _ReaderSettingsPanelState();
@@ -149,34 +145,6 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
                     size: 20,
                   ),
                 ],
-              ),
-              const Gap(AppSpacing.xl),
-
-              // Auto-next chapter
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceAlt,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-                child: SwitchListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                  ),
-                  title: const Text(
-                    'Auto next chapter',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: const Text(
-                    'Automatically advance to next chapter at the last page',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  value: widget.autoNextChapter,
-                  onChanged: widget.onAutoNextChanged,
-                  activeThumbColor: AppColors.primary,
-                ),
               ),
             ],
           ),
