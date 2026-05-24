@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -32,7 +33,7 @@ class CoverImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
-        memCacheWidth: AppConstants.imageCacheWidth,
+        memCacheWidth: kIsWeb ? null : AppConstants.imageCacheWidth,
         placeholder: (context, url) => _CoverPlaceholder(),
         errorWidget: (context, url, error) => _CoverError(),
       ),
