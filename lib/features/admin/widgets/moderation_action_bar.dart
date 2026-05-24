@@ -35,7 +35,7 @@ class ModerationActionBar extends StatelessWidget {
             children: [
               Expanded(
                 child: _ActionButton(
-                  label: 'Xử lý',
+                  label: 'Resolve',
                   icon: Icons.check_circle_outline,
                   color: AppColors.statusGreen,
                   onTap: onResolve,
@@ -45,7 +45,7 @@ class ModerationActionBar extends StatelessWidget {
               const Gap(AppSpacing.sm),
               Expanded(
                 child: _ActionButton(
-                  label: 'Bỏ qua',
+                  label: 'Dismiss',
                   icon: Icons.cancel_outlined,
                   color: AppColors.textSecondary,
                   onTap: onDismiss,
@@ -61,7 +61,7 @@ class ModerationActionBar extends StatelessWidget {
                 if (onWarn != null)
                   Expanded(
                     child: _ActionButton(
-                      label: 'Cảnh cáo',
+                      label: 'Warn',
                       icon: Icons.warning_amber_outlined,
                       color: AppColors.warning,
                       onTap: onWarn!,
@@ -73,7 +73,7 @@ class ModerationActionBar extends StatelessWidget {
                 if (onBan != null)
                   Expanded(
                     child: _ActionButton(
-                      label: 'Cấm tài khoản',
+                      label: 'Ban Account',
                       icon: Icons.block_outlined,
                       color: AppColors.error,
                       onTap: onBan!,

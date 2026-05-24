@@ -33,7 +33,7 @@ class DownloadButton extends ConsumerWidget {
       return switch (existing.status) {
         DownloadStatus.completed => IconButton(
             icon: const Icon(Icons.download_done, color: AppColors.statusGreen),
-            tooltip: 'Đã tải',
+            tooltip: 'Downloaded',
             onPressed: () => ref
                 .read(downloadsProvider.notifier)
                 .removeDownload(existing.id),
@@ -65,7 +65,7 @@ class DownloadButton extends ConsumerWidget {
         DownloadStatus.paused => IconButton(
             icon: const Icon(Icons.download_outlined,
                 color: AppColors.textSecondary),
-            tooltip: 'Tiếp tục tải',
+            tooltip: 'Resume',
             onPressed: () => ref
                 .read(downloadsProvider.notifier)
                 .resumeDownload(existing.id),
@@ -76,7 +76,7 @@ class DownloadButton extends ConsumerWidget {
 
     return IconButton(
       icon: const Icon(Icons.download_outlined, color: AppColors.textSecondary),
-      tooltip: 'Tải xuống',
+      tooltip: 'Download',
       onPressed: () {
         ref.read(downloadsProvider.notifier).addDownload(
               DownloadItem(
@@ -91,7 +91,7 @@ class DownloadButton extends ConsumerWidget {
             );
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đang tải xuống chương...'),
+            content: Text('Downloading chapter...'),
             duration: Duration(seconds: 2),
           ),
         );

@@ -34,7 +34,7 @@ class MangaSectionHeader extends StatelessWidget {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Xem tất cả'),
+                Text('See All'),
                 SizedBox(width: 2),
                 Icon(Icons.chevron_right, size: 18),
               ],

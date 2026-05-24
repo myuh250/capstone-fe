@@ -32,14 +32,25 @@ class RealChapterRepository implements ChapterRepository {
     } else {
       urls = (data as Map<String, dynamic>)['images'] as List<dynamic>? ?? [];
     }
+
+    // Backend proxy URLs are relative paths like "/api/proxy/image?chapterId=X&page=N".
+    // CachedNetworkImage needs absolute URLs, so we prepend the server origin.
+    // ApiEndpoints.baseUrl is e.g. "http://10.0.2.2:9000/api" — strip the "/api" suffix.
+    final base = ApiEndpoints.baseUrl.replaceAll(RegExp(r'/api$'), '');
+
     return urls.asMap().entries.map((entry) {
       final idx = entry.key;
-      final url = entry.value;
+      final raw = entry.value;
+      final String rawUrl =
+          raw is String ? raw : (raw as Map<String, dynamic>)['url'] as String;
+      // Make relative URLs absolute; leave already-absolute URLs untouched.
+      final String imageUrl =
+          rawUrl.startsWith('http') ? rawUrl : '$base$rawUrl';
       return ChapterPage(
         id: '${chapterId}_page_${idx + 1}',
         chapterId: chapterId,
         pageNumber: idx + 1,
-        imageUrl: url is String ? url : (url as Map<String, dynamic>)['url'] as String,
+        imageUrl: imageUrl,
       );
     }).toList();
   }

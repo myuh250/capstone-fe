@@ -9,6 +9,7 @@ part of 'manga.dart';
 _$MangaImpl _$$MangaImplFromJson(Map<String, dynamic> json) => _$MangaImpl(
   id: json['id'] as String,
   title: json['title'] as String,
+  slug: json['slug'] as String?,
   description: json['description'] as String?,
   coverUrl: json['coverUrl'] as String,
   tags:
@@ -29,6 +30,7 @@ Map<String, dynamic> _$$MangaImplToJson(_$MangaImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
+      'slug': instance.slug,
       'description': instance.description,
       'coverUrl': instance.coverUrl,
       'tags': instance.tags,

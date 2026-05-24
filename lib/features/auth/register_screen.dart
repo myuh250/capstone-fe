@@ -45,7 +45,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Đăng ký thành công!'),
+          content: Text('Registration successful!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -54,7 +54,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Đăng ký thất bại: ${e.toString()}'),
+          content: Text('Registration failed: ${e.toString()}'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -78,14 +78,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 children: [
                   const Gap(AppSpacing.xl),
                   Text(
-                    'Tạo tài khoản',
+                    'Create Account',
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
                   ),
                   const Gap(AppSpacing.sm),
                   Text(
-                    'Tham gia cộng đồng đọc manga ngay hôm nay.',
+                    'Join the manga reading community today.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -98,7 +98,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       children: [
                         AuthTextField(
                           controller: _nameController,
-                          label: 'Tên hiển thị',
+                          label: 'Display Name',
                           hint: 'Manga Reader',
                           prefixIcon: Icons.person_outline,
                           validator: Validators.displayName,
@@ -122,7 +122,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         const Gap(AppSpacing.lg),
                         AuthTextField(
                           controller: _confirmController,
-                          label: 'Xác nhận mật khẩu',
+                          label: 'Confirm Password',
                           hint: '••••••••',
                           prefixIcon: Icons.lock_outline,
                           isPassword: true,
@@ -156,7 +156,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   ),
                                 )
                               : const Text(
-                                  'Đăng ký',
+                                  'Sign Up',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -171,13 +171,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Đã có tài khoản? ',
+                        'Already have an account? ',
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                       TextButton(
                         onPressed: isLoading ? null : () => context.pop(),
                         child: const Text(
-                          'Đăng nhập',
+                          'Sign In',
                           style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,
@@ -229,7 +229,7 @@ class _PasswordWithStrengthState extends State<_PasswordWithStrength> {
       children: [
         AuthTextField(
           controller: widget.controller,
-          label: 'Mật khẩu',
+          label: 'Password',
           hint: '••••••••',
           prefixIcon: Icons.lock_outline,
           isPassword: true,

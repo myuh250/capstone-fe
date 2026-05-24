@@ -11,7 +11,7 @@ class CommentInput extends ConsumerStatefulWidget {
   const CommentInput({
     super.key,
     required this.onSubmit,
-    this.hintText = 'Viết bình luận...',
+    this.hintText = 'Write a comment...',
     this.onCancel,
     this.isCompact = false,
   });
@@ -127,7 +127,7 @@ class _CommentInputState extends ConsumerState<CommentInput> {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: const Text(
-                    'Hủy',
+                    'Cancel',
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,

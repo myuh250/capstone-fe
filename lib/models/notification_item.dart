@@ -7,10 +7,10 @@ enum NotificationType {
 
 extension NotificationTypeExtension on NotificationType {
   String get label => switch (this) {
-        NotificationType.newChapter => 'Chương mới',
-        NotificationType.commentReply => 'Phản hồi bình luận',
-        NotificationType.system => 'Hệ thống',
-        NotificationType.subscription => 'Gói dịch vụ',
+        NotificationType.newChapter => 'New Chapter',
+        NotificationType.commentReply => 'Comment Reply',
+        NotificationType.system => 'System',
+        NotificationType.subscription => 'Subscription',
       };
 }
 

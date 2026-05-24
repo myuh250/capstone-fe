@@ -77,25 +77,25 @@ class _AdminSidebarContent extends ConsumerWidget {
     _AdminNavItem(
       icon: Icons.people_outline,
       selectedIcon: Icons.people,
-      label: 'Người dùng',
+      label: 'Users',
       path: RouteNames.adminUsers,
     ),
     _AdminNavItem(
       icon: Icons.library_books_outlined,
       selectedIcon: Icons.library_books,
-      label: 'Nội dung',
+      label: 'Content',
       path: RouteNames.adminContent,
     ),
     _AdminNavItem(
       icon: Icons.shield_outlined,
       selectedIcon: Icons.shield,
-      label: 'Kiểm duyệt',
+      label: 'Moderation',
       path: RouteNames.adminModeration,
     ),
     _AdminNavItem(
       icon: Icons.flag_outlined,
       selectedIcon: Icons.flag,
-      label: 'Báo cáo',
+      label: 'Reports',
       path: RouteNames.adminReports,
     ),
   ];
@@ -304,7 +304,7 @@ class _LogoutButton extends StatelessWidget {
                 Icon(Icons.logout, color: AppColors.error, size: 22),
                 SizedBox(width: AppSpacing.md),
                 Text(
-                  'Đăng xuất',
+                  'Sign Out',
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.error,
@@ -327,13 +327,13 @@ class _LogoutButton extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         ),
-        title: const Text('Đăng xuất'),
-        content: const Text('Bạn có chắc muốn đăng xuất?'),
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text(
-              'Hủy',
+              'Cancel',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -341,7 +341,7 @@ class _LogoutButton extends StatelessWidget {
             onPressed: () => Navigator.of(ctx).pop(true),
             style:
                 FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Đăng xuất'),
+            child: const Text('Sign Out'),
           ),
         ],
       ),

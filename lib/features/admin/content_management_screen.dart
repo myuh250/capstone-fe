@@ -25,12 +25,12 @@ class ContentManagementScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quản lý nội dung'),
+        title: const Text('Content Management'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {},
-            tooltip: 'Thêm manga mới',
+            tooltip: 'Add new manga',
           ),
         ],
       ),
@@ -45,12 +45,12 @@ class ContentManagementScreen extends ConsumerWidget {
                   )
                 : state.error != null
                     ? ErrorView(
-                        message: 'Không thể tải danh sách manga.',
+                        message: 'Failed to load manga list.',
                         onRetry: () {},
                       )
                     : filteredManga.isEmpty
                         ? const EmptyState(
-                            message: 'Không tìm thấy manga nào.',
+                            message: 'No manga found.',
                           )
                         : ListView.separated(
                             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -69,10 +69,10 @@ class ContentManagementScreen extends ConsumerWidget {
                                   final confirmed =
                                       await ConfirmActionDialog.show(
                                     context,
-                                    title: 'Xóa manga',
+                                    title: 'Delete Manga',
                                     message:
-                                        'Xóa "${filteredManga[index].title}"? Hành động này không thể hoàn tác.',
-                                    confirmLabel: 'Xóa',
+                                        'Delete "${filteredManga[index].title}"? This action cannot be undone.',
+                                    confirmLabel: 'Delete',
                                     isDangerous: true,
                                   );
                                   if (confirmed) {
@@ -104,7 +104,7 @@ class _SearchBar extends StatelessWidget {
         onChanged: onChanged,
         style: const TextStyle(color: AppColors.textPrimary),
         decoration: InputDecoration(
-          hintText: 'Tìm kiếm manga...',
+          hintText: 'Search manga...',
           hintStyle: const TextStyle(color: AppColors.textSecondary),
           prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
           filled: true,
@@ -169,7 +169,7 @@ class _MangaAdminCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${manga.totalChapters} chương  •  ${_mangaStatusLabel(manga.status)}',
+                  '${manga.totalChapters} chapters  •  ${_mangaStatusLabel(manga.status)}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -199,8 +199,8 @@ class _MangaAdminCard extends StatelessWidget {
 }
 
 String _mangaStatusLabel(MangaStatus status) => switch (status) {
-      MangaStatus.ongoing => 'Đang tiến hành',
-      MangaStatus.completed => 'Hoàn thành',
-      MangaStatus.hiatus => 'Tạm ngưng',
-      MangaStatus.cancelled => 'Đã hủy',
+      MangaStatus.ongoing => 'Ongoing',
+      MangaStatus.completed => 'Completed',
+      MangaStatus.hiatus => 'Hiatus',
+      MangaStatus.cancelled => 'Cancelled',
     };

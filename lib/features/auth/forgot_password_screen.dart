@@ -44,7 +44,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quên mật khẩu'),
+        title: const Text('Forgot Password'),
         leading: BackButton(onPressed: () => context.pop()),
       ),
       body: SafeArea(
@@ -105,14 +105,14 @@ class _ForgotPasswordForm extends StatelessWidget {
         ),
         const Gap(AppSpacing.xl),
         Text(
-          'Đặt lại mật khẩu',
+          'Reset Password',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
         ),
         const Gap(AppSpacing.sm),
         Text(
-          'Nhập email đã đăng ký. Chúng tôi sẽ gửi link đặt lại mật khẩu về cho bạn.',
+          'Enter your registered email. We will send you a password reset link.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -150,7 +150,7 @@ class _ForgotPasswordForm extends StatelessWidget {
                   ),
                 )
               : const Text(
-                  'Gửi link đặt lại',
+                  'Send Reset Link',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
         ),
@@ -185,7 +185,7 @@ class _EmailSentView extends StatelessWidget {
         ),
         const Gap(AppSpacing.xl),
         Text(
-          'Kiểm tra email của bạn',
+          'Check Your Email',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -197,7 +197,7 @@ class _EmailSentView extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
             children: [
-              const TextSpan(text: 'Chúng tôi đã gửi link đặt lại mật khẩu đến '),
+              const TextSpan(text: 'We sent a password reset link to '),
               TextSpan(
                 text: email,
                 style: const TextStyle(
@@ -207,7 +207,7 @@ class _EmailSentView extends StatelessWidget {
               ),
               const TextSpan(
                 text:
-                    '. Link có hiệu lực trong 15 phút. Hãy kiểm tra cả thư mục spam.',
+                    '. The link is valid for 15 minutes. Please check your spam folder as well.',
               ),
             ],
           ),
@@ -223,7 +223,7 @@ class _EmailSentView extends StatelessWidget {
             ),
           ),
           child: const Text(
-            'Nhập OTP đặt lại',
+            'Enter Reset OTP',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
@@ -238,7 +238,7 @@ class _EmailSentView extends StatelessWidget {
             ),
           ),
           child: const Text(
-            'Gửi lại email',
+            'Resend Email',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -251,7 +251,7 @@ class _EmailSentView extends StatelessWidget {
           child: TextButton(
             onPressed: () => context.pop(),
             child: const Text(
-              'Quay lại đăng nhập',
+              'Back to Sign In',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),

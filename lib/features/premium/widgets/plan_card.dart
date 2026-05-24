@@ -18,10 +18,10 @@ class PlanCard extends StatelessWidget {
   final VoidCallback onSelect;
 
   static const _features = [
-    'Đọc manga không quảng cáo',
-    'Tải manga đọc offline',
-    'Đọc trước nội dung premium',
-    'Hỗ trợ ưu tiên',
+    'Read manga ad-free',
+    'Download manga for offline reading',
+    'Early access to premium content',
+    'Priority support',
   ];
 
   @override
@@ -73,7 +73,7 @@ class PlanCard extends StatelessWidget {
                                 ),
                               ),
                               child: const Text(
-                                'Giảm 32%',
+                                'Save 32%',
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: Colors.white,
@@ -101,7 +101,7 @@ class PlanCard extends StatelessWidget {
                                   ),
                             ),
                             TextSpan(
-                              text: isYearly ? ' / năm' : ' / tháng',
+                              text: isYearly ? ' / year' : ' / month',
                               style: Theme.of(context)
                                   .textTheme
                                   .bodySmall
@@ -114,7 +114,7 @@ class PlanCard extends StatelessWidget {
                       ),
                       if (isYearly)
                         Text(
-                          '≈ ${SubscriptionPlanExtension.formatNumber((plan.priceVnd / 12).round())}đ/tháng',
+                          '≈ ${SubscriptionPlanExtension.formatNumber((plan.priceVnd / 12).round())}đ/month',
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary,

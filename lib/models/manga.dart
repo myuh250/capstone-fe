@@ -8,6 +8,7 @@ class Manga with _$Manga {
   const factory Manga({
     required String id,
     required String title,
+    String? slug,
     String? description,
     required String coverUrl,
     @Default([]) List<String> tags,

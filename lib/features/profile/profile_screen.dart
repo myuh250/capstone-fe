@@ -17,7 +17,7 @@ class ProfileScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Hồ sơ')),
+      appBar: AppBar(title: const Text('Profile')),
       body: user == null
           ? const _NotLoggedIn()
           : _ProfileContent(user: user),
@@ -41,22 +41,22 @@ class _ProfileContent extends ConsumerWidget {
             items: [
               _SettingsTile(
                 icon: Icons.person_outline,
-                label: 'Chỉnh sửa hồ sơ',
+                label: 'Edit Profile',
                 onTap: () => context.push(RouteNames.editProfile),
               ),
               _SettingsTile(
                 icon: Icons.lock_outline,
-                label: 'Đổi mật khẩu',
+                label: 'Change Password',
                 onTap: () => context.push(RouteNames.changePassword),
               ),
               _SettingsTile(
                 icon: Icons.history_outlined,
-                label: 'Lịch sử đọc',
+                label: 'Reading History',
                 onTap: () => context.push(RouteNames.readingHistory),
               ),
               _SettingsTile(
                 icon: Icons.settings_outlined,
-                label: 'Cài đặt tài khoản',
+                label: 'Account Settings',
                 onTap: () => context.push(RouteNames.settings),
               ),
             ],
@@ -66,7 +66,7 @@ class _ProfileContent extends ConsumerWidget {
             items: [
               _SettingsTile(
                 icon: Icons.workspace_premium_outlined,
-                label: 'Nâng cấp Premium',
+                label: 'Upgrade to Premium',
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.sm,
@@ -92,17 +92,17 @@ class _ProfileContent extends ConsumerWidget {
               ),
               _SettingsTile(
                 icon: Icons.receipt_long_outlined,
-                label: 'Lịch sử thanh toán',
+                label: 'Payment History',
                 onTap: () => context.push(RouteNames.paymentHistory),
               ),
               _SettingsTile(
                 icon: Icons.download_outlined,
-                label: 'Manga đã tải',
+                label: 'Downloaded Manga',
                 onTap: () => context.push(RouteNames.downloads),
               ),
               _SettingsTile(
                 icon: Icons.notifications_outlined,
-                label: 'Thông báo',
+                label: 'Notifications',
                 onTap: () => context.push(RouteNames.notifications),
               ),
             ],
@@ -112,12 +112,12 @@ class _ProfileContent extends ConsumerWidget {
             items: [
               _SettingsTile(
                 icon: Icons.help_outline,
-                label: 'Trợ giúp',
+                label: 'Help',
                 onTap: () {},
               ),
               _SettingsTile(
                 icon: Icons.info_outline,
-                label: 'Về ứng dụng',
+                label: 'About',
                 onTap: () {},
               ),
             ],
@@ -127,7 +127,7 @@ class _ProfileContent extends ConsumerWidget {
             items: [
               _SettingsTile(
                 icon: Icons.logout,
-                label: 'Đăng xuất',
+                label: 'Sign Out',
                 labelColor: AppColors.error,
                 iconColor: AppColors.error,
                 onTap: () => _confirmLogout(context, ref),
@@ -148,20 +148,20 @@ class _ProfileContent extends ConsumerWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         ),
-        title: const Text('Đăng xuất'),
-        content: const Text('Bạn có chắc muốn đăng xuất?'),
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text(
-              'Hủy',
+              'Cancel',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Đăng xuất'),
+            child: const Text('Sign Out'),
           ),
         ],
       ),
@@ -368,7 +368,7 @@ class _NotLoggedIn extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       child: Text(
-        'Chưa đăng nhập',
+        'Not logged in',
         style: TextStyle(color: AppColors.textSecondary),
       ),
     );

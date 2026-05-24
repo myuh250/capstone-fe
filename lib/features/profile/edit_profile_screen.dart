@@ -56,7 +56,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     setState(() => _isLoading = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Hồ sơ đã được cập nhật'),
+        content: Text('Profile updated successfully'),
         backgroundColor: AppColors.statusGreen,
       ),
     );
@@ -76,7 +76,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
     if (result != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Chức năng "$result" chưa được tích hợp')),
+        SnackBar(content: Text('Feature "$result" not yet integrated')),
       );
     }
   }
@@ -87,13 +87,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chỉnh sửa hồ sơ'),
+        title: const Text('Edit Profile'),
         leading: BackButton(onPressed: () => context.pop()),
         actions: [
           TextButton(
             onPressed: (_isLoading || !_hasChanges) ? null : _onSave,
             child: const Text(
-              'Lưu',
+              'Save',
               style: TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w700,
@@ -118,19 +118,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
               ),
               const Gap(AppSpacing.xxl),
-              _SectionLabel('Thông tin cá nhân'),
+              _SectionLabel('Personal Information'),
               const Gap(AppSpacing.sm),
               _ProfileField(
                 controller: _nameController,
-                label: 'Tên hiển thị',
-                hint: 'Nhập tên hiển thị của bạn',
+                label: 'Display Name',
+                hint: 'Enter your display name',
                 maxLength: 30,
                 validator: (v) {
                   if (v == null || v.trim().length < 3) {
-                    return 'Tên phải có ít nhất 3 ký tự';
+                    return 'Name must be at least 3 characters';
                   }
                   if (v.trim().length > 30) {
-                    return 'Tên tối đa 30 ký tự';
+                    return 'Name must be at most 30 characters';
                   }
                   return null;
                 },
@@ -139,8 +139,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               const Gap(AppSpacing.md),
               _ProfileField(
                 controller: _bioController,
-                label: 'Giới thiệu bản thân',
-                hint: 'Viết vài dòng về bạn...',
+                label: 'About',
+                hint: 'Write a few words about yourself...',
                 maxLines: 4,
                 maxLength: 200,
                 enabled: !_isLoading,

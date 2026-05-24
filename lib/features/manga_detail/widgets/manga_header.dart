@@ -15,11 +15,13 @@ class MangaHeader extends StatelessWidget {
     required this.manga,
     required this.isFavorite,
     required this.onToggleFavorite,
+    this.onReadNow,
   });
 
   final Manga manga;
   final bool isFavorite;
   final VoidCallback onToggleFavorite;
+  final VoidCallback? onReadNow;
 
   @override
   Widget build(BuildContext context) {
@@ -73,29 +75,16 @@ class MangaHeader extends StatelessWidget {
                   ],
                 ),
                 const Gap(AppSpacing.sm),
-                Text(
-                  '${manga.totalChapters} chương',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                ),
-                const Gap(AppSpacing.sm),
                 if (manga.tags.isNotEmpty)
-                  Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xs,
-                    children: manga.tags
-                        .take(5)
-                        .map((t) => TagChip(label: t))
-                        .toList(),
-                  ),
+                  _TagsRow(tags: manga.tags),
                 const Gap(AppSpacing.md),
                 _ActionRow(
                   isFavorite: isFavorite,
                   onToggleFavorite: onToggleFavorite,
+                  onReadNow: onReadNow,
                   mangaTitle: manga.title,
                   shareUrl:
-                      'https://mangaapp.example.com/manga/${manga.id}',
+                      'https://mangahubs.link/manga/${manga.id}',
                 ),
               ],
             ),
@@ -120,10 +109,10 @@ class _StatusBadge extends StatelessWidget {
       MangaStatus.cancelled => AppColors.error,
     };
     final label = switch (status) {
-      MangaStatus.ongoing => 'Đang tiến hành',
-      MangaStatus.completed => 'Hoàn thành',
-      MangaStatus.hiatus => 'Tạm ngưng',
-      MangaStatus.cancelled => 'Đã hủy',
+      MangaStatus.ongoing => 'Ongoing',
+      MangaStatus.completed => 'Completed',
+      MangaStatus.hiatus => 'Hiatus',
+      MangaStatus.cancelled => 'Cancelled',
     };
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -147,16 +136,68 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
+class _TagsRow extends StatefulWidget {
+  const _TagsRow({required this.tags});
+
+  final List<String> tags;
+
+  @override
+  State<_TagsRow> createState() => _TagsRowState();
+}
+
+class _TagsRowState extends State<_TagsRow> {
+  static const _visibleCount = 3;
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasMore = widget.tags.length > _visibleCount;
+    final visible = _expanded ? widget.tags : widget.tags.take(_visibleCount).toList();
+
+    return Wrap(
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xs,
+      children: [
+        ...visible.map((t) => TagChip(label: t)),
+        if (hasMore && !_expanded)
+          GestureDetector(
+            onTap: () => setState(() => _expanded = true),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: 3,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceAlt,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              ),
+              child: Text(
+                '+${widget.tags.length - _visibleCount} more',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _ActionRow extends StatelessWidget {
   const _ActionRow({
     required this.isFavorite,
     required this.onToggleFavorite,
     required this.mangaTitle,
     required this.shareUrl,
+    this.onReadNow,
   });
 
   final bool isFavorite;
   final VoidCallback onToggleFavorite;
+  final VoidCallback? onReadNow;
   final String mangaTitle;
   final String shareUrl;
 
@@ -166,9 +207,9 @@ class _ActionRow extends StatelessWidget {
       children: [
         Expanded(
           child: FilledButton.icon(
-            onPressed: () {},
+            onPressed: onReadNow,
             icon: const Icon(Icons.menu_book, size: 18),
-            label: const Text('Đọc ngay'),
+            label: const Text('Read Now'),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),

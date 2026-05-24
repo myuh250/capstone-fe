@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
@@ -23,13 +24,15 @@ class FeaturedCarousel extends StatefulWidget {
 }
 
 class _FeaturedCarouselState extends State<FeaturedCarousel> {
-  final _pageController = PageController();
+  static const int _virtualCount = 10000;
+  late final PageController _pageController;
   int _currentIndex = 0;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
     _startAutoScroll();
   }
 
@@ -43,9 +46,9 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
   void _startAutoScroll() {
     _timer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (!mounted || widget.items.isEmpty) return;
-      final next = (_currentIndex + 1) % widget.items.length;
+      final nextPage = (_pageController.page?.round() ?? 0) + 1;
       _pageController.animateToPage(
-        next,
+        nextPage,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
@@ -56,22 +59,34 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
   Widget build(BuildContext context) {
     if (widget.items.isEmpty) return const SizedBox.shrink();
 
+    final itemCount = widget.items.length;
+
     return SizedBox(
-      height: 260,
+      height: 360,
       child: Stack(
         children: [
-          PageView.builder(
-            controller: _pageController,
-            itemCount: widget.items.length,
-            onPageChanged: (index) => setState(() => _currentIndex = index),
-            itemBuilder: (context, index) {
-              return _CarouselItem(
-                manga: widget.items[index],
-                onTap: widget.onTapManga != null
-                    ? () => widget.onTapManga!(widget.items[index])
-                    : null,
-              );
-            },
+          ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(
+              dragDevices: {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+              },
+            ),
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: _virtualCount,
+              onPageChanged: (index) =>
+                  setState(() => _currentIndex = index % itemCount),
+              itemBuilder: (context, index) {
+                final realIndex = index % itemCount;
+                return _CarouselItem(
+                  manga: widget.items[realIndex],
+                  onTap: widget.onTapManga != null
+                      ? () => widget.onTapManga!(widget.items[realIndex])
+                      : null,
+                );
+              },
+            ),
           ),
           Positioned(
             bottom: AppSpacing.md,
@@ -79,7 +94,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
             right: 0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(widget.items.length, (index) {
+              children: List.generate(itemCount, (index) {
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.symmetric(

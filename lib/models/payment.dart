@@ -18,10 +18,10 @@ enum PaymentStatus { pending, success, failed, cancelled }
 
 extension PaymentStatusExtension on PaymentStatus {
   String get label => switch (this) {
-        PaymentStatus.pending => 'Đang xử lý',
-        PaymentStatus.success => 'Thành công',
-        PaymentStatus.failed => 'Thất bại',
-        PaymentStatus.cancelled => 'Đã hủy',
+        PaymentStatus.pending => 'Processing',
+        PaymentStatus.success => 'Success',
+        PaymentStatus.failed => 'Failed',
+        PaymentStatus.cancelled => 'Cancelled',
       };
 
   static PaymentStatus fromString(String value) {
@@ -36,8 +36,8 @@ enum SubscriptionPlan { monthly, yearly }
 
 extension SubscriptionPlanExtension on SubscriptionPlan {
   String get label => switch (this) {
-        SubscriptionPlan.monthly => 'Hàng tháng',
-        SubscriptionPlan.yearly => 'Hàng năm',
+        SubscriptionPlan.monthly => 'Monthly',
+        SubscriptionPlan.yearly => 'Yearly',
       };
 
   int get priceVnd => switch (this) {
@@ -52,7 +52,7 @@ extension SubscriptionPlanExtension on SubscriptionPlan {
 
   String get savings => switch (this) {
         SubscriptionPlan.monthly => '',
-        SubscriptionPlan.yearly => 'Tiết kiệm 32%',
+        SubscriptionPlan.yearly => 'Save 32%',
       };
 
   static String formatNumber(int n) {

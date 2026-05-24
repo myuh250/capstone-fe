@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/manga.dart';
+import '../repositories/manga_repository.dart';
 import 'manga_providers.dart';
 
 final searchQueryProvider = StateProvider<String>((ref) => '');
@@ -65,20 +66,23 @@ class SearchFiltersNotifier extends StateNotifier<SearchFilters> {
   }
 }
 
-final searchResultsProvider = FutureProvider<List<Manga>>((ref) async {
+final searchPageProvider = StateProvider<int>((ref) => 0);
+
+const searchPageSize = 24;
+
+final searchResultsProvider = FutureProvider<PaginatedResult<Manga>>((ref) async {
   final query = ref.watch(searchQueryProvider);
   final filters = ref.watch(searchFiltersProvider);
+  final page = ref.watch(searchPageProvider);
   final repo = ref.watch(mangaRepositoryProvider);
 
-  if (query.isEmpty && filters.genres.isEmpty && filters.status == null) {
-    return repo.fetchLatest();
-  }
-
-  return repo.search(
+  return repo.searchPaginated(
     query,
     genres: filters.genres,
     status: filters.status,
     sortBy: filters.sortBy == 'relevance' ? null : filters.sortBy,
+    page: page,
+    limit: searchPageSize,
   );
 });
 
@@ -103,8 +107,8 @@ const availableGenres = [
 ];
 
 const sortOptions = [
-  ('relevance', 'Liên quan nhất'),
-  ('rating', 'Đánh giá cao nhất'),
-  ('title', 'Tiêu đề A-Z'),
-  ('latest', 'Mới nhất'),
+  ('relevance', 'Most Relevant'),
+  ('rating', 'Highest Rated'),
+  ('title', 'Title A-Z'),
+  ('latest', 'Latest'),
 ];

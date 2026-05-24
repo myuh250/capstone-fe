@@ -10,11 +10,13 @@ class MangaHorizontalList extends StatelessWidget {
     required this.items,
     this.onTapManga,
     this.cardWidth = 130,
+    this.showRating = true,
   });
 
   final List<Manga> items;
   final void Function(Manga manga)? onTapManga;
   final double cardWidth;
+  final bool showRating;
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +34,7 @@ class MangaHorizontalList extends StatelessWidget {
             child: MangaCard(
               manga: manga,
               onTap: onTapManga != null ? () => onTapManga!(manga) : null,
+              showRating: showRating,
             ),
           );
         },

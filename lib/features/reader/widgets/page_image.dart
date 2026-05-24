@@ -69,7 +69,7 @@ class _PageErrorWidget extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Trang $pageNumber không tải được',
+              'Page $pageNumber failed to load',
               style: const TextStyle(color: AppColors.textSecondary),
             ),
           ],

@@ -26,24 +26,35 @@ class Comment {
   final bool isEdited;
 
   factory Comment.fromJson(Map<String, dynamic> json) {
+    final user = json['user'] as Map<String, dynamic>?;
+    final manga = json['manga'] as Map<String, dynamic>?;
+
     return Comment(
       id: json['id'].toString(),
-      mangaId: json['mangaId']?.toString() ?? '',
-      userId: json['userId']?.toString() ?? '',
-      userName: json['userName'] as String? ?? json['userDisplayName'] as String? ?? '',
-      userAvatarUrl: json['userAvatarUrl'] as String?,
+      mangaId: manga?['id']?.toString() ?? json['mangaId']?.toString() ?? '',
+      userId: user?['id']?.toString() ?? json['userId']?.toString() ?? '',
+      userName: user?['displayName'] as String? ??
+          user?['username'] as String? ??
+          json['userName'] as String? ??
+          '',
+      userAvatarUrl: user?['avatarUrl'] as String? ?? json['userAvatarUrl'] as String?,
       content: json['content'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: _parseUtc(json['createdAt'] as String),
       updatedAt: json['updatedAt'] != null
-          ? DateTime.tryParse(json['updatedAt'] as String)
+          ? _parseUtc(json['updatedAt'] as String)
           : null,
       parentId: json['parentId']?.toString(),
       replies: (json['replies'] as List<dynamic>?)
               ?.map((e) => Comment.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      isEdited: json['isEdited'] as bool? ?? false,
+      isEdited: json['edited'] as bool? ?? json['isEdited'] as bool? ?? false,
     );
+  }
+
+  static DateTime _parseUtc(String value) {
+    final dt = DateTime.parse(value);
+    return dt.isUtc ? dt : DateTime.utc(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.millisecond);
   }
 
   Comment copyWith({

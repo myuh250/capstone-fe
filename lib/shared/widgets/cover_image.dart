@@ -24,21 +24,27 @@ class CoverImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final image = ClipRRect(
+      borderRadius: borderRadius ??
+          BorderRadius.circular(AppSpacing.coverRadius),
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
+        width: width,
+        height: height,
+        fit: fit,
+        memCacheWidth: AppConstants.imageCacheWidth,
+        placeholder: (context, url) => _CoverPlaceholder(),
+        errorWidget: (context, url, error) => _CoverError(),
+      ),
+    );
+
+    if (width != null && height != null) {
+      return SizedBox(width: width, height: height, child: image);
+    }
+
     return AspectRatio(
       aspectRatio: AppConstants.coverAspectRatio,
-      child: ClipRRect(
-        borderRadius: borderRadius ??
-            BorderRadius.circular(AppSpacing.coverRadius),
-        child: CachedNetworkImage(
-          imageUrl: imageUrl,
-          width: width,
-          height: height,
-          fit: fit,
-          memCacheWidth: AppConstants.imageCacheWidth,
-          placeholder: (context, url) => _CoverPlaceholder(),
-          errorWidget: (context, url, error) => _CoverError(),
-        ),
-      ),
+      child: image,
     );
   }
 }

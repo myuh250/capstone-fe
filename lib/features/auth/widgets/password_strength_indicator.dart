@@ -8,10 +8,10 @@ enum PasswordStrength { empty, weak, fair, strong, veryStrong }
 extension PasswordStrengthExtension on PasswordStrength {
   String get label => switch (this) {
         PasswordStrength.empty => '',
-        PasswordStrength.weak => 'Yếu',
-        PasswordStrength.fair => 'Trung bình',
-        PasswordStrength.strong => 'Mạnh',
-        PasswordStrength.veryStrong => 'Rất mạnh',
+        PasswordStrength.weak => 'Weak',
+        PasswordStrength.fair => 'Fair',
+        PasswordStrength.strong => 'Strong',
+        PasswordStrength.veryStrong => 'Very Strong',
       };
 
   Color get color => switch (this) {

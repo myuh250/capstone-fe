@@ -30,29 +30,29 @@ class _AccountSettingsScreenState
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         ),
-        title: const Text('Xóa tài khoản'),
+        title: const Text('Delete Account'),
         content: const Text(
-          'Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn sau 30 ngày.',
+          'This action cannot be undone. All your data will be permanently deleted after 30 days.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text(
-              'Hủy',
+              'Cancel',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Xóa tài khoản'),
+            child: const Text('Delete Account'),
           ),
         ],
       ),
     );
     if (confirmed == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chức năng chưa được tích hợp')),
+        const SnackBar(content: Text('Feature not yet integrated')),
       );
     }
   }
@@ -61,35 +61,35 @@ class _AccountSettingsScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cài đặt tài khoản'),
+        title: const Text('Account Settings'),
         leading: BackButton(onPressed: () => context.pop()),
       ),
       body: ListView(
         children: [
           _SettingsSection(
-            title: 'Giao diện',
+            title: 'Appearance',
             children: [
               _SwitchTile(
                 icon: Icons.dark_mode_outlined,
-                label: 'Chế độ tối',
+                label: 'Dark Mode',
                 value: _darkMode,
                 onChanged: (v) => setState(() => _darkMode = v),
               ),
             ],
           ),
           _SettingsSection(
-            title: 'Thông báo',
+            title: 'Notifications',
             children: [
               _SwitchTile(
                 icon: Icons.notifications_outlined,
-                label: 'Tất cả thông báo',
+                label: 'All Notifications',
                 value: _notificationsEnabled,
                 onChanged: (v) => setState(() => _notificationsEnabled = v),
               ),
               _SwitchTile(
                 icon: Icons.auto_stories_outlined,
-                label: 'Chương mới',
-                subtitle: 'Nhận thông báo khi manga yêu thích có chương mới',
+                label: 'New Chapters',
+                subtitle: 'Get notified when your favorite manga has new chapters',
                 value: _newChapterNotif && _notificationsEnabled,
                 onChanged: _notificationsEnabled
                     ? (v) => setState(() => _newChapterNotif = v)
@@ -97,7 +97,7 @@ class _AccountSettingsScreenState
               ),
               _SwitchTile(
                 icon: Icons.chat_bubble_outline,
-                label: 'Phản hồi bình luận',
+                label: 'Comment Replies',
                 value: _commentNotif && _notificationsEnabled,
                 onChanged: _notificationsEnabled
                     ? (v) => setState(() => _commentNotif = v)
@@ -105,7 +105,7 @@ class _AccountSettingsScreenState
               ),
               _SwitchTile(
                 icon: Icons.campaign_outlined,
-                label: 'Thông báo hệ thống',
+                label: 'System Notifications',
                 value: _systemNotif && _notificationsEnabled,
                 onChanged: _notificationsEnabled
                     ? (v) => setState(() => _systemNotif = v)
@@ -114,7 +114,7 @@ class _AccountSettingsScreenState
             ],
           ),
           _SettingsSection(
-            title: 'Ngôn ngữ',
+            title: 'Language',
             children: [
               ListTile(
                 leading: const Icon(
@@ -122,12 +122,12 @@ class _AccountSettingsScreenState
                   color: AppColors.textSecondary,
                   size: 22,
                 ),
-                title: const Text('Ngôn ngữ ứng dụng'),
+                title: const Text('App Language'),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Tiếng Việt',
+                      'English',
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 14,
@@ -146,7 +146,7 @@ class _AccountSettingsScreenState
             ],
           ),
           _SettingsSection(
-            title: 'Tài khoản',
+            title: 'Account',
             children: [
               ListTile(
                 leading: const Icon(
@@ -154,7 +154,7 @@ class _AccountSettingsScreenState
                   color: AppColors.textSecondary,
                   size: 22,
                 ),
-                title: const Text('Đăng nhập & Bảo mật'),
+                title: const Text('Login & Security'),
                 trailing: const Icon(
                   Icons.chevron_right,
                   color: AppColors.textSecondary,
@@ -168,7 +168,7 @@ class _AccountSettingsScreenState
                   color: AppColors.textSecondary,
                   size: 22,
                 ),
-                title: const Text('Xuất dữ liệu'),
+                title: const Text('Export Data'),
                 trailing: const Icon(
                   Icons.chevron_right,
                   color: AppColors.textSecondary,
@@ -183,7 +183,7 @@ class _AccountSettingsScreenState
                   size: 22,
                 ),
                 title: Text(
-                  'Xóa tài khoản',
+                  'Delete Account',
                   style: TextStyle(color: AppColors.error),
                 ),
                 trailing: Icon(

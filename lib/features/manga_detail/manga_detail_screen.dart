@@ -7,6 +7,7 @@ import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/chapter.dart';
+import '../../models/manga.dart';
 import '../../providers/comment_providers.dart';
 import '../../providers/manga_providers.dart';
 import '../../providers/recommendation_providers.dart';
@@ -21,101 +22,136 @@ import 'widgets/rating_display.dart';
 import 'widgets/related_manga_section.dart';
 
 class MangaDetailScreen extends ConsumerWidget {
-  const MangaDetailScreen({super.key, required this.mangaId});
+  const MangaDetailScreen({super.key, required this.mangaSlug});
 
-  final String mangaId;
+  final String mangaSlug;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mangaAsync = ref.watch(mangaDetailProvider(mangaId));
-    final isFavorite = ref.watch(favoriteProvider(mangaId));
-    final recsAsync = ref.watch(mangaRecommendationsProvider(mangaId));
+    final mangaAsync = ref.watch(mangaBySlugProvider(mangaSlug));
 
     return Scaffold(
-      body: mangaAsync.when(
-        data: (manga) => CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 0,
-              floating: false,
-              pinned: true,
-              title: Text(
-                manga.title,
-                overflow: TextOverflow.ellipsis,
-              ),
-              leading: const BackButton(),
-            ),
-            SliverToBoxAdapter(
-              child: MangaHeader(
-                manga: manga,
-                isFavorite: isFavorite,
-                onToggleFavorite: () =>
-                    ref.read(favoriteProvider(mangaId).notifier).toggle(),
-              ),
-            ),
-            const SliverToBoxAdapter(
-              child: _SectionDivider(),
-            ),
-            if (manga.description != null && manga.description!.isNotEmpty)
-              SliverToBoxAdapter(
-                child: MangaDescription(description: manga.description!),
-              ),
-            const SliverToBoxAdapter(child: _SectionDivider()),
-            SliverToBoxAdapter(
-              child: ChapterList(
-                mangaId: mangaId,
-                onTapChapter: (chapter) =>
-                    _navigateToReader(context, chapter),
-              ),
-            ),
-            const SliverToBoxAdapter(child: _SectionDivider()),
-            SliverToBoxAdapter(
-              child: _RatingSection(
-                mangaId: mangaId,
-                manga: manga,
-              ),
-            ),
-            const SliverToBoxAdapter(child: _SectionDivider()),
-            SliverToBoxAdapter(
-              child: CommentSection(mangaId: mangaId),
-            ),
-            const SliverToBoxAdapter(child: _SectionDivider()),
-            SliverToBoxAdapter(
-              child: RelatedMangaSection(
-                mangaId: mangaId,
-                onTapManga: (id) =>
-                    context.pushReplacement(RouteNames.mangaDetail(id)),
-              ),
-            ),
-            recsAsync.maybeWhen(
-              data: (recs) => SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    const _SectionDivider(),
-                    RecommendationSection(
-                      title: 'Có thể bạn cũng thích',
-                      recommendations: recs,
-                      onTapManga: (id) =>
-                          context.pushReplacement(RouteNames.mangaDetail(id)),
-                    ),
-                  ],
-                ),
-              ),
-              orElse: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
-            ),
-          ],
+      appBar: mangaAsync.whenOrNull(
+        data: (manga) => AppBar(
+          title: Text(
+            manga.title,
+            overflow: TextOverflow.ellipsis,
+          ),
+          leading: BackButton(
+            onPressed: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                context.go(RouteNames.home);
+              }
+            },
+          ),
         ),
-        loading: () => const _MangaDetailSkeleton(),
-        error: (e, _) => ErrorView(
-          message: e is Exception ? e.toString() : 'Không thể tải manga.',
-          onRetry: () => ref.invalidate(mangaDetailProvider(mangaId)),
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: mangaAsync.when(
+            data: (manga) {
+              final isFavorite = ref.watch(favoriteProvider(manga.id));
+              final recsAsync = ref.watch(mangaRecommendationsProvider(manga.id));
+              return CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: _SectionBorder(
+                      child: MangaHeader(
+                        manga: manga,
+                        isFavorite: isFavorite,
+                        onToggleFavorite: () =>
+                            ref.read(favoriteProvider(manga.id).notifier).toggle(),
+                        onReadNow: () {
+                          final chapters = ref.read(chapterListProvider(manga.id)).chapters;
+                          if (chapters.isNotEmpty) {
+                            _navigateToReader(context, chapters.last, manga: manga);
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(
+                    child: _SectionDivider(),
+                  ),
+                  if (manga.description != null && manga.description!.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: _SectionBorder(
+                        child: MangaDescription(description: manga.description!),
+                      ),
+                    ),
+                  const SliverToBoxAdapter(child: _SectionDivider()),
+                  SliverToBoxAdapter(
+                    child: _SectionBorder(
+                      child: ChapterList(
+                        mangaId: manga.id,
+                        onTapChapter: (chapter) =>
+                            _navigateToReader(context, chapter, manga: manga),
+                      ),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: _SectionDivider()),
+                  SliverToBoxAdapter(
+                    child: _SectionBorder(
+                      child: _RatingSection(
+                        mangaId: manga.id,
+                        manga: manga,
+                      ),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: _SectionDivider()),
+                  SliverToBoxAdapter(
+                    child: _SectionBorder(
+                      child: CommentSection(mangaId: manga.id),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: _SectionDivider()),
+                  SliverToBoxAdapter(
+                    child: _SectionBorder(
+                      child: RelatedMangaSection(
+                        mangaId: manga.id,
+                        onTapManga: (id) =>
+                            context.pushReplacement(RouteNames.mangaDetail(id)),
+                      ),
+                    ),
+                  ),
+                  recsAsync.maybeWhen(
+                    data: (recs) => SliverToBoxAdapter(
+                      child: Column(
+                        children: [
+                          const _SectionDivider(),
+                          _SectionBorder(
+                            child: RecommendationSection(
+                              title: 'You May Also Like',
+                              recommendations: recs,
+                              onTapManga: (id) =>
+                                  context.pushReplacement(RouteNames.mangaDetail(id)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    orElse: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
+                  ),
+                ],
+              );
+            },
+            loading: () => const _MangaDetailSkeleton(),
+            error: (e, _) => ErrorView(
+              message: e is Exception ? e.toString() : 'Unable to load manga.',
+              onRetry: () => ref.invalidate(mangaBySlugProvider(mangaSlug)),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  void _navigateToReader(BuildContext context, Chapter chapter) {
-    context.push(RouteNames.reader(mangaId, chapter.id));
+  void _navigateToReader(BuildContext context, Chapter chapter, {required Manga manga}) {
+    final slug = manga.slug ?? mangaSlug;
+    context.push(RouteNames.reader(slug, chapter.number));
   }
 }
 
@@ -133,6 +169,11 @@ class _RatingSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final userRatingAsync = ref.watch(userRatingProvider(mangaId));
     final userRating = userRatingAsync.valueOrNull;
+    final statsAsync = ref.watch(mangaRatingStatsProvider(mangaId));
+    final stats = statsAsync.valueOrNull;
+
+    final averageRating = stats?.averageScore ?? manga.averageRating;
+    final ratingCount = stats?.ratingCount ?? 0;
 
     return Container(
       color: AppColors.surface,
@@ -141,15 +182,15 @@ class _RatingSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Đánh giá',
+            'Rating',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
           ),
           const SizedBox(height: AppSpacing.md),
           RatingDisplay(
-            averageRating: manga.averageRating,
-            ratingCount: 1240,
+            averageRating: averageRating,
+            ratingCount: ratingCount,
             userRating: userRating,
             onRate: () => showRatingDialog(
               context,
@@ -173,9 +214,28 @@ class _SectionDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return const SizedBox(height: AppSpacing.md);
+  }
+}
+
+class _SectionBorder extends StatelessWidget {
+  const _SectionBorder({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      height: AppSpacing.sm,
-      color: AppColors.background,
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: AppColors.primary.withAlpha(180),
+          width: 1.2,
+        ),
+      ),
+      child: child,
     );
   }
 }
@@ -245,4 +305,3 @@ class _MangaDetailSkeleton extends StatelessWidget {
     );
   }
 }
-

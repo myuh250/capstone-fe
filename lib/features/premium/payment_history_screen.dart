@@ -16,15 +16,15 @@ class PaymentHistoryScreen extends ConsumerWidget {
     final historyState = ref.watch(paymentHistoryProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Lịch sử thanh toán')),
+      appBar: AppBar(title: const Text('Payment History')),
       body: historyState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Lỗi: $e')),
+        error: (e, _) => Center(child: Text('Error: $e')),
         data: (transactions) {
           if (transactions.isEmpty) {
             return const EmptyState(
               icon: Icons.receipt_long_outlined,
-              message: 'Chưa có giao dịch nào',
+              message: 'No transactions yet',
             );
           }
           return Column(
@@ -72,21 +72,21 @@ class _SummaryBanner extends StatelessWidget {
         children: [
           Expanded(
             child: _Stat(
-              label: 'Tổng giao dịch',
+              label: 'Total Transactions',
               value: '${transactions.length}',
             ),
           ),
           Container(width: 1, height: 40, color: Colors.white24),
           Expanded(
             child: _Stat(
-              label: 'Thành công',
+              label: 'Successful',
               value: '${successful.length}',
             ),
           ),
           Container(width: 1, height: 40, color: Colors.white24),
           Expanded(
             child: _Stat(
-              label: 'Đã chi',
+              label: 'Total Spent',
               value: '${SubscriptionPlanExtension.formatNumber(totalSpent)}đ',
             ),
           ),

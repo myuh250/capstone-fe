@@ -40,7 +40,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     setState(() => _isLoading = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Mật khẩu đã được thay đổi thành công'),
+        content: Text('Password changed successfully'),
         backgroundColor: AppColors.statusGreen,
       ),
     );
@@ -51,7 +51,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Đổi mật khẩu'),
+        title: const Text('Change Password'),
         leading: BackButton(onPressed: () => context.pop()),
       ),
       body: SingleChildScrollView(
@@ -80,7 +80,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
-                        'Mật khẩu mới phải có ít nhất 8 ký tự, bao gồm chữ cái và số.',
+                        'New password must be at least 8 characters, including letters and numbers.',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: AppColors.statusBlue,
                             ),
@@ -92,18 +92,18 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               const Gap(AppSpacing.xl),
               AuthTextField(
                 controller: _currentController,
-                label: 'Mật khẩu hiện tại',
+                label: 'Current Password',
                 hint: '••••••••',
                 prefixIcon: Icons.lock_outline,
                 isPassword: true,
                 validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Vui lòng nhập mật khẩu' : null,
+                    (v == null || v.isEmpty) ? 'Please enter your password' : null,
                 enabled: !_isLoading,
               ),
               const Gap(AppSpacing.xl),
               AuthTextField(
                 controller: _newController,
-                label: 'Mật khẩu mới',
+                label: 'New Password',
                 hint: '••••••••',
                 prefixIcon: Icons.lock_outline,
                 isPassword: true,
@@ -120,13 +120,13 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               const Gap(AppSpacing.lg),
               AuthTextField(
                 controller: _confirmController,
-                label: 'Xác nhận mật khẩu mới',
+                label: 'Confirm New Password',
                 hint: '••••••••',
                 prefixIcon: Icons.lock_outline,
                 isPassword: true,
                 validator: (v) {
                   if (v != _newController.text) {
-                    return 'Mật khẩu không khớp';
+                    return 'Passwords do not match';
                   }
                   return null;
                 },
@@ -152,7 +152,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         ),
                       )
                     : const Text(
-                        'Đổi mật khẩu',
+                        'Change Password',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,

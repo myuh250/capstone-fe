@@ -23,7 +23,7 @@ class ReadingHistoryScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lịch sử đọc'),
+        title: const Text('Reading History'),
         leading: BackButton(onPressed: () => context.pop()),
         actions: [
           historyAsync.maybeWhen(
@@ -31,7 +31,7 @@ class ReadingHistoryScreen extends ConsumerWidget {
                 ? TextButton(
                     onPressed: () => _confirmClearAll(context, ref),
                     child: const Text(
-                      'Xóa tất cả',
+                      'Clear All',
                       style: TextStyle(color: AppColors.error),
                     ),
                   )
@@ -43,14 +43,14 @@ class ReadingHistoryScreen extends ConsumerWidget {
       body: historyAsync.when(
         loading: () => const _HistorySkeleton(),
         error: (e, _) => ErrorView(
-          message: 'Không thể tải lịch sử đọc',
+          message: 'Failed to load reading history',
           onRetry: () => ref.invalidate(readingHistoryProvider),
         ),
         data: (history) {
           if (history.isEmpty) {
             return const EmptyState(
               icon: Icons.history,
-              message: 'Bắt đầu đọc manga để lịch sử hiện ở đây',
+              message: 'Start reading manga to see your history here',
             );
           }
           return ListView(
@@ -61,8 +61,8 @@ class ReadingHistoryScreen extends ConsumerWidget {
                         history: recent,
                         onTap: () => context.push(
                           RouteNames.reader(
-                            recent.mangaId,
-                            recent.lastChapterId,
+                            RouteNames.titleToSlug(recent.mangaTitle),
+                            recent.lastChapterNumber,
                           ),
                         ),
                       )
@@ -77,7 +77,7 @@ class ReadingHistoryScreen extends ConsumerWidget {
                   AppSpacing.xs,
                 ),
                 child: Text(
-                  'TẤT CẢ (${history.length})',
+                  'ALL (${history.length})',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: AppColors.textSecondary,
                         letterSpacing: 0.8,
@@ -98,9 +98,9 @@ class ReadingHistoryScreen extends ConsumerWidget {
                   return HistoryListTile(
                     history: h,
                     onTap: () =>
-                        context.push(RouteNames.mangaDetail(h.mangaId)),
+                        context.push(RouteNames.mangaDetail(RouteNames.titleToSlug(h.mangaTitle))),
                     onContinue: () => context.push(
-                      RouteNames.reader(h.mangaId, h.lastChapterId),
+                      RouteNames.reader(RouteNames.titleToSlug(h.mangaTitle), h.lastChapterNumber),
                     ),
                     onRemove: () => ref
                         .read(readingHistoryProvider.notifier)
@@ -124,20 +124,20 @@ class ReadingHistoryScreen extends ConsumerWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         ),
-        title: const Text('Xóa lịch sử đọc'),
-        content: const Text('Bạn có chắc muốn xóa toàn bộ lịch sử đọc?'),
+        title: const Text('Clear Reading History'),
+        content: const Text('Are you sure you want to clear all reading history?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text(
-              'Hủy',
+              'Cancel',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Xóa tất cả'),
+            child: const Text('Clear All'),
           ),
         ],
       ),

@@ -108,7 +108,7 @@ class FavoritesMangaCard extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.favorite, color: AppColors.error),
               onPressed: onRemove,
-              tooltip: 'Xóa khỏi yêu thích',
+              tooltip: 'Remove from Favorites',
             ),
           ],
         ),

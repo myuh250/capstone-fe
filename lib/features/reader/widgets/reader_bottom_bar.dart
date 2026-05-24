@@ -43,7 +43,7 @@ class ReaderBottomBar extends StatelessWidget {
             children: [
               _ChapterNavButton(
                 icon: Icons.skip_previous,
-                label: previousChapter?.displayNumber ?? 'Đầu',
+                label: previousChapter?.displayNumber ?? 'First',
                 onTap: onPreviousChapter,
               ),
               Text(
@@ -56,7 +56,7 @@ class ReaderBottomBar extends StatelessWidget {
               ),
               _ChapterNavButton(
                 icon: Icons.skip_next,
-                label: nextChapter?.displayNumber ?? 'Cuối',
+                label: nextChapter?.displayNumber ?? 'Last',
                 onTap: onNextChapter,
                 isNext: true,
               ),

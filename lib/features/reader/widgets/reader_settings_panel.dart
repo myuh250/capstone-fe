@@ -8,8 +8,8 @@ enum ReaderTheme { dark, light, sepia }
 
 extension ReaderThemeExtension on ReaderTheme {
   String get label => switch (this) {
-        ReaderTheme.dark => 'Tối',
-        ReaderTheme.light => 'Sáng',
+        ReaderTheme.dark => 'Dark',
+        ReaderTheme.light => 'Light',
         ReaderTheme.sepia => 'Sepia',
       };
 
@@ -32,21 +32,17 @@ class ReaderSettingsPanel extends StatefulWidget {
     required this.isVerticalMode,
     required this.brightness,
     required this.readerTheme,
-    required this.autoNextChapter,
     required this.onToggleReadingMode,
     required this.onBrightnessChanged,
     required this.onThemeChanged,
-    required this.onAutoNextChanged,
   });
 
   final bool isVerticalMode;
   final double brightness;
   final ReaderTheme readerTheme;
-  final bool autoNextChapter;
   final VoidCallback onToggleReadingMode;
   final ValueChanged<double> onBrightnessChanged;
   final ValueChanged<ReaderTheme> onThemeChanged;
-  final ValueChanged<bool> onAutoNextChanged;
 
   @override
   State<ReaderSettingsPanel> createState() => _ReaderSettingsPanelState();
@@ -95,7 +91,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
               ),
               const Gap(AppSpacing.lg),
               Text(
-                'Cài đặt đọc',
+                'Reader Settings',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -103,7 +99,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
               const Gap(AppSpacing.xl),
 
               // Reading mode toggle
-              _SectionLabel('Chế độ đọc'),
+              _SectionLabel('Reading Mode'),
               const Gap(AppSpacing.sm),
               _ReadingModeToggle(
                 isVertical: widget.isVerticalMode,
@@ -112,7 +108,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
               const Gap(AppSpacing.xl),
 
               // Background theme
-              _SectionLabel('Nền đọc'),
+              _SectionLabel('Background'),
               const Gap(AppSpacing.sm),
               _ReaderThemeSelector(
                 current: widget.readerTheme,
@@ -121,7 +117,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
               const Gap(AppSpacing.xl),
 
               // Brightness (mobile only)
-              _SectionLabel('Độ sáng'),
+              _SectionLabel('Brightness'),
               const Gap(AppSpacing.xs),
               Row(
                 children: [
@@ -149,34 +145,6 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
                     size: 20,
                   ),
                 ],
-              ),
-              const Gap(AppSpacing.xl),
-
-              // Auto-next chapter
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceAlt,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-                child: SwitchListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                  ),
-                  title: const Text(
-                    'Tự động sang chương tiếp',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: const Text(
-                    'Tự động chuyển chương khi đọc đến trang cuối',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  value: widget.autoNextChapter,
-                  onChanged: widget.onAutoNextChanged,
-                  activeThumbColor: AppColors.primary,
-                ),
               ),
             ],
           ),
@@ -218,7 +186,7 @@ class _ReadingModeToggle extends StatelessWidget {
         Expanded(
           child: _ModeButton(
             icon: Icons.swap_vert_rounded,
-            label: 'Cuộn dọc',
+            label: 'Vertical Scroll',
             selected: isVertical,
             onTap: !isVertical ? onToggle : null,
           ),
@@ -227,7 +195,7 @@ class _ReadingModeToggle extends StatelessWidget {
         Expanded(
           child: _ModeButton(
             icon: Icons.swap_horiz_rounded,
-            label: 'Lật trang',
+            label: 'Page Flip',
             selected: !isVertical,
             onTap: isVertical ? onToggle : null,
           ),

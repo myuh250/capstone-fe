@@ -22,7 +22,7 @@ class NotificationsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Row(
           children: [
-            const Text('Thông báo'),
+            const Text('Notifications'),
             if (unread > 0) ...[
               const SizedBox(width: AppSpacing.sm),
               Container(
@@ -35,7 +35,7 @@ class NotificationsScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                 ),
                 child: Text(
-                  '$unread mới',
+                  '$unread new',
                   style: const TextStyle(
                     fontSize: 11,
                     color: Colors.white,
@@ -52,7 +52,7 @@ class NotificationsScreen extends ConsumerWidget {
               onPressed: () =>
                   ref.read(notificationsProvider.notifier).markAllAsRead(),
               child: const Text(
-                'Đọc tất cả',
+                'Mark All Read',
                 style: TextStyle(color: AppColors.primary, fontSize: 13),
               ),
             ),
@@ -60,11 +60,11 @@ class NotificationsScreen extends ConsumerWidget {
       ),
       body: notifications.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Lỗi: $e')),
+        error: (e, _) => Center(child: Text('Error: $e')),
         data: (items) => items.isEmpty
             ? const EmptyState(
                 icon: Icons.notifications_none,
-                message: 'Bạn chưa có thông báo nào',
+                message: 'You have no notifications',
               )
             : ListView.separated(
                 itemCount: items.length,

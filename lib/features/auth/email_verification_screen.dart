@@ -48,7 +48,7 @@ class _EmailVerificationScreenState
     if (success) {
       context.go(RouteNames.home);
     } else {
-      setState(() => _errorMessage = 'OTP không hợp lệ. Vui lòng thử lại.');
+      setState(() => _errorMessage = 'Invalid OTP. Please try again.');
     }
   }
 
@@ -58,7 +58,7 @@ class _EmailVerificationScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Xác thực Email'),
+        title: const Text('Verify Email'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -88,7 +88,7 @@ class _EmailVerificationScreenState
                   ),
                   const Gap(AppSpacing.xl),
                   Text(
-                    'Kiểm tra Email của bạn',
+                    'Check Your Email',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -96,7 +96,7 @@ class _EmailVerificationScreenState
                   ),
                   const Gap(AppSpacing.sm),
                   Text(
-                    'Chúng tôi đã gửi mã OTP 6 chữ số đến\n${user?.email ?? 'email của bạn'}',
+                    'We sent a 6-digit OTP code to\n${user?.email ?? 'your email'}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -175,7 +175,7 @@ class _EmailVerificationScreenState
                             ),
                           )
                         : const Text(
-                            'Xác thực',
+                            'Verify',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -186,7 +186,7 @@ class _EmailVerificationScreenState
                   TextButton(
                     onPressed: _isVerifying ? null : () {},
                     child: const Text(
-                      'Gửi lại OTP',
+                      'Resend OTP',
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
                   ),

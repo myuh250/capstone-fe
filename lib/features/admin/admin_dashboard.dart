@@ -36,7 +36,7 @@ class AdminDashboard extends ConsumerWidget {
           child: LoadingSkeleton(width: double.infinity, height: 400),
         ),
         error: (e, _) => ErrorView(
-          message: 'Không thể tải thống kê.',
+          message: 'Failed to load statistics.',
           onRetry: () => ref.invalidate(adminStatsProvider),
         ),
       ),
@@ -57,7 +57,7 @@ class _DashboardContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Tổng quan hệ thống',
+            'System Overview',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -70,7 +70,7 @@ class _DashboardContent extends StatelessWidget {
           ),
           const Gap(AppSpacing.xl),
           Text(
-            'Quản lý nhanh',
+            'Quick Actions',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -93,42 +93,42 @@ class _StatsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = [
       (
-        'Tổng người dùng',
+        'Total Users',
         stats.totalUsers.toString(),
         Icons.people_outline,
         AppColors.statusBlue,
-        '+${stats.newUsersToday} hôm nay',
+        '+${stats.newUsersToday} today',
       ),
       (
-        'Tổng manga',
+        'Total Manga',
         stats.totalManga.toString(),
         Icons.menu_book_outlined,
         AppColors.primary,
         null,
       ),
       (
-        'Tổng chương',
+        'Total Chapters',
         stats.totalChapters.toString(),
         Icons.article_outlined,
         AppColors.statusGreen,
         null,
       ),
       (
-        'Báo cáo chờ',
+        'Pending Reports',
         stats.totalReports.toString(),
         Icons.flag_outlined,
         AppColors.error,
         null,
       ),
       (
-        'Mới hôm nay',
+        'New Today',
         stats.newUsersToday.toString(),
         Icons.person_add_outlined,
         AppColors.statusGreen,
         null,
       ),
       (
-        'Đang đọc',
+        'Active Readers',
         stats.activeReaders.toString(),
         Icons.auto_stories_outlined,
         AppColors.ratingYellow,
@@ -165,22 +165,22 @@ class _QuickActionsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final actions = [
       (
-        'Quản lý người dùng',
+        'User Management',
         Icons.manage_accounts_outlined,
         RouteNames.adminUsers,
       ),
       (
-        'Quản lý nội dung',
+        'Content Management',
         Icons.library_books_outlined,
         RouteNames.adminContent,
       ),
       (
-        'Kiểm duyệt',
+        'Moderation',
         Icons.shield_outlined,
         RouteNames.adminModeration,
       ),
       (
-        'Báo cáo',
+        'Reports',
         Icons.bar_chart_outlined,
         RouteNames.adminReports,
       ),

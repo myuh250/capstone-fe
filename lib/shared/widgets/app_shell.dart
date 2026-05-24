@@ -63,11 +63,20 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   Widget build(BuildContext context) {
     if (context.isDesktop || context.isTablet) {
-      return Row(
-        children: [
-          _buildSidebar(),
-          Expanded(child: widget.child),
-        ],
+      return Scaffold(
+        body: Row(
+          children: [
+            _buildSidebar(),
+            Expanded(child: widget.child),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton.small(
+          heroTag: 'chatbot_fab',
+          backgroundColor: AppColors.primary,
+          tooltip: 'AI Assistant',
+          onPressed: () => ChatbotPanel.show(context),
+          child: const Icon(Icons.smart_toy_outlined, color: Colors.white),
+        ),
       );
     } else {
       return Scaffold(
@@ -76,7 +85,7 @@ class _AppShellState extends ConsumerState<AppShell> {
         floatingActionButton: FloatingActionButton.small(
           heroTag: 'chatbot_fab',
           backgroundColor: AppColors.primary,
-          tooltip: 'Trợ lý AI',
+          tooltip: 'AI Assistant',
           onPressed: () => ChatbotPanel.show(context),
           child: const Icon(Icons.smart_toy_outlined, color: Colors.white),
         ),
@@ -153,20 +162,20 @@ class _AppShellState extends ConsumerState<AppShell> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         ),
-        title: const Text('Đăng xuất'),
-        content: const Text('Bạn có chắc muốn đăng xuất?'),
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text(
-              'Hủy',
+              'Cancel',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Đăng xuất'),
+            child: const Text('Sign Out'),
           ),
         ],
       ),
@@ -279,7 +288,7 @@ class _SidebarLogoutButton extends StatelessWidget {
                 Icon(Icons.logout, color: AppColors.error, size: 24),
                 SizedBox(width: AppSpacing.md),
                 Text(
-                  'Đăng xuất',
+                  'Sign Out',
                   style: TextStyle(
                     color: AppColors.error,
                     fontWeight: FontWeight.w500,
@@ -331,7 +340,7 @@ class _SidebarNotificationButton extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Text(
-                  'Thông báo',
+                  'Notifications',
                   style: context.textTheme.bodyLarge?.copyWith(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w400,

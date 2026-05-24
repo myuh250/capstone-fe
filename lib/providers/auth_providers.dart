@@ -18,7 +18,7 @@ final authStateProvider =
 });
 
 class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
-  AuthNotifier(this._repository) : super(const AsyncValue.data(null)) {
+  AuthNotifier(this._repository) : super(const AsyncValue.loading()) {
     _init();
   }
 

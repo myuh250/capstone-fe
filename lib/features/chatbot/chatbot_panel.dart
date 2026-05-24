@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import '../../core/network/api_client.dart';
+import '../../core/network/api_endpoints.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 
@@ -18,36 +21,39 @@ class ChatMessage {
   final DateTime timestamp;
 }
 
-class ChatbotPanel extends StatefulWidget {
-  const ChatbotPanel({super.key, this.initialContext});
+class ChatbotPanel extends ConsumerStatefulWidget {
+  const ChatbotPanel({super.key, this.initialContext, this.mangaId, this.chapterId});
 
   final String? initialContext;
+  final String? mangaId;
+  final String? chapterId;
 
-  static Future<void> show(BuildContext context, {String? initialContext}) {
+  static Future<void> show(BuildContext context, {String? initialContext, String? mangaId, String? chapterId}) {
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) => ChatbotPanel(initialContext: initialContext),
+      builder: (_) => ChatbotPanel(initialContext: initialContext, mangaId: mangaId, chapterId: chapterId),
     );
   }
 
   @override
-  State<ChatbotPanel> createState() => _ChatbotPanelState();
+  ConsumerState<ChatbotPanel> createState() => _ChatbotPanelState();
 }
 
-class _ChatbotPanelState extends State<ChatbotPanel> {
+class _ChatbotPanelState extends ConsumerState<ChatbotPanel> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   bool _isLoading = false;
   final List<ChatMessage> _messages = [];
+  String? _sessionId;
 
   static const _suggestions = [
-    'Gợi ý manga hành động',
-    'Manga hoàn thành hay nhất',
-    'Manga tương tự One Piece',
-    'Manga ngắn để đọc nhanh',
+    'Suggest action manga',
+    'Best completed manga',
+    'Manga similar to One Piece',
+    'Short manga for quick reads',
   ];
 
   @override
@@ -56,8 +62,8 @@ class _ChatbotPanelState extends State<ChatbotPanel> {
     _messages.add(ChatMessage(
       role: ChatRole.bot,
       text: widget.initialContext != null
-          ? 'Xin chào! Tôi có thể giúp bạn tìm hiểu về "${widget.initialContext}" hoặc gợi ý manga khác. Bạn muốn biết gì?'
-          : 'Xin chào! Tôi là trợ lý AI của MangaApp. Tôi có thể giúp bạn tìm manga phù hợp, trả lời câu hỏi về nội dung, hoặc gợi ý dựa trên sở thích của bạn. Bạn cần gì?',
+          ? 'Hello! I can help you learn about "${widget.initialContext}" or suggest other manga. What would you like to know?'
+          : 'Hello! I\'m the AI assistant for MangaApp. I can help you find manga, answer questions about content, or give recommendations based on your preferences. How can I help?',
       timestamp: DateTime.now(),
     ));
   }
@@ -82,46 +88,44 @@ class _ChatbotPanelState extends State<ChatbotPanel> {
     _controller.clear();
     _scrollToBottom();
 
-    await Future.delayed(const Duration(milliseconds: 1200));
-    if (!mounted) return;
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      final response = await apiClient.post(
+        ApiEndpoints.aiChat,
+        data: {
+          'message': text,
+          if (widget.mangaId != null) 'mangaId': widget.mangaId,
+          if (widget.chapterId != null) 'chapterId': widget.chapterId,
+          if (_sessionId != null) 'sessionId': _sessionId,
+        },
+      );
 
-    setState(() {
-      _messages.add(ChatMessage(
-        role: ChatRole.bot,
-        text: _generateFakeResponse(text),
-        timestamp: DateTime.now(),
-      ));
-      _isLoading = false;
-    });
+      if (!mounted) return;
+
+      final data = response.data as Map<String, dynamic>;
+      _sessionId = data['sessionId'] as String?;
+      final reply = data['reply'] as String? ?? 'No response received.';
+
+      setState(() {
+        _messages.add(ChatMessage(
+          role: ChatRole.bot,
+          text: reply,
+          timestamp: DateTime.now(),
+        ));
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _messages.add(ChatMessage(
+          role: ChatRole.bot,
+          text: 'Sorry, I encountered an error. Please try again.',
+          timestamp: DateTime.now(),
+        ));
+        _isLoading = false;
+      });
+    }
     _scrollToBottom();
-  }
-
-  String _generateFakeResponse(String query) {
-    final q = query.toLowerCase();
-    if (q.contains('hành động') || q.contains('action')) {
-      return 'Dựa trên sở thích của bạn, tôi gợi ý:\n\n'
-          '• **One Piece** — Hành trình tìm kho báu huyền thoại\n'
-          '• **Attack on Titan** — Nhân loại chiến đấu với người khổng lồ\n'
-          '• **Chainsaw Man** — Thợ diệt quỷ độc đáo và bạo lực\n\n'
-          'Bạn muốn biết thêm về manga nào?';
-    }
-    if (q.contains('hoàn thành') || q.contains('completed')) {
-      return 'Những manga đã hoàn thành xuất sắc:\n\n'
-          '• **Fullmetal Alchemist** — 108 chương\n'
-          '• **Death Note** — 108 chương\n'
-          '• **Berserk** — Huyền thoại fantasy dark\n\n'
-          'Tất cả đều rất đáng đọc!';
-    }
-    if (q.contains('one piece')) {
-      return 'Nếu bạn thích One Piece, hãy thử:\n\n'
-          '• **Fairy Tail** — Hội pháp sư phiêu lưu\n'
-          '• **Hunter x Hunter** — Thế giới kỳ bí và phong phú\n'
-          '• **Black Clover** — Phép thuật và hành trình của kẻ không có năng lực\n\n'
-          'Cả ba đều có cốt truyện dài kỳ và thú vị!';
-    }
-    return 'Đây là câu trả lời mô phỏng cho: "$query".\n\n'
-        'Trong phiên bản thực tế, AI sẽ phân tích sở thích của bạn và đưa ra gợi ý cá nhân hóa. '
-        'Bạn có muốn tôi gợi ý thể loại nào khác không?';
   }
 
   void _scrollToBottom() {
@@ -222,7 +226,7 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Trợ lý AI',
+                'AI Assistant',
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
               ),
               Row(
@@ -237,7 +241,7 @@ class _Header extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   const Text(
-                    'Trực tuyến',
+                    'Online',
                     style: TextStyle(
                       fontSize: 11,
                       color: AppColors.textSecondary,
@@ -449,7 +453,7 @@ class ChatInput extends StatelessWidget {
               textInputAction: TextInputAction.send,
               onSubmitted: isLoading ? null : onSend,
               decoration: InputDecoration(
-                hintText: 'Hỏi gì đó...',
+                hintText: 'Ask something...',
                 hintStyle: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 14,

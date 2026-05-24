@@ -22,14 +22,14 @@ class ReportDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chi tiết báo cáo'),
+        title: const Text('Report Details'),
         leading: BackButton(onPressed: () => context.pop()),
       ),
       body: reportAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorView(
-          message: 'Không thể tải báo cáo',
+          message: 'Failed to load report',
           onRetry: () => ref.invalidate(reportDetailProvider(reportId)),
         ),
         data: (report) => _ReportDetailContent(report: report),
@@ -55,9 +55,9 @@ class _ReportDetailContentState
   Future<void> _resolveReport() async {
     final reason = await _showReasonDialog(
       context,
-      title: 'Xử lý báo cáo',
-      hint: 'Nhập lý do xử lý...',
-      submitLabel: 'Xử lý',
+      title: 'Resolve Report',
+      hint: 'Enter resolution reason...',
+      submitLabel: 'Resolve',
       submitColor: AppColors.statusGreen,
     );
     if (reason == null) return;
@@ -75,9 +75,9 @@ class _ReportDetailContentState
   Future<void> _dismissReport() async {
     final reason = await _showReasonDialog(
       context,
-      title: 'Bỏ qua báo cáo',
-      hint: 'Nhập lý do bỏ qua...',
-      submitLabel: 'Bỏ qua',
+      title: 'Dismiss Report',
+      hint: 'Enter dismiss reason...',
+      submitLabel: 'Dismiss',
       submitColor: AppColors.textSecondary,
     );
     if (reason == null) return;
@@ -126,7 +126,7 @@ class _ReportDetailContentState
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(null),
             child: const Text(
-              'Hủy',
+              'Cancel',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -134,7 +134,7 @@ class _ReportDetailContentState
             onPressed: () => Navigator.of(ctx).pop(
               controller.text.trim().isNotEmpty
                   ? controller.text.trim()
-                  : 'Không có ghi chú',
+                  : 'No notes',
             ),
             style: FilledButton.styleFrom(backgroundColor: submitColor),
             child: Text(submitLabel),
@@ -156,30 +156,30 @@ class _ReportDetailContentState
             padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
               _InfoSection(
-                title: 'Thông tin báo cáo',
+                title: 'Report Information',
                 children: [
                   _InfoRow(
-                    label: 'Loại nội dung',
+                    label: 'Content Type',
                     value: report.type.label,
                   ),
-                  _InfoRow(label: 'Lý do', value: report.reason.label),
+                  _InfoRow(label: 'Reason', value: report.reason.label),
                   _InfoRow(
-                    label: 'Báo cáo bởi',
+                    label: 'Reported by',
                     value: report.reportedBy,
                   ),
                   _InfoRow(
-                    label: 'Thời gian',
+                    label: 'Time',
                     value: _formatDate(report.reportedAt),
                   ),
                   _InfoRow(
-                    label: 'Trạng thái',
+                    label: 'Status',
                     value: report.status.label,
                     valueColor: _statusColor(report.status),
                   ),
                   if (report.isOverdue)
                     _InfoRow(
-                      label: 'Cảnh báo',
-                      value: 'Quá 48h chưa xử lý',
+                      label: 'Warning',
+                      value: 'Unresolved for over 48h',
                       valueColor: AppColors.error,
                     ),
                 ],
@@ -191,7 +191,7 @@ class _ReportDetailContentState
               ],
               if (report.targetTitle != null)
                 _InfoSection(
-                  title: 'Nội dung bị báo cáo',
+                  title: 'Reported Content',
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(AppSpacing.md),
@@ -217,7 +217,7 @@ class _ReportDetailContentState
                           if (report.description != null) ...[
                             const Gap(AppSpacing.sm),
                             Text(
-                              'Mô tả từ người báo cáo:',
+                              'Reporter\'s description:',
                               style: Theme.of(context)
                                   .textTheme
                                   .labelSmall
@@ -239,14 +239,14 @@ class _ReportDetailContentState
               if (!isPending && report.resolution != null) ...[
                 const Gap(AppSpacing.lg),
                 _InfoSection(
-                  title: 'Kết quả xử lý',
+                  title: 'Resolution',
                   children: [
                     _InfoRow(
-                      label: 'Xử lý bởi',
+                      label: 'Resolved by',
                       value: report.resolvedBy ?? '-',
                     ),
                     _InfoRow(
-                      label: 'Thời gian xử lý',
+                      label: 'Resolution time',
                       value: report.resolvedAt != null
                           ? _formatDate(report.resolvedAt!)
                           : '-',
@@ -262,7 +262,7 @@ class _ReportDetailContentState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Ghi chú:',
+                            'Notes:',
                             style: Theme.of(context)
                                 .textTheme
                                 .labelSmall

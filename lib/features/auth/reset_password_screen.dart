@@ -48,7 +48,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     if (_otpValue.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Vui lòng nhập đầy đủ mã OTP 6 số'),
+          content: Text('Please enter the full 6-digit OTP code'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -68,7 +68,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Đặt lại mật khẩu'),
+        title: const Text('Reset Password'),
         leading: BackButton(onPressed: () => context.pop()),
       ),
       body: SafeArea(
@@ -123,14 +123,14 @@ class _ResetForm extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Nhập mã xác nhận',
+          'Enter Verification Code',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
         ),
         const Gap(AppSpacing.sm),
         Text(
-          'Nhập mã OTP 6 số từ email và mật khẩu mới của bạn.',
+          'Enter the 6-digit OTP from your email and your new password.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -149,7 +149,7 @@ class _ResetForm extends StatelessWidget {
             children: [
               AuthTextField(
                 controller: passwordController,
-                label: 'Mật khẩu mới',
+                label: 'New Password',
                 hint: '••••••••',
                 prefixIcon: Icons.lock_outline,
                 isPassword: true,
@@ -166,13 +166,13 @@ class _ResetForm extends StatelessWidget {
               const Gap(AppSpacing.lg),
               AuthTextField(
                 controller: confirmController,
-                label: 'Xác nhận mật khẩu',
+                label: 'Confirm Password',
                 hint: '••••••••',
                 prefixIcon: Icons.lock_outline,
                 isPassword: true,
                 validator: (v) {
                   if (v != passwordController.text) {
-                    return 'Mật khẩu không khớp';
+                    return 'Passwords do not match';
                   }
                   return null;
                 },
@@ -201,7 +201,7 @@ class _ResetForm extends StatelessWidget {
                   ),
                 )
               : const Text(
-                  'Đặt lại mật khẩu',
+                  'Reset Password',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
         ),
@@ -296,14 +296,14 @@ class _SuccessView extends StatelessWidget {
         ),
         const Gap(AppSpacing.xl),
         Text(
-          'Đặt lại thành công!',
+          'Password Reset Successful!',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
         ),
         const Gap(AppSpacing.sm),
         Text(
-          'Mật khẩu của bạn đã được đặt lại. Tất cả phiên đăng nhập cũ đã bị vô hiệu hóa.',
+          'Your password has been reset. All previous sessions have been invalidated.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -319,7 +319,7 @@ class _SuccessView extends StatelessWidget {
             ),
           ),
           child: const Text(
-            'Đăng nhập ngay',
+            'Sign In Now',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),

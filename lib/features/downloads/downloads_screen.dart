@@ -18,7 +18,7 @@ class DownloadsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Đọc offline'),
+        title: const Text('Offline Reading'),
         actions: [
           if (downloads.isNotEmpty)
             TextButton(
@@ -26,21 +26,21 @@ class DownloadsScreen extends ConsumerWidget {
                 final ok = await showDialog<bool>(
                   context: context,
                   builder: (_) => AlertDialog(
-                    title: const Text('Xóa tất cả'),
+                    title: const Text('Clear All'),
                     content: const Text(
-                      'Xóa tất cả dữ liệu đã tải xuống?',
+                      'Delete all downloaded data?',
                     ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Hủy'),
+                        child: const Text('Cancel'),
                       ),
                       FilledButton(
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.error,
                         ),
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Xóa'),
+                        child: const Text('Delete'),
                       ),
                     ],
                   ),
@@ -52,7 +52,7 @@ class DownloadsScreen extends ConsumerWidget {
                 }
               },
               child: const Text(
-                'Xóa tất cả',
+                'Clear All',
                 style: TextStyle(color: AppColors.error),
               ),
             ),
@@ -62,7 +62,7 @@ class DownloadsScreen extends ConsumerWidget {
           ? const EmptyState(
               icon: Icons.download_outlined,
               message:
-                  'Chưa có manga nào được tải xuống\nTải manga để đọc khi không có mạng',
+                  'No downloaded manga yet\nDownload manga to read offline',
             )
           : ListView(
               padding: const EdgeInsets.all(AppSpacing.lg),
@@ -70,7 +70,7 @@ class DownloadsScreen extends ConsumerWidget {
                 const StorageUsageIndicator(),
                 const Gap(AppSpacing.xl),
                 Text(
-                  'Đã tải (${downloads.length})',
+                  'Downloaded (${downloads.length})',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -189,7 +189,7 @@ class _DownloadTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${item.downloadedPages}/${item.totalPages} trang',
+                  '${item.downloadedPages}/${item.totalPages} pages',
                   style: const TextStyle(
                     fontSize: 11,
                     color: AppColors.textSecondary,
@@ -223,12 +223,12 @@ class _StatusRow extends StatelessWidget {
     final (color, text) = switch (item.status) {
       DownloadStatus.completed => (
           AppColors.statusGreen,
-          'Hoàn thành • ${formatBytes(item.fileSizeBytes)}'
+          'Completed • ${formatBytes(item.fileSizeBytes)}'
         ),
-      DownloadStatus.downloading => (AppColors.primary, 'Đang tải...'),
-      DownloadStatus.paused => (AppColors.warning, 'Tạm dừng'),
-      DownloadStatus.queued => (AppColors.textSecondary, 'Chờ tải'),
-      DownloadStatus.failed => (AppColors.error, 'Thất bại'),
+      DownloadStatus.downloading => (AppColors.primary, 'Downloading...'),
+      DownloadStatus.paused => (AppColors.warning, 'Paused'),
+      DownloadStatus.queued => (AppColors.textSecondary, 'Queued'),
+      DownloadStatus.failed => (AppColors.error, 'Failed'),
     };
     return Row(
       children: [
