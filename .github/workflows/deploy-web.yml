@@ -35,7 +35,7 @@ jobs:
           echo "WS_URL=${{ secrets.WS_URL }}" >> .env
 
       - name: Build web
-        run: flutter build web --release
+        run: flutter build web --release --web-renderer html
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
