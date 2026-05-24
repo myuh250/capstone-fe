@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../../core/network/api_endpoints.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/constants.dart';
@@ -23,6 +24,12 @@ class CoverImage extends StatelessWidget {
   final BoxFit fit;
   final BorderRadius? borderRadius;
 
+  String get _resolvedUrl {
+    if (imageUrl.startsWith('http')) return imageUrl;
+    final base = ApiEndpoints.baseUrl.replaceAll(RegExp(r'/api$'), '');
+    return '$base$imageUrl';
+  }
+
   @override
   Widget build(BuildContext context) {
     final image = ClipRRect(
@@ -30,7 +37,7 @@ class CoverImage extends StatelessWidget {
           BorderRadius.circular(AppSpacing.coverRadius),
       child: kIsWeb
           ? Image.network(
-              imageUrl,
+              _resolvedUrl,
               width: width,
               height: height,
               fit: fit,
@@ -39,7 +46,7 @@ class CoverImage extends StatelessWidget {
               errorBuilder: (context, error, stack) => _CoverError(),
             )
           : CachedNetworkImage(
-              imageUrl: imageUrl,
+              imageUrl: _resolvedUrl,
               width: width,
               height: height,
               fit: fit,

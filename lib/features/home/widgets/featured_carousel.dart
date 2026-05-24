@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
+import '../../../core/network/api_endpoints.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../models/manga.dart';
@@ -132,7 +133,9 @@ class _CarouselItem extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           Image.network(
-            manga.coverUrl,
+            manga.coverUrl.startsWith('http')
+                ? manga.coverUrl
+                : '${ApiEndpoints.baseUrl.replaceAll(RegExp(r'/api$'), '')}${manga.coverUrl}',
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => Container(
               color: AppColors.surface,
