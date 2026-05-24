@@ -84,7 +84,7 @@ class MangaHeader extends StatelessWidget {
                   onReadNow: onReadNow,
                   mangaTitle: manga.title,
                   shareUrl:
-                      'https://mangahubs.link/manga/${manga.id}',
+                      'https://mangahubs.link/manga/${manga.slug ?? manga.id}',
                 ),
               ],
             ),

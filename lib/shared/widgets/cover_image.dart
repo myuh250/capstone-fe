@@ -28,15 +28,25 @@ class CoverImage extends StatelessWidget {
     final image = ClipRRect(
       borderRadius: borderRadius ??
           BorderRadius.circular(AppSpacing.coverRadius),
-      child: CachedNetworkImage(
-        imageUrl: imageUrl,
-        width: width,
-        height: height,
-        fit: fit,
-        memCacheWidth: kIsWeb ? null : AppConstants.imageCacheWidth,
-        placeholder: (context, url) => _CoverPlaceholder(),
-        errorWidget: (context, url, error) => _CoverError(),
-      ),
+      child: kIsWeb
+          ? Image.network(
+              imageUrl,
+              width: width,
+              height: height,
+              fit: fit,
+              loadingBuilder: (context, child, progress) =>
+                  progress == null ? child : _CoverPlaceholder(),
+              errorBuilder: (context, error, stack) => _CoverError(),
+            )
+          : CachedNetworkImage(
+              imageUrl: imageUrl,
+              width: width,
+              height: height,
+              fit: fit,
+              memCacheWidth: AppConstants.imageCacheWidth,
+              placeholder: (context, url) => _CoverPlaceholder(),
+              errorWidget: (context, url, error) => _CoverError(),
+            ),
     );
 
     if (width != null && height != null) {
