@@ -58,11 +58,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final loc = state.matchedLocation;
 
       final isAuthRoute = loc.startsWith('/auth');
+      final isPaymentCallback = loc.startsWith('/payment/vnpay-return');
       final isAdminRoute = loc.startsWith('/admin');
-      final isUserRoute = !isAuthRoute && !isAdminRoute;
+      final isUserRoute = !isAuthRoute && !isAdminRoute && !isPaymentCallback;
 
-      // Not logged in → redirect to login
-      if (!isLoggedIn && !isAuthRoute) return RouteNames.login;
+      // Not logged in → redirect to login (except payment callbacks)
+      if (!isLoggedIn && !isAuthRoute && !isPaymentCallback) return RouteNames.login;
 
       // Logged in, on auth page → redirect by role
       if (isLoggedIn && isAuthRoute) {
@@ -83,6 +84,21 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     },
     refreshListenable: authRefreshListenable,
     routes: [
+      // ── Payment callback (outside auth shell) ───────────────
+      GoRoute(
+        path: '/payment/vnpay-return',
+        name: 'vnpayReturn',
+        builder: (context, state) {
+          final params = state.uri.queryParameters;
+          final success = params['success'] == 'true';
+          return PaymentResultScreen(
+            success: success,
+            plan: SubscriptionPlan.monthly,
+            method: PaymentMethod.vnpay,
+          );
+        },
+      ),
+
       // ── Auth routes ──────────────────────────────────────────
       GoRoute(
         path: RouteNames.login,
@@ -187,7 +203,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               return PaymentResultScreen(
                 success: extra?.success ?? false,
                 plan: extra?.plan ?? SubscriptionPlan.monthly,
-                method: extra?.method ?? PaymentMethod.momo,
+                method: extra?.method ?? PaymentMethod.vnpay,
               );
             },
           ),

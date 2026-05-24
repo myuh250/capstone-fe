@@ -1,15 +1,14 @@
-enum PaymentMethod { momo, vnpay }
+enum PaymentMethod { vnpay }
 
 extension PaymentMethodExtension on PaymentMethod {
   String get label => switch (this) {
-        PaymentMethod.momo => 'MoMo',
         PaymentMethod.vnpay => 'VNPAY',
       };
 
   static PaymentMethod fromString(String value) {
     return PaymentMethod.values.firstWhere(
       (e) => e.name.toUpperCase() == value.toUpperCase(),
-      orElse: () => PaymentMethod.momo,
+      orElse: () => PaymentMethod.vnpay,
     );
   }
 }
@@ -140,6 +139,7 @@ class PaymentResult {
     required this.amount,
     required this.transactionRef,
     required this.createdAt,
+    this.redirectUrl,
   });
 
   final int id;
@@ -149,18 +149,23 @@ class PaymentResult {
   final int amount;
   final String transactionRef;
   final DateTime createdAt;
+  final String? redirectUrl;
 
   bool get isSuccess => status == PaymentStatus.success;
+  bool get requiresRedirect => redirectUrl != null && redirectUrl!.isNotEmpty;
 
   factory PaymentResult.fromJson(Map<String, dynamic> json) {
     return PaymentResult(
-      id: json['id'] as int,
+      id: json['id'] as int? ?? 0,
       plan: SubscriptionPlanExtension.fromString(json['plan'] as String),
       method: PaymentMethodExtension.fromString(json['method'] as String),
       status: PaymentStatusExtension.fromString(json['status'] as String),
       amount: json['amount'] as int,
       transactionRef: json['transactionRef'] as String? ?? '',
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
+          : DateTime.now(),
+      redirectUrl: json['redirectUrl'] as String?,
     );
   }
 }

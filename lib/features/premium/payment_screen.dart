@@ -1,14 +1,15 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/payment.dart';
 import '../../providers/subscription_providers.dart';
-import 'widgets/payment_method_selector.dart';
 
 class PaymentScreen extends ConsumerStatefulWidget {
   const PaymentScreen({super.key, required this.plan});
@@ -20,7 +21,7 @@ class PaymentScreen extends ConsumerStatefulWidget {
 }
 
 class _PaymentScreenState extends ConsumerState<PaymentScreen> {
-  PaymentMethod _method = PaymentMethod.momo;
+  final PaymentMethod _method = PaymentMethod.vnpay;
   bool _isLoading = false;
 
   Future<void> _processPayment() async {
@@ -32,6 +33,17 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         method: _method,
       );
       if (!mounted) return;
+
+      if (result.requiresRedirect) {
+        final url = Uri.parse(result.redirectUrl!);
+        if (kIsWeb) {
+          // Web: redirect in same tab so user returns to our app
+          await launchUrl(url, webOnlyWindowName: '_self');
+        } else {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        }
+        return;
+      }
 
       if (result.isSuccess) {
         ref.read(activeSubscriptionProvider.notifier).load();
@@ -73,9 +85,72 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                         ),
                   ),
                   const Gap(AppSpacing.md),
-                  PaymentMethodSelector(
-                    selected: _method,
-                    onChanged: (m) => setState(() => _method = m),
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      border: Border.all(color: AppColors.primary, width: 2),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF005BAC),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'VN\nPAY',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                height: 1.1,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                        const Gap(AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'VNPAY',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              const Text(
+                                'Pay with VNPAY',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.primary,
+                            border:
+                                Border.all(color: AppColors.primary, width: 2),
+                          ),
+                          child: const Icon(Icons.check,
+                              size: 12, color: Colors.white),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
