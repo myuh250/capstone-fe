@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/validators.dart';
+import '../../providers/auth_providers.dart';
 import '../auth/widgets/auth_text_field.dart';
 import '../auth/widgets/password_strength_indicator.dart';
 
@@ -35,16 +36,33 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   Future<void> _onSubmit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Password changed successfully'),
-        backgroundColor: AppColors.statusGreen,
-      ),
-    );
-    context.pop();
+    try {
+      await ref.read(authStateProvider.notifier).changePassword(
+        currentPassword: _currentController.text,
+        newPassword: _newController.text,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password changed successfully'),
+          backgroundColor: AppColors.statusGreen,
+        ),
+      );
+      if (context.canPop()) context.pop();
+    } catch (e) {
+      if (!mounted) return;
+      final message = e.toString().contains('incorrect')
+          ? 'Current password is incorrect'
+          : 'Failed to change password';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override

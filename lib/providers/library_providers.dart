@@ -31,8 +31,8 @@ class ReadingHistoryNotifier
     }
   }
 
-  Future<void> removeEntry(String mangaId) async {
-    await _repo.removeFromHistory(mangaId);
+  Future<void> removeEntry(String historyId) async {
+    await _repo.removeFromHistory(historyId);
     await _load();
   }
 

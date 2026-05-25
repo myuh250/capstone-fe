@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/network/api_endpoints.dart';
 import '../../core/theme/app_colors.dart';
 
 class UserAvatar extends StatelessWidget {
@@ -17,14 +18,21 @@ class UserAvatar extends StatelessWidget {
   final double size;
   final Color? backgroundColor;
 
+  String? get _resolvedUrl {
+    if (imageUrl == null || imageUrl!.isEmpty) return null;
+    if (imageUrl!.startsWith('http')) return imageUrl;
+    final base = ApiEndpoints.baseUrl.replaceAll(RegExp(r'/api$'), '');
+    return '$base$imageUrl';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final url = _resolvedUrl;
     return CircleAvatar(
       radius: size / 2,
       backgroundColor: backgroundColor ?? AppColors.surfaceAlt,
-      backgroundImage:
-          imageUrl != null ? CachedNetworkImageProvider(imageUrl!) : null,
-      child: imageUrl == null
+      backgroundImage: url != null ? CachedNetworkImageProvider(url) : null,
+      child: url == null
           ? Text(
               _getInitials(),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(

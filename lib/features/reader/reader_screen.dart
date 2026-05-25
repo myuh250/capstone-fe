@@ -13,6 +13,8 @@ import 'widgets/reader_app_bar.dart';
 import 'widgets/reader_bottom_bar.dart';
 import 'widgets/reader_settings_panel.dart';
 
+const _progressSaveDebounceMs = 3000;
+
 class ReaderScreen extends ConsumerWidget {
   const ReaderScreen({
     super.key,
@@ -53,7 +55,7 @@ class ReaderScreen extends ConsumerWidget {
   }
 }
 
-class _ReaderContent extends ConsumerWidget {
+class _ReaderContent extends ConsumerStatefulWidget {
   const _ReaderContent({
     required this.manga,
     required this.chapter,
@@ -65,18 +67,61 @@ class _ReaderContent extends ConsumerWidget {
   final String mangaSlug;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final pagesAsync = ref.watch(chapterPagesProvider(chapter.id));
-    final readerKey = ReaderKey(mangaId: manga.id, chapterId: chapter.id);
+  ConsumerState<_ReaderContent> createState() => _ReaderContentState();
+}
+
+class _ReaderContentState extends ConsumerState<_ReaderContent> {
+  int _lastSavedPage = 0;
+  DateTime _lastSaveTime = DateTime.fromMillisecondsSinceEpoch(0);
+  bool _initialProgressSaved = false;
+
+  void _onPageChanged(int page) {
+    final readerKey = ReaderKey(mangaId: widget.manga.id, chapterId: widget.chapter.id);
+    ref.read(readerProvider(readerKey).notifier).setPage(page);
+    _saveProgressDebounced(page);
+  }
+
+  void _saveProgressDebounced(int page) {
+    final now = DateTime.now();
+    if (page == _lastSavedPage) return;
+    if (now.difference(_lastSaveTime).inMilliseconds < _progressSaveDebounceMs) return;
+    _lastSavedPage = page;
+    _lastSaveTime = now;
+    _saveProgress(page);
+  }
+
+  void _saveProgress(int page) {
+    final pageToSave = page < 1 ? 1 : page;
+    ref.read(chapterRepositoryProvider).saveReadingProgress(
+      widget.manga.id,
+      widget.chapter.id,
+      pageToSave,
+    );
+  }
+
+  @override
+  void dispose() {
+    final readerKey = ReaderKey(mangaId: widget.manga.id, chapterId: widget.chapter.id);
+    final currentPage = ref.read(readerProvider(readerKey)).currentPage;
+    if (currentPage != _lastSavedPage && currentPage > 0) {
+      _saveProgress(currentPage);
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pagesAsync = ref.watch(chapterPagesProvider(widget.chapter.id));
+    final readerKey = ReaderKey(mangaId: widget.manga.id, chapterId: widget.chapter.id);
     final readerState = ref.watch(readerProvider(readerKey));
     final readerNotifier = ref.read(readerProvider(readerKey).notifier);
 
     final adjacentParams = AdjacentChaptersParams(
-      mangaId: manga.id,
-      chapterNumber: chapter.number,
+      mangaId: widget.manga.id,
+      chapterNumber: widget.chapter.number,
     );
     final adjacentAsync = ref.watch(adjacentChaptersProvider(adjacentParams));
-    final chapterListState = ref.watch(chapterListProvider(manga.id));
+    final chapterListState = ref.watch(chapterListProvider(widget.manga.id));
 
     final bgColor = readerState.readerTheme.backgroundColor;
 
@@ -85,22 +130,22 @@ class _ReaderContent extends ConsumerWidget {
       extendBodyBehindAppBar: true,
       appBar: readerState.isOverlayVisible
           ? ReaderAppBar(
-              mangaTitle: manga.title,
-              chapterTitle: 'Ch.${chapter.number.toInt()}',
+              mangaTitle: widget.manga.title,
+              chapterTitle: 'Ch.${widget.chapter.number.toInt()}',
               onBack: () {
                 if (Navigator.of(context).canPop()) {
                   Navigator.of(context).pop();
                 } else {
-                  context.go(RouteNames.mangaDetail(mangaSlug));
+                  context.go(RouteNames.mangaDetail(widget.mangaSlug));
                 }
               },
-              onSettings: () => _showSettings(context, ref, readerKey),
+              onSettings: () => _showSettings(context, readerKey),
               shareUrl:
-                  'https://mangahubs.link/manga/$mangaSlug/chapter-${chapter.number.toInt()}',
+                  'https://mangahubs.link/manga/${widget.mangaSlug}/chapter-${widget.chapter.number.toInt()}',
               chapters: chapterListState.chapters,
-              currentChapter: chapter,
+              currentChapter: widget.chapter,
               onChapterSelected: (ch) => context.pushReplacement(
-                RouteNames.reader(mangaSlug, ch.number),
+                RouteNames.reader(widget.mangaSlug, ch.number),
               ),
             )
           : null,
@@ -117,13 +162,17 @@ class _ReaderContent extends ConsumerWidget {
                   ),
                 );
               }
+              if (!_initialProgressSaved) {
+                _initialProgressSaved = true;
+                _saveProgress(1);
+              }
               return Stack(
                 children: [
                   PageViewer(
                     pages: pages,
                     isVerticalMode: readerState.isVerticalMode,
                     initialPage: readerState.currentPage,
-                    onPageChanged: readerNotifier.setPage,
+                    onPageChanged: _onPageChanged,
                     onTap: readerNotifier.toggleOverlay,
                   ),
                   if (readerState.brightness < 1.0)
@@ -148,15 +197,15 @@ class _ReaderContent extends ConsumerWidget {
                           totalPages: pages.length,
                           previousChapter: adjacent.previous,
                           nextChapter: adjacent.next,
-                          onPageChanged: readerNotifier.setPage,
+                          onPageChanged: _onPageChanged,
                           onPreviousChapter: adjacent.previous != null
                               ? () => context.pushReplacement(
-                                    RouteNames.reader(mangaSlug, adjacent.previous!.number),
+                                    RouteNames.reader(widget.mangaSlug, adjacent.previous!.number),
                                   )
                               : null,
                           onNextChapter: adjacent.next != null
                               ? () => context.pushReplacement(
-                                    RouteNames.reader(mangaSlug, adjacent.next!.number),
+                                    RouteNames.reader(widget.mangaSlug, adjacent.next!.number),
                                   )
                               : null,
                         ),
@@ -170,7 +219,7 @@ class _ReaderContent extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => ErrorView(
               message: 'Failed to load manga pages.',
-              onRetry: () => ref.invalidate(chapterPagesProvider(chapter.id)),
+              onRetry: () => ref.invalidate(chapterPagesProvider(widget.chapter.id)),
             ),
           ),
         ),
@@ -178,7 +227,7 @@ class _ReaderContent extends ConsumerWidget {
     );
   }
 
-  void _showSettings(BuildContext context, WidgetRef ref, ReaderKey readerKey) {
+  void _showSettings(BuildContext context, ReaderKey readerKey) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,

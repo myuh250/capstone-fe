@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
+
 import '../core/network/api_client.dart';
 import '../core/network/api_endpoints.dart';
 import '../core/storage/local_storage.dart';
@@ -16,6 +20,13 @@ abstract class AuthRepository {
   Future<void> forgotPassword(String email);
   Future<void> resetPassword({required String otp, required String newPassword});
   Future<User?> getCurrentUser();
+  Future<User> updateProfile({String? displayName, String? bio});
+  Future<String> uploadAvatar(Uint8List bytes, String filename);
+  Future<User> removeAvatar();
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
 }
 
 class RealAuthRepository implements AuthRepository {
@@ -115,5 +126,52 @@ class RealAuthRepository implements AuthRepository {
     if (token == null) return null;
     final response = await _apiClient.get(ApiEndpoints.profile);
     return User.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<User> updateProfile({String? displayName, String? bio}) async {
+    final data = <String, dynamic>{};
+    if (displayName != null) data['displayName'] = displayName;
+    if (bio != null) data['bio'] = bio;
+    final response = await _apiClient.put(
+      ApiEndpoints.updateProfile,
+      data: data,
+    );
+    return User.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<String> uploadAvatar(Uint8List bytes, String filename) async {
+    final formData = FormData.fromMap({
+      'file': MultipartFile.fromBytes(bytes, filename: filename),
+    });
+    final response = await _apiClient.post(
+      '/users/me/avatar',
+      data: formData,
+    );
+    return (response.data as Map<String, dynamic>)['avatarUrl'] as String;
+  }
+
+  @override
+  Future<User> removeAvatar() async {
+    final response = await _apiClient.put(
+      ApiEndpoints.updateProfile,
+      data: {'avatarUrl': ''},
+    );
+    return User.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _apiClient.post(
+      ApiEndpoints.changePassword,
+      data: {
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+      },
+    );
   }
 }

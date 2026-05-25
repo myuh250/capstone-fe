@@ -116,7 +116,7 @@ class RealChapterRepository implements ChapterRepository {
       data: {
         'mangaId': mangaId,
         'chapterId': chapterId,
-        'lastPageRead': currentPage,
+        'page': currentPage,
       },
     );
   }

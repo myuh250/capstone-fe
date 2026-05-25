@@ -27,7 +27,7 @@ class RealLibraryRepository implements LibraryRepository {
 
   @override
   Future<List<ReadingHistory>> getReadingHistory() async {
-    final response = await _apiClient.get(ApiEndpoints.historyMe);
+    final response = await _apiClient.get(ApiEndpoints.historyProgress);
     final data = response.data;
     List<dynamic> list;
     if (data is List) {
@@ -61,8 +61,7 @@ class RealLibraryRepository implements LibraryRepository {
       data: {
         'mangaId': mangaId,
         'chapterId': chapterId,
-        'lastPageRead': lastPageRead,
-        'chaptersRead': chaptersRead,
+        'page': lastPageRead,
       },
     );
   }

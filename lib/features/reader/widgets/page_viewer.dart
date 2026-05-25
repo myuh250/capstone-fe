@@ -53,8 +53,9 @@ class _PageViewerState extends State<PageViewer> {
         if (!mounted) return;
         if (widget.isVerticalMode) {
           if (_scrollController.hasClients) {
-            final pageHeight = MediaQuery.of(context).size.height;
-            _scrollController.jumpTo((target - 1) * pageHeight);
+            final maxExtent = _scrollController.position.maxScrollExtent;
+            final targetOffset = (target - 1) / (widget.pages.length - 1) * maxExtent;
+            _scrollController.jumpTo(targetOffset.clamp(0.0, maxExtent));
           }
         } else {
           if (_pageController.hasClients) {
@@ -89,12 +90,17 @@ class _PageViewerState extends State<PageViewer> {
       onNotification: (notification) {
         if (_isJumping) return false;
         if (notification.scrollDelta == null) return false;
-        final position = notification.metrics.pixels;
-        final pageHeight = MediaQuery.of(context).size.height;
-        final estimatedPage = (position / pageHeight).round() + 1;
+        final metrics = notification.metrics;
+        final maxExtent = metrics.maxScrollExtent;
+        if (maxExtent <= 0) return false;
+        final progress = metrics.pixels / maxExtent;
+        final estimatedPage =
+            (progress * (widget.pages.length - 1)).round() + 1;
         final clampedPage = estimatedPage.clamp(1, widget.pages.length);
-        _currentPage = clampedPage;
-        widget.onPageChanged(clampedPage);
+        if (clampedPage != _currentPage) {
+          _currentPage = clampedPage;
+          widget.onPageChanged(clampedPage);
+        }
         return false;
       },
       child: ListView.builder(

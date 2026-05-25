@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../providers/settings_providers.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -16,11 +17,7 @@ class AccountSettingsScreen extends ConsumerStatefulWidget {
 
 class _AccountSettingsScreenState
     extends ConsumerState<AccountSettingsScreen> {
-  bool _darkMode = true;
-  bool _notificationsEnabled = true;
-  bool _newChapterNotif = true;
-  bool _commentNotif = true;
-  bool _systemNotif = true;
+  String _selectedLanguage = 'English';
 
   Future<void> _confirmDeleteAccount() async {
     final confirmed = await showDialog<bool>(
@@ -57,8 +54,73 @@ class _AccountSettingsScreenState
     }
   }
 
+  void _showLanguagePicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusLg),
+        ),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: Text(
+                'Select Language',
+                style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+            _LanguageOption(
+              label: 'English',
+              selected: _selectedLanguage == 'English',
+              onTap: () {
+                setState(() => _selectedLanguage = 'English');
+                Navigator.of(ctx).pop();
+              },
+            ),
+            _LanguageOption(
+              label: 'Tiếng Việt',
+              selected: _selectedLanguage == 'Tiếng Việt',
+              onTap: () {
+                setState(() => _selectedLanguage = 'Tiếng Việt');
+                Navigator.of(ctx).pop();
+              },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showComingSoon() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Coming soon')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final themeNotifier = ref.read(themeModeProvider.notifier);
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+    final notifPrefs = ref.watch(notificationPreferencesProvider);
+    final notifNotifier = ref.read(notificationPreferencesProvider.notifier);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Account Settings'),
@@ -72,8 +134,8 @@ class _AccountSettingsScreenState
               _SwitchTile(
                 icon: Icons.dark_mode_outlined,
                 label: 'Dark Mode',
-                value: _darkMode,
-                onChanged: (v) => setState(() => _darkMode = v),
+                value: isDark,
+                onChanged: (_) => themeNotifier.toggle(),
               ),
             ],
           ),
@@ -83,32 +145,32 @@ class _AccountSettingsScreenState
               _SwitchTile(
                 icon: Icons.notifications_outlined,
                 label: 'All Notifications',
-                value: _notificationsEnabled,
-                onChanged: (v) => setState(() => _notificationsEnabled = v),
+                value: notifPrefs.allEnabled,
+                onChanged: (v) => notifNotifier.setAll(v),
               ),
               _SwitchTile(
                 icon: Icons.auto_stories_outlined,
                 label: 'New Chapters',
                 subtitle: 'Get notified when your favorite manga has new chapters',
-                value: _newChapterNotif && _notificationsEnabled,
-                onChanged: _notificationsEnabled
-                    ? (v) => setState(() => _newChapterNotif = v)
+                value: notifPrefs.newChapter && notifPrefs.allEnabled,
+                onChanged: notifPrefs.allEnabled
+                    ? (v) => notifNotifier.setNewChapter(v)
                     : null,
               ),
               _SwitchTile(
                 icon: Icons.chat_bubble_outline,
                 label: 'Comment Replies',
-                value: _commentNotif && _notificationsEnabled,
-                onChanged: _notificationsEnabled
-                    ? (v) => setState(() => _commentNotif = v)
+                value: notifPrefs.commentReplies && notifPrefs.allEnabled,
+                onChanged: notifPrefs.allEnabled
+                    ? (v) => notifNotifier.setCommentReplies(v)
                     : null,
               ),
               _SwitchTile(
                 icon: Icons.campaign_outlined,
                 label: 'System Notifications',
-                value: _systemNotif && _notificationsEnabled,
-                onChanged: _notificationsEnabled
-                    ? (v) => setState(() => _systemNotif = v)
+                value: notifPrefs.system && notifPrefs.allEnabled,
+                onChanged: notifPrefs.allEnabled
+                    ? (v) => notifNotifier.setSystem(v)
                     : null,
               ),
             ],
@@ -127,8 +189,8 @@ class _AccountSettingsScreenState
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'English',
-                      style: TextStyle(
+                      _selectedLanguage,
+                      style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 14,
                       ),
@@ -141,7 +203,7 @@ class _AccountSettingsScreenState
                     ),
                   ],
                 ),
-                onTap: () {},
+                onTap: _showLanguagePicker,
               ),
             ],
           ),
@@ -160,7 +222,7 @@ class _AccountSettingsScreenState
                   color: AppColors.textSecondary,
                   size: 20,
                 ),
-                onTap: () {},
+                onTap: _showComingSoon,
               ),
               ListTile(
                 leading: const Icon(
@@ -174,7 +236,7 @@ class _AccountSettingsScreenState
                   color: AppColors.textSecondary,
                   size: 20,
                 ),
-                onTap: () {},
+                onTap: _showComingSoon,
               ),
               ListTile(
                 leading: Icon(
@@ -283,6 +345,35 @@ class _SwitchTile extends StatelessWidget {
       value: value,
       onChanged: onChanged,
       activeThumbColor: AppColors.primary,
+    );
+  }
+}
+
+class _LanguageOption extends StatelessWidget {
+  const _LanguageOption({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(
+        label,
+        style: TextStyle(
+          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          color: selected ? AppColors.primary : null,
+        ),
+      ),
+      trailing: selected
+          ? const Icon(Icons.check_rounded, color: AppColors.primary, size: 20)
+          : null,
+      onTap: onTap,
     );
   }
 }

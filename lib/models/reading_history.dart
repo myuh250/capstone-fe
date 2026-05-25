@@ -1,5 +1,6 @@
 class ReadingHistory {
   const ReadingHistory({
+    this.id,
     required this.mangaId,
     required this.mangaTitle,
     required this.coverUrl,
@@ -11,6 +12,7 @@ class ReadingHistory {
     this.lastPageRead = 0,
   });
 
+  final String? id;
   final String mangaId;
   final String mangaTitle;
   final String coverUrl;
@@ -27,14 +29,16 @@ class ReadingHistory {
   }
 
   factory ReadingHistory.fromJson(Map<String, dynamic> json) {
+    final dateStr = json['lastReadAt'] ?? json['lastReadTime'];
     return ReadingHistory(
+      id: json['id']?.toString(),
       mangaId: json['mangaId']?.toString() ?? '',
       mangaTitle: json['mangaTitle'] as String? ?? '',
-      coverUrl: json['coverUrl'] as String? ?? '',
-      lastChapterId: json['lastChapterId']?.toString() ?? '',
-      lastChapterNumber: (json['lastChapterNumber'] as num?)?.toDouble() ?? 0,
-      lastReadAt: json['lastReadAt'] != null
-          ? DateTime.parse(json['lastReadAt'] as String)
+      coverUrl: (json['coverUrl'] ?? json['mangaCoverUrl']) as String? ?? '',
+      lastChapterId: (json['lastChapterId'] ?? json['chapterId'])?.toString() ?? '',
+      lastChapterNumber: ((json['lastChapterNumber'] ?? json['chapterNumber']) as num?)?.toDouble() ?? 0,
+      lastReadAt: dateStr != null
+          ? _parseUtcDate(dateStr as String)
           : DateTime.now(),
       totalChapters: json['totalChapters'] as int? ?? 0,
       chaptersRead: json['chaptersRead'] as int? ?? 0,
@@ -43,6 +47,7 @@ class ReadingHistory {
   }
 
   ReadingHistory copyWith({
+    String? id,
     String? mangaId,
     String? mangaTitle,
     String? coverUrl,
@@ -54,6 +59,7 @@ class ReadingHistory {
     int? lastPageRead,
   }) {
     return ReadingHistory(
+      id: id ?? this.id,
       mangaId: mangaId ?? this.mangaId,
       mangaTitle: mangaTitle ?? this.mangaTitle,
       coverUrl: coverUrl ?? this.coverUrl,
@@ -64,5 +70,14 @@ class ReadingHistory {
       chaptersRead: chaptersRead ?? this.chaptersRead,
       lastPageRead: lastPageRead ?? this.lastPageRead,
     );
+  }
+
+  static DateTime _parseUtcDate(String dateStr) {
+    final parsed = DateTime.parse(dateStr);
+    if (parsed.isUtc) return parsed.toLocal();
+    return DateTime.utc(
+      parsed.year, parsed.month, parsed.day,
+      parsed.hour, parsed.minute, parsed.second, parsed.millisecond,
+    ).toLocal();
   }
 }

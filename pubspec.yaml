@@ -73,6 +73,9 @@ dependencies:
   # WebSocket (STOMP over SockJS)
   stomp_dart_client: ^2.1.0
 
+  # File picker
+  file_picker: ^8.0.0
+
   # Environment config
   flutter_dotenv: ^5.2.1
 

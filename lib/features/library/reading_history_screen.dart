@@ -97,14 +97,14 @@ class ReadingHistoryScreen extends ConsumerWidget {
                   final h = history[i];
                   return HistoryListTile(
                     history: h,
-                    onTap: () =>
-                        context.push(RouteNames.mangaDetail(RouteNames.titleToSlug(h.mangaTitle))),
-                    onContinue: () => context.push(
+                    onTap: () => context.push(
                       RouteNames.reader(RouteNames.titleToSlug(h.mangaTitle), h.lastChapterNumber),
                     ),
-                    onRemove: () => ref
-                        .read(readingHistoryProvider.notifier)
-                        .removeEntry(h.mangaId),
+                    onRemove: h.id != null
+                        ? () => ref
+                            .read(readingHistoryProvider.notifier)
+                            .removeEntry(h.id!)
+                        : null,
                   );
                 },
               ),

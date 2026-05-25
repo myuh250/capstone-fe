@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/utils/image_picker_helper.dart';
 import '../../providers/auth_providers.dart';
 import 'widgets/avatar_picker.dart';
 
@@ -51,19 +52,36 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Future<void> _onSave() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile updated successfully'),
-        backgroundColor: AppColors.statusGreen,
-      ),
-    );
-    context.pop();
+    try {
+      await ref.read(authStateProvider.notifier).updateProfile(
+        displayName: _nameController.text.trim(),
+        bio: _bioController.text.trim(),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated successfully'),
+          backgroundColor: AppColors.statusGreen,
+        ),
+      );
+      if (context.canPop()) context.pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update profile: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _onPickAvatar() async {
+    final user = ref.read(currentUserProvider);
+    final hasAvatar = user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty;
+
     final result = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: AppColors.surface,
@@ -72,12 +90,73 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           top: Radius.circular(AppSpacing.radiusLg),
         ),
       ),
-      builder: (_) => const AvatarPickerBottomSheet(),
+      builder: (_) => _AvatarOptionsSheet(showRemove: hasAvatar),
     );
-    if (result != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Feature "$result" not yet integrated')),
+    if (result == null || !mounted) return;
+
+    if (result == 'remove') {
+      await _removeAvatar();
+      return;
+    }
+
+    await _pickAndUploadAvatar();
+  }
+
+  Future<void> _removeAvatar() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authStateProvider.notifier).removeAvatar();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Avatar removed'),
+            backgroundColor: AppColors.statusGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to remove avatar: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final result = await ImagePickerHelper.pickImage();
+    if (result == null || !mounted) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authStateProvider.notifier).uploadAvatar(
+        result.bytes,
+        result.name,
       );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Avatar updated'),
+            backgroundColor: AppColors.statusGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to upload avatar: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -151,6 +230,59 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AvatarOptionsSheet extends StatelessWidget {
+  const _AvatarOptionsSheet({this.showRemove = false});
+
+  final bool showRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.divider,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.sm,
+            ),
+            child: Text(
+              'Change Avatar',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined),
+            title: const Text('Choose Image'),
+            onTap: () => Navigator.of(context).pop('gallery'),
+          ),
+          if (showRemove)
+            ListTile(
+              leading: Icon(Icons.delete_outline, color: AppColors.error),
+              title: Text(
+                'Remove Avatar',
+                style: TextStyle(color: AppColors.error),
+              ),
+              onTap: () => Navigator.of(context).pop('remove'),
+            ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
       ),
     );
   }

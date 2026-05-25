@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/network/api_client.dart';
@@ -84,6 +86,35 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     } catch (_) {
       return false;
     }
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _repository.changePassword(
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+    );
+  }
+
+  Future<void> updateProfile({String? displayName, String? bio}) async {
+    final updated = await _repository.updateProfile(
+      displayName: displayName,
+      bio: bio,
+    );
+    state = AsyncValue.data(updated);
+  }
+
+  Future<void> uploadAvatar(Uint8List bytes, String filename) async {
+    await _repository.uploadAvatar(bytes, filename);
+    final user = await _repository.getCurrentUser();
+    state = AsyncValue.data(user);
+  }
+
+  Future<void> removeAvatar() async {
+    final updated = await _repository.removeAvatar();
+    state = AsyncValue.data(updated);
   }
 }
 

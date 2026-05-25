@@ -50,11 +50,6 @@ class _ProfileContent extends ConsumerWidget {
                 onTap: () => context.push(RouteNames.changePassword),
               ),
               _SettingsTile(
-                icon: Icons.history_outlined,
-                label: 'Reading History',
-                onTap: () => context.push(RouteNames.readingHistory),
-              ),
-              _SettingsTile(
                 icon: Icons.settings_outlined,
                 label: 'Account Settings',
                 onTap: () => context.push(RouteNames.settings),
@@ -100,11 +95,6 @@ class _ProfileContent extends ConsumerWidget {
                 label: 'Downloaded Manga',
                 onTap: () => context.push(RouteNames.downloads),
               ),
-              _SettingsTile(
-                icon: Icons.notifications_outlined,
-                label: 'Notifications',
-                onTap: () => context.push(RouteNames.notifications),
-              ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -119,18 +109,6 @@ class _ProfileContent extends ConsumerWidget {
                 icon: Icons.info_outline,
                 label: 'About',
                 onTap: () {},
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          _SettingsSection(
-            items: [
-              _SettingsTile(
-                icon: Icons.logout,
-                label: 'Sign Out',
-                labelColor: AppColors.error,
-                iconColor: AppColors.error,
-                onTap: () => _confirmLogout(context, ref),
               ),
             ],
           ),
