@@ -5,6 +5,7 @@ class Comment {
     required this.userId,
     required this.userName,
     this.userAvatarUrl,
+    this.isUserPremium = false,
     required this.content,
     required this.createdAt,
     this.updatedAt,
@@ -18,6 +19,7 @@ class Comment {
   final String userId;
   final String userName;
   final String? userAvatarUrl;
+  final bool isUserPremium;
   final String content;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -38,6 +40,7 @@ class Comment {
           json['userName'] as String? ??
           '',
       userAvatarUrl: user?['avatarUrl'] as String? ?? json['userAvatarUrl'] as String?,
+      isUserPremium: user?['isPremium'] as bool? ?? false,
       content: json['content'] as String,
       createdAt: _parseUtc(json['createdAt'] as String),
       updatedAt: json['updatedAt'] != null
@@ -63,6 +66,7 @@ class Comment {
     String? userId,
     String? userName,
     String? userAvatarUrl,
+    bool? isUserPremium,
     String? content,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -76,6 +80,7 @@ class Comment {
       userId: userId ?? this.userId,
       userName: userName ?? this.userName,
       userAvatarUrl: userAvatarUrl ?? this.userAvatarUrl,
+      isUserPremium: isUserPremium ?? this.isUserPremium,
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

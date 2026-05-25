@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,8 +7,9 @@ import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/payment.dart';
+import '../../providers/subscription_providers.dart';
 
-class PaymentResultScreen extends StatelessWidget {
+class PaymentResultScreen extends ConsumerStatefulWidget {
   const PaymentResultScreen({
     super.key,
     required this.success,
@@ -20,7 +22,23 @@ class PaymentResultScreen extends StatelessWidget {
   final PaymentMethod method;
 
   @override
+  ConsumerState<PaymentResultScreen> createState() => _PaymentResultScreenState();
+}
+
+class _PaymentResultScreenState extends ConsumerState<PaymentResultScreen> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.success) {
+      ref.read(activeSubscriptionProvider.notifier).load();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final success = widget.success;
+    final plan = widget.plan;
+    final method = widget.method;
     return PopScope(
       canPop: false,
       child: Scaffold(
@@ -55,7 +73,7 @@ class PaymentResultScreen extends StatelessWidget {
                 ),
                 if (success) ...[
                   const Gap(AppSpacing.xl),
-                  _TransactionDetails(plan: plan, method: method),
+                  _TransactionDetails(plan: plan, method: method, ref: ref),
                 ],
                 const Spacer(),
                 SizedBox(
@@ -133,17 +151,22 @@ class _ResultIcon extends StatelessWidget {
 }
 
 class _TransactionDetails extends StatelessWidget {
-  const _TransactionDetails({required this.plan, required this.method});
+  const _TransactionDetails({
+    required this.plan,
+    required this.method,
+    required this.ref,
+  });
 
   final SubscriptionPlan plan;
   final PaymentMethod method;
+  final WidgetRef ref;
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final expiry = plan == SubscriptionPlan.yearly
-        ? now.add(const Duration(days: 365))
-        : now.add(const Duration(days: 30));
+    final sub = ref.watch(activeSubscriptionProvider).valueOrNull;
+    final expiryStr = sub != null
+        ? '${sub.expiryDate.day}/${sub.expiryDate.month}/${sub.expiryDate.year}'
+        : 'Loading...';
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -159,10 +182,7 @@ class _TransactionDetails extends StatelessWidget {
           const Gap(AppSpacing.sm),
           _Row(label: 'Amount', value: plan.formattedPrice),
           const Gap(AppSpacing.sm),
-          _Row(
-            label: 'Expires',
-            value: '${expiry.day}/${expiry.month}/${expiry.year}',
-          ),
+          _Row(label: 'Expires', value: expiryStr),
         ],
       ),
     );

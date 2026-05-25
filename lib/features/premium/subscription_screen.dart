@@ -46,7 +46,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             _PremiumHeroSection(),
             if (activeSub != null) ...[
               const Gap(AppSpacing.xl),
-              _ActiveSubscriptionBanner(subscription: activeSub),
+              _ActiveSubscriptionBanner(
+                subscription: activeSub,
+                onCancel: activeSub.autoRenew ? () => _confirmCancel(context) : null,
+              ),
             ] else ...[
               const Gap(AppSpacing.xl),
               Text(
@@ -106,12 +109,68 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       ),
     );
   }
+
+  Future<void> _confirmCancel(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
+        title: const Text('Cancel Subscription'),
+        content: const Text(
+          'Your premium features will remain active until the current period ends. '
+          'After that, auto-renewal will be disabled and your plan will not be renewed.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Keep Plan', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Cancel Renewal'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final repo = ref.read(subscriptionRepositoryProvider);
+      await repo.cancelSubscription();
+      ref.read(activeSubscriptionProvider.notifier).load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Auto-renewal cancelled. Premium active until expiry.'),
+            backgroundColor: AppColors.statusGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to cancel: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
 }
 
 class _ActiveSubscriptionBanner extends StatelessWidget {
-  const _ActiveSubscriptionBanner({required this.subscription});
+  const _ActiveSubscriptionBanner({
+    required this.subscription,
+    this.onCancel,
+  });
 
   final SubscriptionInfo subscription;
+  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -129,12 +188,14 @@ class _ActiveSubscriptionBanner extends StatelessWidget {
             children: [
               const Icon(Icons.check_circle, color: AppColors.statusGreen, size: 20),
               const Gap(AppSpacing.sm),
-              Text(
-                'Premium Plan Active',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.statusGreen,
-                    ),
+              Expanded(
+                child: Text(
+                  'Premium Plan Active',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.statusGreen,
+                      ),
+                ),
               ),
             ],
           ),
@@ -150,6 +211,32 @@ class _ActiveSubscriptionBanner extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
           ),
+          if (!subscription.autoRenew) ...[
+            const Gap(AppSpacing.xs),
+            Text(
+              'Auto-renewal disabled — will not renew after expiry',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.warning,
+                  ),
+            ),
+          ],
+          if (onCancel != null) ...[
+            const Gap(AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: onCancel,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: const BorderSide(color: AppColors.error),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
+                ),
+                child: const Text('Cancel Subscription'),
+              ),
+            ),
+          ],
         ],
       ),
     );

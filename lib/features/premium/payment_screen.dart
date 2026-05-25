@@ -23,6 +23,7 @@ class PaymentScreen extends ConsumerStatefulWidget {
 class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   final PaymentMethod _method = PaymentMethod.vnpay;
   bool _isLoading = false;
+  bool _redirected = false;
 
   Future<void> _processPayment() async {
     setState(() => _isLoading = true);
@@ -35,13 +36,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       if (!mounted) return;
 
       if (result.requiresRedirect) {
+        setState(() => _redirected = true);
         final url = Uri.parse(result.redirectUrl!);
         if (kIsWeb) {
-          // Web: redirect in same tab so user returns to our app
           await launchUrl(url, webOnlyWindowName: '_self');
         } else {
           await launchUrl(url, mode: LaunchMode.externalApplication);
         }
+        if (mounted) setState(() => _isLoading = false);
         return;
       }
 
@@ -59,6 +61,35 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         RouteNames.paymentResult,
         extra: (success: false, plan: widget.plan, method: _method),
       );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _checkPaymentStatus() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(activeSubscriptionProvider.notifier).load();
+      if (!mounted) return;
+      final sub = ref.read(activeSubscriptionProvider).valueOrNull;
+      if (sub != null && sub.status == 'ACTIVE') {
+        context.pushReplacement(
+          RouteNames.paymentResult,
+          extra: (success: true, plan: widget.plan, method: _method),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Payment not confirmed yet. Please wait a moment and try again.'),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to check status. Try again later.')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -156,6 +187,26 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               ),
             ),
           ),
+          if (_redirected)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _checkPaymentStatus,
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Check Payment Status'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.statusBlue,
+                    side: const BorderSide(color: AppColors.statusBlue),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           _PayButton(
             plan: widget.plan,
             isLoading: _isLoading,

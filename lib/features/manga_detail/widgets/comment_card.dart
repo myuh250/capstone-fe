@@ -49,6 +49,7 @@ class CommentCard extends StatelessWidget {
             imageUrl: comment.userAvatarUrl,
             name: comment.userName,
             size: isReply ? 28 : 36,
+            isPremium: comment.isUserPremium,
           ),
           const Gap(AppSpacing.sm),
           Expanded(
@@ -61,8 +62,34 @@ class CommentCard extends StatelessWidget {
                       comment.userName,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
                             fontWeight: FontWeight.w600,
+                            color: comment.isUserPremium
+                                ? const Color(0xFFFFD700)
+                                : null,
                           ),
                     ),
+                    if (comment.isUserPremium) ...[
+                      const SizedBox(width: AppSpacing.xs),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs + 2,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                          ),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                        ),
+                        child: const Text(
+                          'PRO',
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
                     if (comment.userId == 'current_user') ...[
                       const SizedBox(width: AppSpacing.xs),
                       Container(

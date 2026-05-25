@@ -91,9 +91,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final params = state.uri.queryParameters;
           final success = params['success'] == 'true';
+          final planStr = params['plan'];
+          final plan = planStr != null
+              ? SubscriptionPlanExtension.fromString(planStr)
+              : SubscriptionPlan.monthly;
           return PaymentResultScreen(
             success: success,
-            plan: SubscriptionPlan.monthly,
+            plan: plan,
             method: PaymentMethod.vnpay,
           );
         },

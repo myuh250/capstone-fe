@@ -11,12 +11,20 @@ class UserAvatar extends StatelessWidget {
     this.name,
     this.size = 40,
     this.backgroundColor,
+    this.isPremium = false,
   });
 
   final String? imageUrl;
   final String? name;
   final double size;
   final Color? backgroundColor;
+  final bool isPremium;
+
+  static const _goldGradient = LinearGradient(
+    colors: [Color(0xFFFFD700), Color(0xFFFFA500), Color(0xFFFFD700)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   String? get _resolvedUrl {
     if (imageUrl == null || imageUrl!.isEmpty) return null;
@@ -28,7 +36,7 @@ class UserAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final url = _resolvedUrl;
-    return CircleAvatar(
+    final avatar = CircleAvatar(
       radius: size / 2,
       backgroundColor: backgroundColor ?? AppColors.surfaceAlt,
       backgroundImage: url != null ? CachedNetworkImageProvider(url) : null,
@@ -41,6 +49,18 @@ class UserAvatar extends StatelessWidget {
                   ),
             )
           : null,
+    );
+
+    if (!isPremium) return avatar;
+
+    final borderWidth = (size * 0.06).clamp(2.0, 4.0);
+    return Container(
+      padding: EdgeInsets.all(borderWidth),
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: _goldGradient,
+      ),
+      child: avatar,
     );
   }
 

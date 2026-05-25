@@ -170,12 +170,14 @@ class _ProfileHeader extends StatelessWidget {
             imageUrl: user.avatarUrl,
             name: user.displayName,
             size: 80,
+            isPremium: user.isPremium,
           ),
           const Gap(AppSpacing.md),
           Text(
             user.displayName,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
+                  color: user.isPremium ? const Color(0xFFFFD700) : null,
                 ),
           ),
           const Gap(AppSpacing.xs),
