@@ -48,12 +48,13 @@ class NotificationsScreen extends ConsumerWidget {
         ),
         actions: [
           if (unread > 0)
-            TextButton(
+            TextButton.icon(
               onPressed: () =>
                   ref.read(notificationsProvider.notifier).markAllAsRead(),
-              child: const Text(
-                'Mark All Read',
-                style: TextStyle(color: AppColors.primary, fontSize: 13),
+              icon: const Icon(Icons.done_all, size: 18),
+              label: const Text(
+                'Read All',
+                style: TextStyle(fontSize: 13),
               ),
             ),
         ],
@@ -93,8 +94,15 @@ class NotificationsScreen extends ConsumerWidget {
   }
 
   void _handleTap(BuildContext context, NotificationItem n) {
-    if (n.type == NotificationType.newChapter && n.targetId != null) {
-      context.push(RouteNames.mangaDetail(n.targetId!));
+    if (n.targetId == null) return;
+    switch (n.type) {
+      case NotificationType.newChapter:
+        context.push(RouteNames.mangaDetail(n.targetId!));
+      case NotificationType.commentReply:
+      case NotificationType.mention:
+        context.push(RouteNames.mangaDetailComments(n.targetId!));
+      default:
+        break;
     }
   }
 }

@@ -69,6 +69,7 @@ abstract class ApiEndpoints {
   static String commentById(String id) => '/comments/$id';
   static String commentUpdate(String id) => '/comments/$id';
   static String commentDelete(String id) => '/comments/$id';
+  static const String mentionSearch = '/comments/mentions/search';
 
   // Recommendations
   static const String recommendations = '/recommendations';

@@ -225,6 +225,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'mangaDetail',
         builder: (context, state) => MangaDetailScreen(
           mangaSlug: state.pathParameters['mangaSlug']!,
+          scrollTo: state.uri.queryParameters['scrollTo'],
         ),
         routes: [
           GoRoute(

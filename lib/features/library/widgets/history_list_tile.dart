@@ -19,9 +19,12 @@ class HistoryListTile extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onRemove;
 
+  static const _utc7 = Duration(hours: 7);
+
   String _formatDate(DateTime date) {
-    final localDate = date.isUtc ? date.toLocal() : date;
-    final diff = DateTime.now().difference(localDate);
+    final now = DateTime.now().toUtc().add(_utc7);
+    final local = date.toUtc().add(_utc7);
+    final diff = now.difference(local);
     if (diff.isNegative) return 'Just now';
     if (diff.inMinutes < 1) return 'Just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';

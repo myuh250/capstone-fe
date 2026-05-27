@@ -21,14 +21,38 @@ import 'widgets/rating_dialog.dart';
 import 'widgets/rating_display.dart';
 import 'widgets/related_manga_section.dart';
 
-class MangaDetailScreen extends ConsumerWidget {
-  const MangaDetailScreen({super.key, required this.mangaSlug});
+class MangaDetailScreen extends ConsumerStatefulWidget {
+  const MangaDetailScreen({super.key, required this.mangaSlug, this.scrollTo});
 
   final String mangaSlug;
+  final String? scrollTo;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final mangaAsync = ref.watch(mangaBySlugProvider(mangaSlug));
+  ConsumerState<MangaDetailScreen> createState() => _MangaDetailScreenState();
+}
+
+class _MangaDetailScreenState extends ConsumerState<MangaDetailScreen> {
+  final _commentSectionKey = GlobalKey();
+  bool _hasScrolled = false;
+
+  void _scrollToComments() {
+    if (_hasScrolled) return;
+    _hasScrolled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _commentSectionKey.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mangaAsync = ref.watch(mangaBySlugProvider(widget.mangaSlug));
 
     return Scaffold(
       appBar: mangaAsync.whenOrNull(
@@ -55,6 +79,9 @@ class MangaDetailScreen extends ConsumerWidget {
             data: (manga) {
               final isFavorite = ref.watch(favoriteProvider(manga.id));
               final recsAsync = ref.watch(mangaRecommendationsProvider(manga.id));
+              if (widget.scrollTo == 'comments') {
+                _scrollToComments();
+              }
               return CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(
@@ -105,6 +132,7 @@ class MangaDetailScreen extends ConsumerWidget {
                   ),
                   const SliverToBoxAdapter(child: _SectionDivider()),
                   SliverToBoxAdapter(
+                    key: _commentSectionKey,
                     child: _SectionBorder(
                       child: CommentSection(mangaId: manga.id),
                     ),
@@ -143,7 +171,7 @@ class MangaDetailScreen extends ConsumerWidget {
             loading: () => const _MangaDetailSkeleton(),
             error: (e, _) => ErrorView(
               message: e is Exception ? e.toString() : 'Unable to load manga.',
-              onRetry: () => ref.invalidate(mangaBySlugProvider(mangaSlug)),
+              onRetry: () => ref.invalidate(mangaBySlugProvider(widget.mangaSlug)),
             ),
           ),
         ),
@@ -152,7 +180,7 @@ class MangaDetailScreen extends ConsumerWidget {
   }
 
   void _navigateToReader(BuildContext context, Chapter chapter, {required Manga manga}) {
-    final slug = manga.slug ?? mangaSlug;
+    final slug = manga.slug ?? widget.mangaSlug;
     context.push(RouteNames.reader(slug, chapter.number));
   }
 }

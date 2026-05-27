@@ -15,6 +15,8 @@ abstract class RouteNames {
 
   // Manga — slug-based clean URLs
   static String mangaDetail(String slug) => '/manga/$slug';
+  static String mangaDetailComments(String slug) =>
+      '/manga/$slug?scrollTo=comments';
 
   static String reader(String mangaSlug, double chapterNumber) {
     final chNum = chapterNumber == chapterNumber.truncateToDouble()

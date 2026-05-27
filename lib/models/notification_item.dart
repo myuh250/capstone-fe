@@ -1,6 +1,18 @@
+NotificationType _parseNotificationType(String? value) {
+  if (value == null) return NotificationType.system;
+  return switch (value.toUpperCase()) {
+    'NEW_CHAPTER' => NotificationType.newChapter,
+    'COMMENT_REPLY' => NotificationType.commentReply,
+    'MENTION' => NotificationType.mention,
+    'SUBSCRIPTION' => NotificationType.subscription,
+    _ => NotificationType.system,
+  };
+}
+
 enum NotificationType {
   newChapter,
   commentReply,
+  mention,
   system,
   subscription,
 }
@@ -9,6 +21,7 @@ extension NotificationTypeExtension on NotificationType {
   String get label => switch (this) {
         NotificationType.newChapter => 'New Chapter',
         NotificationType.commentReply => 'Comment Reply',
+        NotificationType.mention => 'Mention',
         NotificationType.system => 'System',
         NotificationType.subscription => 'Subscription',
       };
@@ -38,16 +51,13 @@ class NotificationItem {
   factory NotificationItem.fromJson(Map<String, dynamic> json) {
     return NotificationItem(
       id: json['id'].toString(),
-      type: NotificationType.values.firstWhere(
-        (t) => t.name == (json['type'] as String?)?.toLowerCase(),
-        orElse: () => NotificationType.system,
-      ),
+      type: _parseNotificationType(json['type'] as String?),
       title: json['title'] as String,
-      body: json['body'] as String,
+      body: (json['body'] ?? json['message'] ?? '') as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      isRead: json['isRead'] as bool? ?? false,
+      isRead: (json['isRead'] ?? json['read']) as bool? ?? false,
       imageUrl: json['imageUrl'] as String?,
-      targetId: json['targetId']?.toString(),
+      targetId: (json['targetId'] ?? json['targetUrl'])?.toString(),
     );
   }
 

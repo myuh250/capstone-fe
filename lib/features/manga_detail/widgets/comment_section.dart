@@ -152,6 +152,10 @@ class _CommentItemState extends ConsumerState<_CommentItem> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = ref.watch(currentUserProvider);
+    final isOwner = currentUser != null &&
+        widget.comment.userId == currentUser.id;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Column(
@@ -159,12 +163,14 @@ class _CommentItemState extends ConsumerState<_CommentItem> {
         children: [
           CommentCard(
             comment: widget.comment,
+            isOwner: isOwner,
             onReply: () => setState(() => _showReplyInput = true),
-            onDelete: widget.comment.userId == 'current_user'
+            onDelete: isOwner
                 ? () => ref
                     .read(commentsProvider(widget.mangaId).notifier)
                     .deleteComment(widget.comment.id)
                 : null,
+            onReport: !isOwner ? () => _reportComment(context) : null,
           ),
           ReplyThread(
             parentComment: widget.comment,
@@ -189,6 +195,44 @@ class _CommentItemState extends ConsumerState<_CommentItem> {
                 isCompact: true,
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  void _reportComment(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+        title: const Text('Report Comment'),
+        content: const Text(
+          'Are you sure you want to report this comment as inappropriate?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Comment reported. Thank you.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            style: FilledButton.styleFrom(backgroundColor: AppColors.warning),
+            child: const Text('Report'),
+          ),
         ],
       ),
     );

@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../models/comment.dart';
+import '../../../providers/auth_providers.dart';
 import '../../../providers/comment_providers.dart';
 import 'comment_card.dart';
 import 'comment_input.dart';
@@ -75,23 +76,31 @@ class _ReplyThreadState extends ConsumerState<ReplyThread> {
             ),
           ),
         if (_showReplies)
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: replies.length,
-            separatorBuilder: (_, __) =>
-                const SizedBox(height: AppSpacing.md),
-            itemBuilder: (_, i) => CommentCard(
-              comment: replies[i],
-              isReply: true,
-              onReply: () => setState(() => _showInput = true),
-              onDelete: replies[i].userId == 'current_user'
-                  ? () => ref
-                      .read(commentsProvider(widget.mangaId).notifier)
-                      .deleteComment(replies[i].id)
-                  : null,
-            ),
-          ),
+          Builder(builder: (context) {
+            final currentUser = ref.watch(currentUserProvider);
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: replies.length,
+              separatorBuilder: (_, __) =>
+                  const SizedBox(height: AppSpacing.md),
+              itemBuilder: (_, i) {
+                final isOwner = currentUser != null &&
+                    replies[i].userId == currentUser.id;
+                return CommentCard(
+                  comment: replies[i],
+                  isReply: true,
+                  isOwner: isOwner,
+                  onReply: () => setState(() => _showInput = true),
+                  onDelete: isOwner
+                      ? () => ref
+                          .read(commentsProvider(widget.mangaId).notifier)
+                          .deleteComment(replies[i].id)
+                      : null,
+                );
+              },
+            );
+          }),
         if (_showInput) ...[
           const Gap(AppSpacing.sm),
           Padding(

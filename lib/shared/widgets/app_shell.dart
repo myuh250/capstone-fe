@@ -7,7 +7,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/extensions/context_extensions.dart';
 import '../../features/chatbot/chatbot_panel.dart';
-import '../../features/notifications/widgets/notification_card.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/notification_providers.dart';
 
@@ -330,13 +329,28 @@ class _SidebarNotificationButton extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                NotificationBadge(
-                  count: unread,
-                  child: const Icon(
-                    Icons.notifications_outlined,
-                    color: AppColors.textSecondary,
-                    size: 24,
-                  ),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(
+                      Icons.notifications_outlined,
+                      color: AppColors.textSecondary,
+                      size: 24,
+                    ),
+                    if (unread > 0)
+                      Positioned(
+                        top: -2,
+                        right: -2,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            color: AppColors.error,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Text(
@@ -346,28 +360,6 @@ class _SidebarNotificationButton extends ConsumerWidget {
                     fontWeight: FontWeight.w400,
                   ),
                 ),
-                if (unread > 0) ...[
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusFull),
-                    ),
-                    child: Text(
-                      '$unread',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),

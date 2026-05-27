@@ -17,12 +17,17 @@ class NotificationCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onDismiss;
 
+  static const _utc7 = Duration(hours: 7);
+
   String _formatDate(DateTime date) {
-    final diff = DateTime.now().difference(date);
+    final now = DateTime.now().toUtc().add(_utc7);
+    final local = date.toUtc().add(_utc7);
+    final diff = now.difference(local);
+    if (diff.inMinutes < 1) return 'just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes} minutes ago';
     if (diff.inHours < 24) return '${diff.inHours} hours ago';
     if (diff.inDays < 7) return '${diff.inDays} days ago';
-    return '${(diff.inDays / 7).floor()} weeks ago';
+    return '${local.day}/${local.month}/${local.year}';
   }
 
   @override
@@ -152,6 +157,8 @@ class _FallbackIcon extends StatelessWidget {
         (Icons.auto_stories, AppColors.primary),
       NotificationType.commentReply =>
         (Icons.chat_bubble_outline, AppColors.statusBlue),
+      NotificationType.mention =>
+        (Icons.alternate_email, AppColors.primary),
       NotificationType.system =>
         (Icons.campaign_outlined, AppColors.warning),
       NotificationType.subscription =>

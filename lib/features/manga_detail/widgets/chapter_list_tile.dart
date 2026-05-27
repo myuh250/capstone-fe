@@ -156,8 +156,12 @@ class ChapterListTile extends StatelessWidget {
     );
   }
 
+  static const _utc7 = Duration(hours: 7);
+
   String _timeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
+    final now = DateTime.now().toUtc().add(_utc7);
+    final local = date.toUtc().add(_utc7);
+    final diff = now.difference(local);
     if (diff.inDays > 365) return '${(diff.inDays / 365).floor()} years ago';
     if (diff.inDays > 30) return '${(diff.inDays / 30).floor()} months ago';
     if (diff.inDays > 0) return '${diff.inDays} days ago';

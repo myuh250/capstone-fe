@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
@@ -6,21 +8,32 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../models/comment.dart';
 import '../../../shared/widgets/user_avatar.dart';
 
-class CommentCard extends StatelessWidget {
+class CommentCard extends StatefulWidget {
   const CommentCard({
     super.key,
     required this.comment,
     required this.onReply,
     this.onDelete,
+    this.onReport,
     this.isReply = false,
+    this.isOwner = false,
   });
 
   final Comment comment;
   final VoidCallback onReply;
   final VoidCallback? onDelete;
+  final VoidCallback? onReport;
   final bool isReply;
+  final bool isOwner;
 
-  static final _utc7 = Duration(hours: 7);
+  @override
+  State<CommentCard> createState() => _CommentCardState();
+}
+
+class _CommentCardState extends State<CommentCard> {
+  bool _isHidden = false;
+
+  static const _utc7 = Duration(hours: 7);
 
   String _formatDate(DateTime date) {
     final now = DateTime.now().toUtc().add(_utc7);
@@ -33,136 +46,236 @@ class CommentCard extends StatelessWidget {
     return '${local.day}/${local.month}/${local.year}';
   }
 
+  void _showMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(button.size.topRight(Offset.zero), ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu<String>(
+      context: context,
+      position: position,
+      color: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        side: const BorderSide(color: AppColors.divider),
+      ),
+      items: [
+        if (widget.isOwner)
+          const PopupMenuItem(
+            value: 'delete',
+            child: Row(
+              children: [
+                Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+                SizedBox(width: 8),
+                Text('Delete', style: TextStyle(color: AppColors.error)),
+              ],
+            ),
+          )
+        else ...[
+          const PopupMenuItem(
+            value: 'hide',
+            child: Row(
+              children: [
+                Icon(Icons.visibility_off_outlined, size: 18, color: AppColors.textSecondary),
+                SizedBox(width: 8),
+                Text('Hide'),
+              ],
+            ),
+          ),
+          const PopupMenuItem(
+            value: 'report',
+            child: Row(
+              children: [
+                Icon(Icons.flag_outlined, size: 18, color: AppColors.warning),
+                SizedBox(width: 8),
+                Text('Report', style: TextStyle(color: AppColors.warning)),
+              ],
+            ),
+          ),
+        ],
+      ],
+    ).then((value) {
+      if (value == 'delete' && widget.onDelete != null) {
+        widget.onDelete!();
+      } else if (value == 'hide') {
+        setState(() => _isHidden = true);
+      } else if (value == 'report' && widget.onReport != null) {
+        widget.onReport!();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        isReply ? AppSpacing.xxl + AppSpacing.md : AppSpacing.lg,
+        widget.isReply ? AppSpacing.xxl + AppSpacing.md : AppSpacing.lg,
         0,
         AppSpacing.lg,
         0,
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          UserAvatar(
-            imageUrl: comment.userAvatarUrl,
-            name: comment.userName,
-            size: isReply ? 28 : 36,
-            isPremium: comment.isUserPremium,
-          ),
-          const Gap(AppSpacing.sm),
-          Expanded(
-            child: Column(
+          ImageFiltered(
+            imageFilter: _isHidden
+                ? ImageFilter.blur(sigmaX: 5, sigmaY: 5)
+                : ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      comment.userName,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: comment.isUserPremium
-                                ? const Color(0xFFFFD700)
-                                : null,
+                UserAvatar(
+                  imageUrl: widget.comment.userAvatarUrl,
+                  name: widget.comment.userName,
+                  size: widget.isReply ? 28 : 36,
+                  isPremium: widget.comment.isUserPremium,
+                ),
+                const Gap(AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            widget.comment.userName,
+                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: widget.comment.isUserPremium
+                                      ? const Color(0xFFFFD700)
+                                      : null,
+                                ),
                           ),
-                    ),
-                    if (comment.isUserPremium) ...[
-                      const SizedBox(width: AppSpacing.xs),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xs + 2,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                          if (widget.comment.isUserPremium) ...[
+                            const SizedBox(width: AppSpacing.xs),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.xs + 2,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                                ),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                              ),
+                              child: const Text(
+                                'PRO',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (widget.isOwner) ...[
+                            const SizedBox(width: AppSpacing.xs),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.xs,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withAlpha(26),
+                                borderRadius:
+                                    BorderRadius.circular(AppSpacing.radiusSm),
+                              ),
+                              child: const Text(
+                                'You',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                          const Spacer(),
+                          Text(
+                            _formatDate(widget.comment.createdAt),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                        ),
-                        child: const Text(
-                          'PRO',
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTapDown: (_) => _showMenu(context),
+                            child: const Icon(
+                              Icons.more_horiz,
+                              size: 18,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Gap(4),
+                      Text(
+                        widget.comment.content,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              height: 1.5,
+                            ),
+                      ),
+                      if (widget.comment.isEdited)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            '(edited)',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                         ),
+                      const Gap(AppSpacing.xs),
+                      Row(
+                        children: [
+                          _ActionButton(
+                            icon: Icons.reply_outlined,
+                            label: 'Reply',
+                            onTap: widget.onReply,
+                          ),
+                        ],
                       ),
                     ],
-                    if (comment.userId == 'current_user') ...[
-                      const SizedBox(width: AppSpacing.xs),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xs,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(26),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusSm),
-                        ),
-                        child: const Text(
-                          'You',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                    const Spacer(),
-                    Text(
-                      _formatDate(comment.createdAt),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                const Gap(4),
-                Text(
-                  comment.content,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        height: 1.5,
-                      ),
-                ),
-                if (comment.isEdited)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      '(edited)',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
                   ),
-                const Gap(AppSpacing.xs),
-                Row(
-                  children: [
-                    _ActionButton(
-                      icon: Icons.reply_outlined,
-                      label: 'Reply',
-                      onTap: onReply,
-                    ),
-                    if (onDelete != null) ...[
-                      const SizedBox(width: AppSpacing.md),
-                      _ActionButton(
-                        icon: Icons.delete_outline,
-                        label: 'Delete',
-                        onTap: onDelete!,
-                        color: AppColors.error,
-                      ),
-                    ],
-                  ],
                 ),
               ],
             ),
           ),
+          if (_isHidden)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => setState(() => _isHidden = false),
+                child: Container(
+                  alignment: Alignment.center,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface.withAlpha(200),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                    child: const Text(
+                      'Comment hidden. Tap to show.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -208,6 +321,48 @@ class _ActionButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class NotificationBadge extends StatelessWidget {
+  const NotificationBadge({
+    super.key,
+    required this.count,
+    required this.child,
+  });
+
+  final int count;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (count == 0) return child;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        child,
+        Positioned(
+          top: -4,
+          right: -4,
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: const BoxDecoration(
+              color: AppColors.error,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              count > 99 ? '99+' : '$count',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
