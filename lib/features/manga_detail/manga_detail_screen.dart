@@ -87,6 +87,8 @@ class MangaDetailScreen extends ConsumerWidget {
                     child: _SectionBorder(
                       child: ChapterList(
                         mangaId: manga.id,
+                        mangaTitle: manga.title,
+                        coverUrl: manga.coverUrl,
                         onTapChapter: (chapter) =>
                             _navigateToReader(context, chapter, manga: manga),
                       ),

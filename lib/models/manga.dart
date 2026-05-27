@@ -17,6 +17,7 @@ class Manga with _$Manga {
     @Default(0) int totalChapters,
     String? author,
     DateTime? updatedAt,
+    @Default(false) bool hasEarlyAccess,
   }) = _Manga;
 
   factory Manga.fromJson(Map<String, dynamic> json) => _$MangaFromJson(json);

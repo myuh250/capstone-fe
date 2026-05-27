@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../models/chapter.dart';
 import '../../../providers/manga_providers.dart';
+import '../../../providers/subscription_providers.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../../../shared/widgets/loading_skeleton.dart';
 import 'chapter_list_tile.dart';
@@ -15,14 +16,19 @@ class ChapterList extends ConsumerWidget {
     super.key,
     required this.mangaId,
     required this.onTapChapter,
+    this.mangaTitle = '',
+    this.coverUrl = '',
   });
 
   final String mangaId;
   final void Function(Chapter chapter) onTapChapter;
+  final String mangaTitle;
+  final String coverUrl;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(chapterListProvider(mangaId));
+    final isPremium = ref.watch(isPremiumProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,6 +86,10 @@ class ChapterList extends ConsumerWidget {
                   key: ValueKey(state.chapters[index].id),
                   chapter: state.chapters[index],
                   onTap: () => onTapChapter(state.chapters[index]),
+                  isPremium: isPremium,
+                  mangaId: mangaId,
+                  mangaTitle: mangaTitle,
+                  coverUrl: coverUrl,
                 );
               },
             ),

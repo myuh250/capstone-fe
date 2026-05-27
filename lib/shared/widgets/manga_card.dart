@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/manga.dart';
 import 'cover_image.dart';
@@ -30,7 +31,46 @@ class MangaCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: CoverImage(imageUrl: manga.coverUrl),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: CoverImage(imageUrl: manga.coverUrl),
+                ),
+                if (manga.hasEarlyAccess)
+                  Positioned(
+                    top: AppSpacing.xs,
+                    left: AppSpacing.xs,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                        ),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.bolt, size: 10, color: Colors.white),
+                          SizedBox(width: 2),
+                          Text(
+                            'EARLY',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
           const Gap(AppSpacing.sm),
           Text(
@@ -50,4 +90,5 @@ class MangaCard extends StatelessWidget {
       ),
     );
   }
+
 }

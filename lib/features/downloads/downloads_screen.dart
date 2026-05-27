@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../providers/download_providers.dart';
 import '../../shared/widgets/cover_image.dart';
 import '../../shared/widgets/empty_state.dart';
-import 'widgets/storage_usage_indicator.dart';
 
 class DownloadsScreen extends ConsumerWidget {
   const DownloadsScreen({super.key});
@@ -19,56 +20,16 @@ class DownloadsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Offline Reading'),
-        actions: [
-          if (downloads.isNotEmpty)
-            TextButton(
-              onPressed: () async {
-                final ok = await showDialog<bool>(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    title: const Text('Clear All'),
-                    content: const Text(
-                      'Delete all downloaded data?',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.error,
-                        ),
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Delete'),
-                      ),
-                    ],
-                  ),
-                );
-                if (ok == true) {
-                  for (final d in downloads) {
-                    ref.read(downloadsProvider.notifier).removeDownload(d.id);
-                  }
-                }
-              },
-              child: const Text(
-                'Clear All',
-                style: TextStyle(color: AppColors.error),
-              ),
-            ),
-        ],
       ),
       body: downloads.isEmpty
           ? const EmptyState(
               icon: Icons.download_outlined,
               message:
-                  'No downloaded manga yet\nDownload manga to read offline',
+                  'No downloaded manga yet\nDownload chapters to read offline',
             )
           : ListView(
               padding: const EdgeInsets.all(AppSpacing.lg),
               children: [
-                const StorageUsageIndicator(),
-                const Gap(AppSpacing.xl),
                 Text(
                   'Downloaded (${downloads.length})',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -79,6 +40,13 @@ class DownloadsScreen extends ConsumerWidget {
                 ...downloads.map(
                   (d) => _DownloadTile(
                     item: d,
+                    onTap: () {
+                      if (d.status == DownloadStatus.completed) {
+                        final slug = RouteNames.titleToSlug(d.mangaTitle);
+                        final chapterNum = _extractChapterNumber(d.chapterTitle);
+                        context.push(RouteNames.reader(slug, chapterNum));
+                      }
+                    },
                     onDelete: () => ref
                         .read(downloadsProvider.notifier)
                         .removeDownload(d.id),
@@ -94,137 +62,139 @@ class DownloadsScreen extends ConsumerWidget {
             ),
     );
   }
+
+  double _extractChapterNumber(String chapterTitle) {
+    final match = RegExp(r'Ch\.?(\d+\.?\d*)').firstMatch(chapterTitle);
+    if (match != null) return double.tryParse(match.group(1)!) ?? 1.0;
+    return 1.0;
+  }
 }
 
 class _DownloadTile extends StatelessWidget {
   const _DownloadTile({
     required this.item,
+    required this.onTap,
     required this.onDelete,
     required this.onPause,
     required this.onResume,
   });
 
   final DownloadItem item;
+  final VoidCallback onTap;
   final VoidCallback onDelete;
   final VoidCallback onPause;
   final VoidCallback onResume;
 
-  String _formatBytes(int bytes) {
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(0)}KB';
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: AppColors.divider),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                child: CoverImage(
-                  imageUrl: item.coverUrl,
-                  width: 44,
-                  height: 60,
-                ),
-              ),
-              const Gap(AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.mangaTitle,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const Gap(2),
-                    Text(
-                      item.chapterTitle,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const Gap(4),
-                    _StatusRow(item: item, formatBytes: _formatBytes),
-                  ],
-                ),
-              ),
-              _ActionButton(
-                item: item,
-                onDelete: onDelete,
-                onPause: onPause,
-                onResume: onResume,
-              ),
-            ],
-          ),
-          if (item.status == DownloadStatus.downloading) ...[
-            const Gap(AppSpacing.sm),
-            ClipRRect(
-              borderRadius:
-                  BorderRadius.circular(AppSpacing.radiusFull),
-              child: LinearProgressIndicator(
-                value: item.progress,
-                backgroundColor: AppColors.divider,
-                color: AppColors.primary,
-                minHeight: 6,
-              ),
-            ),
-            const Gap(4),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(color: AppColors.divider),
+        ),
+        child: Column(
+          children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${item.downloadedPages}/${item.totalPages} pages',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  child: CoverImage(
+                    imageUrl: item.coverUrl,
+                    width: 44,
+                    height: 60,
                   ),
                 ),
-                Text(
-                  '${(item.progress * 100).toStringAsFixed(0)}%',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
+                const Gap(AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.mangaTitle,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const Gap(2),
+                      Text(
+                        item.chapterTitle,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const Gap(4),
+                      _StatusRow(item: item),
+                    ],
                   ),
+                ),
+                _ActionButton(
+                  item: item,
+                  onDelete: onDelete,
+                  onPause: onPause,
+                  onResume: onResume,
                 ),
               ],
             ),
+            if (item.status == DownloadStatus.downloading) ...[
+              const Gap(AppSpacing.sm),
+              ClipRRect(
+                borderRadius:
+                    BorderRadius.circular(AppSpacing.radiusFull),
+                child: LinearProgressIndicator(
+                  value: item.progress,
+                  backgroundColor: AppColors.divider,
+                  color: AppColors.primary,
+                  minHeight: 6,
+                ),
+              ),
+              const Gap(4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${item.downloadedPages}/${item.totalPages} pages',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    '${(item.progress * 100).toStringAsFixed(0)}%',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
 }
 
 class _StatusRow extends StatelessWidget {
-  const _StatusRow({required this.item, required this.formatBytes});
+  const _StatusRow({required this.item});
 
   final DownloadItem item;
-  final String Function(int) formatBytes;
 
   @override
   Widget build(BuildContext context) {
     final (color, text) = switch (item.status) {
-      DownloadStatus.completed => (
-          AppColors.statusGreen,
-          'Completed • ${formatBytes(item.fileSizeBytes)}'
-        ),
+      DownloadStatus.completed => (AppColors.statusGreen, 'Downloaded'),
       DownloadStatus.downloading => (AppColors.primary, 'Downloading...'),
       DownloadStatus.paused => (AppColors.warning, 'Paused'),
       DownloadStatus.queued => (AppColors.textSecondary, 'Queued'),

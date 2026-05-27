@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../providers/download_providers.dart';
+import '../../../providers/subscription_providers.dart';
 
 class DownloadButton extends ConsumerWidget {
   const DownloadButton({
@@ -24,6 +25,7 @@ class DownloadButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isPremium = ref.watch(isPremiumProvider);
     final downloads = ref.watch(downloadsProvider);
     final existing = downloads
         .where((d) => d.chapterId == chapterId)
@@ -70,25 +72,41 @@ class DownloadButton extends ConsumerWidget {
                 .read(downloadsProvider.notifier)
                 .resumeDownload(existing.id),
           ),
-        _ => const SizedBox.shrink(),
+        DownloadStatus.queued => const SizedBox(
+            width: 40,
+            height: 40,
+            child: Center(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+        _ => IconButton(
+            icon: const Icon(Icons.refresh, color: AppColors.error),
+            tooltip: 'Retry',
+            onPressed: () => _startDownload(ref),
+          ),
       };
     }
 
     return IconButton(
-      icon: const Icon(Icons.download_outlined, color: AppColors.textSecondary),
+      icon: Icon(
+        Icons.download_outlined,
+        color: AppColors.textSecondary,
+      ),
       tooltip: 'Download',
       onPressed: () {
-        ref.read(downloadsProvider.notifier).addDownload(
-              DownloadItem(
-                mangaId: mangaId,
-                mangaTitle: mangaTitle,
-                coverUrl: coverUrl,
-                chapterId: chapterId,
-                chapterTitle: chapterTitle,
-                status: DownloadStatus.downloading,
-                totalPages: 48,
-              ),
-            );
+        if (!isPremium) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Premium subscription required for offline reading'),
+            ),
+          );
+          return;
+        }
+        _startDownload(ref);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Downloading chapter...'),
@@ -96,6 +114,16 @@ class DownloadButton extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+
+  void _startDownload(WidgetRef ref) {
+    ref.read(downloadsProvider.notifier).startDownload(
+      mangaId: mangaId,
+      mangaTitle: mangaTitle,
+      coverUrl: coverUrl,
+      chapterId: chapterId,
+      chapterTitle: chapterTitle,
     );
   }
 }

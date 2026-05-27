@@ -45,6 +45,7 @@ dependencies:
 
   # Networking
   dio: ^5.7.0
+  path_provider: ^2.1.0
 
   # Images
   cached_network_image: ^3.4.0

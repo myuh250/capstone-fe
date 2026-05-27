@@ -5,6 +5,7 @@ import '../../../core/router/route_names.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../models/chapter.dart';
+import '../../downloads/widgets/download_button.dart';
 
 class ChapterListTile extends StatelessWidget {
   const ChapterListTile({
@@ -12,11 +13,17 @@ class ChapterListTile extends StatelessWidget {
     required this.chapter,
     required this.onTap,
     this.isPremium = false,
+    this.mangaId = '',
+    this.mangaTitle = '',
+    this.coverUrl = '',
   });
 
   final Chapter chapter;
   final VoidCallback onTap;
   final bool isPremium;
+  final String mangaId;
+  final String mangaTitle;
+  final String coverUrl;
 
   bool get _isLocked => chapter.isEarlyAccess && !isPremium;
 
@@ -106,18 +113,29 @@ class ChapterListTile extends StatelessWidget {
                   size: 18,
                   color: AppColors.ratingYellow,
                 )
-              else if (chapter.isRead)
-                const Icon(
-                  Icons.check_circle_outline,
-                  size: 16,
-                  color: AppColors.textSecondary,
-                )
-              else
-                const Icon(
-                  Icons.chevron_right,
-                  size: 20,
-                  color: AppColors.textSecondary,
-                ),
+              else ...[
+                if (mangaId.isNotEmpty)
+                  DownloadButton(
+                    mangaId: mangaId,
+                    mangaTitle: mangaTitle,
+                    coverUrl: coverUrl,
+                    chapterId: chapter.id,
+                    chapterTitle: chapter.displayNumber,
+                    compact: true,
+                  ),
+                if (chapter.isRead)
+                  const Icon(
+                    Icons.check_circle_outline,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  )
+                else
+                  const Icon(
+                    Icons.chevron_right,
+                    size: 20,
+                    color: AppColors.textSecondary,
+                  ),
+              ],
             ],
           ),
         ),
@@ -132,7 +150,7 @@ class ChapterListTile extends StatelessWidget {
       builder: (_) => _PremiumGateSheet(
         onUpgrade: () {
           Navigator.of(context).pop();
-          context.push(RouteNames.premium);
+          context.go(RouteNames.premium);
         },
       ),
     );

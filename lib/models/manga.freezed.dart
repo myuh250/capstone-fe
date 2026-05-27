@@ -32,6 +32,7 @@ mixin _$Manga {
   int get totalChapters => throw _privateConstructorUsedError;
   String? get author => throw _privateConstructorUsedError;
   DateTime? get updatedAt => throw _privateConstructorUsedError;
+  bool get hasEarlyAccess => throw _privateConstructorUsedError;
 
   /// Serializes this Manga to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -59,6 +60,7 @@ abstract class $MangaCopyWith<$Res> {
     int totalChapters,
     String? author,
     DateTime? updatedAt,
+    bool hasEarlyAccess,
   });
 }
 
@@ -88,6 +90,7 @@ class _$MangaCopyWithImpl<$Res, $Val extends Manga>
     Object? totalChapters = null,
     Object? author = freezed,
     Object? updatedAt = freezed,
+    Object? hasEarlyAccess = null,
   }) {
     return _then(
       _value.copyWith(
@@ -135,6 +138,10 @@ class _$MangaCopyWithImpl<$Res, $Val extends Manga>
                 ? _value.updatedAt
                 : updatedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
+            hasEarlyAccess: null == hasEarlyAccess
+                ? _value.hasEarlyAccess
+                : hasEarlyAccess // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -161,6 +168,7 @@ abstract class _$$MangaImplCopyWith<$Res> implements $MangaCopyWith<$Res> {
     int totalChapters,
     String? author,
     DateTime? updatedAt,
+    bool hasEarlyAccess,
   });
 }
 
@@ -189,6 +197,7 @@ class __$$MangaImplCopyWithImpl<$Res>
     Object? totalChapters = null,
     Object? author = freezed,
     Object? updatedAt = freezed,
+    Object? hasEarlyAccess = null,
   }) {
     return _then(
       _$MangaImpl(
@@ -236,6 +245,10 @@ class __$$MangaImplCopyWithImpl<$Res>
             ? _value.updatedAt
             : updatedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
+        hasEarlyAccess: null == hasEarlyAccess
+            ? _value.hasEarlyAccess
+            : hasEarlyAccess // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -256,6 +269,7 @@ class _$MangaImpl implements _Manga {
     this.totalChapters = 0,
     this.author,
     this.updatedAt,
+    this.hasEarlyAccess = false,
   }) : _tags = tags;
 
   factory _$MangaImpl.fromJson(Map<String, dynamic> json) =>
@@ -293,10 +307,13 @@ class _$MangaImpl implements _Manga {
   final String? author;
   @override
   final DateTime? updatedAt;
+  @override
+  @JsonKey()
+  final bool hasEarlyAccess;
 
   @override
   String toString() {
-    return 'Manga(id: $id, title: $title, slug: $slug, description: $description, coverUrl: $coverUrl, tags: $tags, status: $status, averageRating: $averageRating, totalChapters: $totalChapters, author: $author, updatedAt: $updatedAt)';
+    return 'Manga(id: $id, title: $title, slug: $slug, description: $description, coverUrl: $coverUrl, tags: $tags, status: $status, averageRating: $averageRating, totalChapters: $totalChapters, author: $author, updatedAt: $updatedAt, hasEarlyAccess: $hasEarlyAccess)';
   }
 
   @override
@@ -319,7 +336,9 @@ class _$MangaImpl implements _Manga {
                 other.totalChapters == totalChapters) &&
             (identical(other.author, author) || other.author == author) &&
             (identical(other.updatedAt, updatedAt) ||
-                other.updatedAt == updatedAt));
+                other.updatedAt == updatedAt) &&
+            (identical(other.hasEarlyAccess, hasEarlyAccess) ||
+                other.hasEarlyAccess == hasEarlyAccess));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -337,6 +356,7 @@ class _$MangaImpl implements _Manga {
     totalChapters,
     author,
     updatedAt,
+    hasEarlyAccess,
   );
 
   /// Create a copy of Manga
@@ -366,6 +386,7 @@ abstract class _Manga implements Manga {
     final int totalChapters,
     final String? author,
     final DateTime? updatedAt,
+    final bool hasEarlyAccess,
   }) = _$MangaImpl;
 
   factory _Manga.fromJson(Map<String, dynamic> json) = _$MangaImpl.fromJson;
@@ -392,6 +413,8 @@ abstract class _Manga implements Manga {
   String? get author;
   @override
   DateTime? get updatedAt;
+  @override
+  bool get hasEarlyAccess;
 
   /// Create a copy of Manga
   /// with the given fields replaced by the non-null parameter values.

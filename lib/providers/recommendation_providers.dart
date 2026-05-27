@@ -34,6 +34,7 @@ final recommendationsProvider = FutureProvider<List<Recommendation>>((ref) async
         manga: Manga(
           id: item['mangaId'] as String,
           title: item['title'] as String? ?? '',
+          slug: item['slug'] as String?,
           coverUrl: item['coverUrl'] as String? ?? '',
           averageRating: (item['averageRating'] as num?)?.toDouble() ?? 0.0,
         ),
@@ -66,6 +67,7 @@ final mangaRecommendationsProvider =
         manga: Manga(
           id: item['mangaId'] as String,
           title: item['title'] as String? ?? '',
+          slug: item['slug'] as String?,
           coverUrl: item['coverUrl'] as String? ?? '',
           averageRating: (item['averageRating'] as num?)?.toDouble() ?? 0.0,
         ),

@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/network/api_client.dart';
 import '../models/payment.dart';
+import '../models/user.dart';
 import '../repositories/subscription_repository.dart';
+import 'auth_providers.dart';
 
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
   return SubscriptionRepository(ref.watch(apiClientProvider));
@@ -64,5 +66,8 @@ class PaymentHistoryNotifier extends StateNotifier<AsyncValue<List<Transaction>>
 
 final isPremiumProvider = Provider<bool>((ref) {
   final sub = ref.watch(activeSubscriptionProvider).valueOrNull;
-  return sub != null && sub.status == 'ACTIVE';
+  if (sub != null && sub.status == 'ACTIVE') return true;
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return false;
+  return user.isPremium || user.role == UserRole.admin;
 });

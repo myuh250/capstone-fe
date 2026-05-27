@@ -24,6 +24,7 @@ _$MangaImpl _$$MangaImplFromJson(Map<String, dynamic> json) => _$MangaImpl(
   updatedAt: json['updatedAt'] == null
       ? null
       : DateTime.parse(json['updatedAt'] as String),
+  hasEarlyAccess: json['hasEarlyAccess'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$$MangaImplToJson(_$MangaImpl instance) =>
@@ -39,6 +40,7 @@ Map<String, dynamic> _$$MangaImplToJson(_$MangaImpl instance) =>
       'totalChapters': instance.totalChapters,
       'author': instance.author,
       'updatedAt': instance.updatedAt?.toIso8601String(),
+      'hasEarlyAccess': instance.hasEarlyAccess,
     };
 
 const _$MangaStatusEnumMap = {
