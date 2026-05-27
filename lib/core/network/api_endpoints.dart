@@ -7,6 +7,7 @@ abstract class ApiEndpoints {
   // Auth
   static const String login = '/auth/login';
   static const String register = '/auth/register';
+  static const String registerOtp = '/auth/register-otp';
   static const String logout = '/auth/logout';
   static const String refreshToken = '/auth/refresh';
   static const String googleLogin = '/auth/google';

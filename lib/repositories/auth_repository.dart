@@ -13,12 +13,15 @@ abstract class AuthRepository {
     required String email,
     required String password,
     required String displayName,
+    String? otp,
   });
   Future<User> googleLogin({required String idToken});
   Future<void> logout();
+  Future<void> sendRegistrationOtp(String email);
   Future<void> verifyEmail(String otp);
   Future<void> forgotPassword(String email);
-  Future<void> resetPassword({required String otp, required String newPassword});
+  Future<bool> verifyOtp({required String email, required String otp});
+  Future<void> resetPassword({required String email, required String otp, required String newPassword});
   Future<User?> getCurrentUser();
   Future<User> updateProfile({String? displayName, String? bio});
   Future<String> uploadAvatar(Uint8List bytes, String filename);
@@ -56,10 +59,19 @@ class RealAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> sendRegistrationOtp(String email) async {
+    await _apiClient.post(
+      ApiEndpoints.registerOtp,
+      data: {'email': email},
+    );
+  }
+
+  @override
   Future<User> register({
     required String email,
     required String password,
     required String displayName,
+    String? otp,
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.register,
@@ -67,6 +79,7 @@ class RealAuthRepository implements AuthRepository {
         'email': email,
         'password': password,
         'displayName': displayName,
+        'otp': otp,
       },
     );
     return _sessionFromAuthResponse(response.data as Map<String, dynamic>);
@@ -110,13 +123,23 @@ class RealAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<bool> verifyOtp({required String email, required String otp}) async {
+    await _apiClient.post(
+      ApiEndpoints.verifyOtp,
+      data: {'email': email, 'otp': otp},
+    );
+    return true;
+  }
+
+  @override
   Future<void> resetPassword({
+    required String email,
     required String otp,
     required String newPassword,
   }) async {
     await _apiClient.post(
       ApiEndpoints.resetPassword,
-      data: {'otp': otp, 'newPassword': newPassword},
+      data: {'email': email, 'otp': otp, 'newPassword': newPassword},
     );
   }
 

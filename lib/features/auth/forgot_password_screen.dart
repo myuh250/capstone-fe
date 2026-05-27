@@ -7,6 +7,7 @@ import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/validators.dart';
+import '../../providers/auth_providers.dart';
 import 'widgets/auth_text_field.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -22,6 +23,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
   bool _emailSent = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -31,13 +33,25 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   Future<void> _onSubmit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
     setState(() {
-      _isLoading = false;
-      _emailSent = true;
+      _isLoading = true;
+      _error = null;
     });
+    try {
+      final repo = ref.read(authRepositoryProvider);
+      await repo.forgotPassword(_emailController.text.trim());
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _emailSent = true;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = 'Failed to send email. Please try again.';
+      });
+    }
   }
 
   @override
@@ -57,11 +71,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   ? _EmailSentView(
                       email: _emailController.text.trim(),
                       onResend: () => setState(() => _emailSent = false),
+                      onContinue: () => context.push(
+                        RouteNames.resetPassword,
+                        extra: _emailController.text.trim(),
+                      ),
                     )
                   : _ForgotPasswordForm(
                       formKey: _formKey,
                       emailController: _emailController,
                       isLoading: _isLoading,
+                      error: _error,
                       onSubmit: _onSubmit,
                     ),
             ),
@@ -78,12 +97,14 @@ class _ForgotPasswordForm extends StatelessWidget {
     required this.emailController,
     required this.isLoading,
     required this.onSubmit,
+    this.error,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController emailController;
   final bool isLoading;
   final VoidCallback onSubmit;
+  final String? error;
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +133,7 @@ class _ForgotPasswordForm extends StatelessWidget {
         ),
         const Gap(AppSpacing.sm),
         Text(
-          'Enter your registered email. We will send you a password reset link.',
+          'Enter your registered email. We will send you a 6-digit OTP code.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -130,6 +151,13 @@ class _ForgotPasswordForm extends StatelessWidget {
             enabled: !isLoading,
           ),
         ),
+        if (error != null) ...[
+          const Gap(AppSpacing.md),
+          Text(
+            error!,
+            style: const TextStyle(color: AppColors.error, fontSize: 13),
+          ),
+        ],
         const Gap(AppSpacing.xl),
         FilledButton(
           onPressed: isLoading ? null : onSubmit,
@@ -150,7 +178,7 @@ class _ForgotPasswordForm extends StatelessWidget {
                   ),
                 )
               : const Text(
-                  'Send Reset Link',
+                  'Send OTP Code',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
         ),
@@ -160,10 +188,15 @@ class _ForgotPasswordForm extends StatelessWidget {
 }
 
 class _EmailSentView extends StatelessWidget {
-  const _EmailSentView({required this.email, required this.onResend});
+  const _EmailSentView({
+    required this.email,
+    required this.onResend,
+    required this.onContinue,
+  });
 
   final String email;
   final VoidCallback onResend;
+  final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -197,7 +230,7 @@ class _EmailSentView extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
             children: [
-              const TextSpan(text: 'We sent a password reset link to '),
+              const TextSpan(text: 'We sent a 6-digit code to '),
               TextSpan(
                 text: email,
                 style: const TextStyle(
@@ -207,14 +240,14 @@ class _EmailSentView extends StatelessWidget {
               ),
               const TextSpan(
                 text:
-                    '. The link is valid for 15 minutes. Please check your spam folder as well.',
+                    '. The code expires in 5 minutes. Check your spam folder if you don\'t see it.',
               ),
             ],
           ),
         ),
         const Gap(AppSpacing.xxl),
         FilledButton(
-          onPressed: () => context.push(RouteNames.resetPassword),
+          onPressed: onContinue,
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.primary,
             minimumSize: const Size(double.infinity, 52),
@@ -223,7 +256,7 @@ class _EmailSentView extends StatelessWidget {
             ),
           ),
           child: const Text(
-            'Enter Reset OTP',
+            'Enter OTP Code',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
@@ -243,16 +276,6 @@ class _EmailSentView extends StatelessWidget {
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
-            ),
-          ),
-        ),
-        const Gap(AppSpacing.xl),
-        Center(
-          child: TextButton(
-            onPressed: () => context.pop(),
-            child: const Text(
-              'Back to Sign In',
-              style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
         ),

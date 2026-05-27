@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/network/api_exceptions.dart';
 import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/validators.dart';
+import '../../providers/auth_providers.dart';
 import 'widgets/auth_text_field.dart';
 import 'widgets/password_strength_indicator.dart';
 
@@ -19,14 +21,28 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
       _ResetPasswordScreenState();
 }
 
+enum _Step { otp, newPassword, success }
+
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _otpControllers = List.generate(6, (_) => TextEditingController());
   final _otpFocusNodes = List.generate(6, (_) => FocusNode());
+  final _passwordFormKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
+
+  _Step _step = _Step.otp;
   bool _isLoading = false;
-  bool _success = false;
+  String? _error;
+  String _email = '';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final extra = GoRouterState.of(context).extra;
+    if (extra is String && extra.isNotEmpty) {
+      _email = extra;
+    }
+  }
 
   @override
   void dispose() {
@@ -41,27 +57,71 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     super.dispose();
   }
 
-  String get _otpValue =>
-      _otpControllers.map((c) => c.text).join();
+  String get _otpValue => _otpControllers.map((c) => c.text).join();
 
-  Future<void> _onSubmit() async {
+  Future<void> _verifyOtp() async {
     if (_otpValue.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter the full 6-digit OTP code'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      setState(() => _error = 'Please enter the full 6-digit code');
       return;
     }
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
     setState(() {
-      _isLoading = false;
-      _success = true;
+      _isLoading = true;
+      _error = null;
     });
+    try {
+      final repo = ref.read(authRepositoryProvider);
+      await repo.verifyOtp(email: _email, otp: _otpValue);
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _step = _Step.newPassword;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = e.message ?? 'Invalid OTP. Please try again.';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = 'Invalid OTP. Please try again.';
+      });
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    if (!_passwordFormKey.currentState!.validate()) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final repo = ref.read(authRepositoryProvider);
+      await repo.resetPassword(
+        email: _email,
+        otp: _otpValue,
+        newPassword: _passwordController.text,
+      );
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _step = _Step.success;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = e.message ?? 'Failed to reset password.';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = 'Failed to reset password. Please try again.';
+      });
+    }
   }
 
   @override
@@ -77,51 +137,36 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             padding: const EdgeInsets.all(AppSpacing.xl),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 440),
-              child: _success
-                  ? _SuccessView(
-                      onGoLogin: () => context.go(RouteNames.login),
-                    )
-                  : _ResetForm(
-                      formKey: _formKey,
-                      otpControllers: _otpControllers,
-                      otpFocusNodes: _otpFocusNodes,
-                      passwordController: _passwordController,
-                      confirmController: _confirmController,
-                      isLoading: _isLoading,
-                      onSubmit: _onSubmit,
-                    ),
+              child: switch (_step) {
+                _Step.otp => _buildOtpStep(),
+                _Step.newPassword => _buildPasswordStep(),
+                _Step.success => _buildSuccessStep(),
+              },
             ),
           ),
         ),
       ),
     );
   }
-}
 
-class _ResetForm extends StatelessWidget {
-  const _ResetForm({
-    required this.formKey,
-    required this.otpControllers,
-    required this.otpFocusNodes,
-    required this.passwordController,
-    required this.confirmController,
-    required this.isLoading,
-    required this.onSubmit,
-  });
-
-  final GlobalKey<FormState> formKey;
-  final List<TextEditingController> otpControllers;
-  final List<FocusNode> otpFocusNodes;
-  final TextEditingController passwordController;
-  final TextEditingController confirmController;
-  final bool isLoading;
-  final VoidCallback onSubmit;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildOtpStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withAlpha(26),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.pin_outlined,
+            size: 36,
+            color: AppColors.primary,
+          ),
+        ),
+        const Gap(AppSpacing.xl),
         Text(
           'Enter Verification Code',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -130,60 +175,28 @@ class _ResetForm extends StatelessWidget {
         ),
         const Gap(AppSpacing.sm),
         Text(
-          'Enter the 6-digit OTP from your email and your new password.',
+          'Enter the 6-digit code sent to $_email',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.textSecondary,
               ),
         ),
         const Gap(AppSpacing.xxl),
         _OtpRow(
-          controllers: otpControllers,
-          focusNodes: otpFocusNodes,
-          enabled: !isLoading,
+          controllers: _otpControllers,
+          focusNodes: _otpFocusNodes,
+          enabled: !_isLoading,
         ),
-        const Gap(AppSpacing.xxl),
-        Form(
-          key: formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AuthTextField(
-                controller: passwordController,
-                label: 'New Password',
-                hint: '••••••••',
-                prefixIcon: Icons.lock_outline,
-                isPassword: true,
-                validator: Validators.password,
-                enabled: !isLoading,
-              ),
-              const Gap(AppSpacing.sm),
-              ValueListenableBuilder(
-                valueListenable: passwordController,
-                builder: (_, __, ___) => PasswordStrengthIndicator(
-                  password: passwordController.text,
-                ),
-              ),
-              const Gap(AppSpacing.lg),
-              AuthTextField(
-                controller: confirmController,
-                label: 'Confirm Password',
-                hint: '••••••••',
-                prefixIcon: Icons.lock_outline,
-                isPassword: true,
-                validator: (v) {
-                  if (v != passwordController.text) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
-                enabled: !isLoading,
-              ),
-            ],
+        if (_error != null) ...[
+          const Gap(AppSpacing.md),
+          Text(
+            _error!,
+            style: const TextStyle(color: AppColors.error, fontSize: 13),
+            textAlign: TextAlign.center,
           ),
-        ),
+        ],
         const Gap(AppSpacing.xl),
         FilledButton(
-          onPressed: isLoading ? null : onSubmit,
+          onPressed: _isLoading ? null : _verifyOtp,
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.primary,
             minimumSize: const Size(double.infinity, 52),
@@ -191,7 +204,113 @@ class _ResetForm extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
           ),
-          child: isLoading
+          child: _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text(
+                  'Verify Code',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withAlpha(26),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.lock_outline,
+            size: 36,
+            color: AppColors.primary,
+          ),
+        ),
+        const Gap(AppSpacing.xl),
+        Text(
+          'Set New Password',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        const Gap(AppSpacing.sm),
+        Text(
+          'Choose a strong password for your account.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+        ),
+        const Gap(AppSpacing.xxl),
+        Form(
+          key: _passwordFormKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AuthTextField(
+                controller: _passwordController,
+                label: 'New Password',
+                hint: '••••••••',
+                prefixIcon: Icons.lock_outline,
+                isPassword: true,
+                validator: Validators.password,
+                enabled: !_isLoading,
+              ),
+              const Gap(AppSpacing.sm),
+              ValueListenableBuilder(
+                valueListenable: _passwordController,
+                builder: (_, __, ___) => PasswordStrengthIndicator(
+                  password: _passwordController.text,
+                ),
+              ),
+              const Gap(AppSpacing.lg),
+              AuthTextField(
+                controller: _confirmController,
+                label: 'Confirm Password',
+                hint: '••••••••',
+                prefixIcon: Icons.lock_outline,
+                isPassword: true,
+                validator: (v) {
+                  if (v != _passwordController.text) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
+                enabled: !_isLoading,
+              ),
+            ],
+          ),
+        ),
+        if (_error != null) ...[
+          const Gap(AppSpacing.md),
+          Text(
+            _error!,
+            style: const TextStyle(color: AppColors.error, fontSize: 13),
+          ),
+        ],
+        const Gap(AppSpacing.xl),
+        FilledButton(
+          onPressed: _isLoading ? null : _resetPassword,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            minimumSize: const Size(double.infinity, 52),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+          ),
+          child: _isLoading
               ? const SizedBox(
                   width: 20,
                   height: 20,
@@ -204,6 +323,56 @@ class _ResetForm extends StatelessWidget {
                   'Reset Password',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSuccessStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: AppColors.statusGreen.withAlpha(26),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.check_circle_outline,
+            size: 36,
+            color: AppColors.statusGreen,
+          ),
+        ),
+        const Gap(AppSpacing.xl),
+        Text(
+          'Password Reset Successful!',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        const Gap(AppSpacing.sm),
+        Text(
+          'Your password has been changed. You can now sign in with your new password.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+        ),
+        const Gap(AppSpacing.xxl),
+        FilledButton(
+          onPressed: () => context.go(RouteNames.login),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            minimumSize: const Size(double.infinity, 52),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+          ),
+          child: const Text(
+            'Sign In Now',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );
@@ -221,7 +390,7 @@ class _OtpRow extends StatelessWidget {
   final List<FocusNode> focusNodes;
   final bool enabled;
 
-  void _onChanged(String value, int index, BuildContext context) {
+  void _onChanged(String value, int index) {
     if (value.isNotEmpty && index < 5) {
       focusNodes[index + 1].requestFocus();
     } else if (value.isEmpty && index > 0) {
@@ -255,7 +424,8 @@ class _OtpRow extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                borderSide:
+                    const BorderSide(color: AppColors.primary, width: 2),
               ),
               filled: true,
               fillColor: AppColors.surface,
@@ -263,67 +433,10 @@ class _OtpRow extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
-            onChanged: (v) => _onChanged(v, i, context),
+            onChanged: (v) => _onChanged(v, i),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _SuccessView extends StatelessWidget {
-  const _SuccessView({required this.onGoLogin});
-
-  final VoidCallback onGoLogin;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            color: AppColors.statusGreen.withAlpha(26),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.check_circle_outline,
-            size: 36,
-            color: AppColors.statusGreen,
-          ),
-        ),
-        const Gap(AppSpacing.xl),
-        Text(
-          'Password Reset Successful!',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-        ),
-        const Gap(AppSpacing.sm),
-        Text(
-          'Your password has been reset. All previous sessions have been invalidated.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-        ),
-        const Gap(AppSpacing.xxl),
-        FilledButton(
-          onPressed: onGoLogin,
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            minimumSize: const Size(double.infinity, 52),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            ),
-          ),
-          child: const Text(
-            'Sign In Now',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-        ),
-      ],
     );
   }
 }
