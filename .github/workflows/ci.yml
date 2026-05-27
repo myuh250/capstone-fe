@@ -77,6 +77,16 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
+      - name: Scan APK with Trivy
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          scan-type: fs
+          scan-ref: build/app/outputs/flutter-apk/
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
