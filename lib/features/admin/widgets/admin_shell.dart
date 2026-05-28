@@ -98,6 +98,18 @@ class _AdminSidebarContent extends ConsumerWidget {
       label: 'Reports',
       path: RouteNames.adminReports,
     ),
+    _AdminNavItem(
+      icon: Icons.smart_toy_outlined,
+      selectedIcon: Icons.smart_toy,
+      label: 'AI Moderation',
+      path: RouteNames.adminAiModeration,
+    ),
+    _AdminNavItem(
+      icon: Icons.sync_outlined,
+      selectedIcon: Icons.sync,
+      label: 'Sync',
+      path: RouteNames.adminSync,
+    ),
   ];
 
   @override

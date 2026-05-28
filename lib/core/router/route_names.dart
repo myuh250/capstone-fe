@@ -60,9 +60,12 @@ abstract class RouteNames {
   // Admin
   static const String admin = '/admin';
   static const String adminUsers = '/admin/users';
+  static String adminUserDetail(String id) => '/admin/users/$id';
   static const String adminContent = '/admin/content';
   static String adminMangaEdit(String id) => '/admin/content/manga/$id/edit';
   static const String adminReports = '/admin/reports';
   static const String adminModeration = '/admin/moderation';
+  static const String adminSync = '/admin/sync';
+  static const String adminAiModeration = '/admin/ai-moderation';
   static String adminReportDetail(String id) => '/admin/reports/$id';
 }

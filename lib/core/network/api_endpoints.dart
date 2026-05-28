@@ -113,6 +113,9 @@ abstract class ApiEndpoints {
       '/admin/ai-moderation/results';
   static const String adminAiModerationStats = '/admin/ai-moderation/stats';
 
+  // Admin - Stats
+  static const String adminStats = '/admin/stats';
+
   // Admin - Sync Dashboard
   static const String adminSyncDashboard = '/admin/sync/dashboard';
   static const String adminSyncLogs = '/admin/sync/logs';

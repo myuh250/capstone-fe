@@ -7,6 +7,7 @@ import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../providers/admin_providers.dart';
+import '../../repositories/admin_repository.dart';
 import '../../shared/widgets/error_view.dart';
 import '../../shared/widgets/loading_skeleton.dart';
 import '../../shared/widgets/responsive_builder.dart';
@@ -47,7 +48,7 @@ class AdminDashboard extends ConsumerWidget {
 class _DashboardContent extends StatelessWidget {
   const _DashboardContent({required this.stats});
 
-  final AdminStats stats;
+  final AdminDashboardStats stats;
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +87,7 @@ class _DashboardContent extends StatelessWidget {
 class _StatsGrid extends StatelessWidget {
   const _StatsGrid({required this.stats, required this.columns});
 
-  final AdminStats stats;
+  final AdminDashboardStats stats;
   final int columns;
 
   @override
@@ -181,8 +182,18 @@ class _QuickActionsGrid extends StatelessWidget {
       ),
       (
         'Reports',
-        Icons.bar_chart_outlined,
+        Icons.flag_outlined,
         RouteNames.adminReports,
+      ),
+      (
+        'AI Moderation',
+        Icons.smart_toy_outlined,
+        RouteNames.adminAiModeration,
+      ),
+      (
+        'Sync Dashboard',
+        Icons.sync_outlined,
+        RouteNames.adminSync,
       ),
     ];
 
@@ -193,7 +204,7 @@ class _QuickActionsGrid extends StatelessWidget {
         crossAxisCount: 2,
         crossAxisSpacing: AppSpacing.md,
         mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 2.2,
+        childAspectRatio: 2.5,
       ),
       itemCount: actions.length,
       itemBuilder: (context, index) {

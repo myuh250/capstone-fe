@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/admin/admin_dashboard.dart';
+import '../../features/admin/ai_moderation_screen.dart';
 import '../../features/admin/content_management_screen.dart';
 import '../../features/admin/manga_edit_screen.dart';
 import '../../features/admin/moderation_screen.dart';
 import '../../features/admin/report_dashboard.dart';
 import '../../features/admin/report_detail_screen.dart';
+import '../../features/admin/sync_dashboard_screen.dart';
+import '../../features/admin/user_detail_screen.dart';
 import '../../features/admin/user_management_screen.dart';
 import '../../features/admin/widgets/admin_shell.dart';
 import '../../features/auth/email_verification_screen.dart';
@@ -252,6 +255,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: RouteNames.adminUsers,
             name: 'adminUsers',
             builder: (_, __) => const UserManagementScreen(),
+            routes: [
+              GoRoute(
+                path: ':userId',
+                name: 'adminUserDetail',
+                builder: (context, state) => UserDetailScreen(
+                  userId: state.pathParameters['userId']!,
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: RouteNames.adminContent,
@@ -269,6 +281,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: RouteNames.adminModeration,
             name: 'adminModeration',
             builder: (_, __) => const ModerationScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.adminAiModeration,
+            name: 'adminAiModeration',
+            builder: (_, __) => const AiModerationScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.adminSync,
+            name: 'adminSync',
+            builder: (_, __) => const SyncDashboardScreen(),
           ),
           GoRoute(
             path: RouteNames.adminReports,

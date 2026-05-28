@@ -58,17 +58,27 @@ class User {
     final isPremium = json['isPremium'] as bool? ??
         roleStr == 'premium';
 
+    // Backend uses 'enabled' boolean; map to UserStatus
+    UserStatus status;
+    if (json.containsKey('enabled')) {
+      status = (json['enabled'] as bool? ?? true)
+          ? UserStatus.active
+          : UserStatus.banned;
+    } else {
+      status = UserStatus.values.firstWhere(
+        (s) => s.name == (json['status'] as String?)?.toLowerCase(),
+        orElse: () => UserStatus.active,
+      );
+    }
+
     return User(
       id: json['id'].toString(),
-      email: json['email'] as String,
+      email: json['email'] as String? ?? '',
       displayName: json['displayName'] ?? json['username'] as String? ?? '',
       avatarUrl: json['avatarUrl'] as String?,
       bio: json['bio'] as String?,
       role: role,
-      status: UserStatus.values.firstWhere(
-        (s) => s.name == (json['status'] as String?)?.toLowerCase(),
-        orElse: () => UserStatus.active,
-      ),
+      status: status,
       isPremium: isPremium,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String)
