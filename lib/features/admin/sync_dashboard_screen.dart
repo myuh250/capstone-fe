@@ -9,7 +9,59 @@ import '../../providers/admin_providers.dart';
 import '../../repositories/admin_repository.dart';
 import '../../shared/widgets/error_view.dart';
 import '../../shared/widgets/loading_skeleton.dart';
-import 'widgets/confirm_action_dialog.dart';
+
+class _SyncJobDef {
+  const _SyncJobDef({
+    required this.jobType,
+    required this.label,
+    required this.description,
+    required this.icon,
+    this.defaultCron = '',
+    this.hasLimit = false,
+    this.defaultLimit = 20,
+  });
+
+  final String jobType;
+  final String label;
+  final String description;
+  final IconData icon;
+  final String defaultCron;
+  final bool hasLimit;
+  final int defaultLimit;
+}
+
+const _allSyncJobs = [
+  _SyncJobDef(
+    jobType: 'TRENDING_SYNC',
+    label: 'Trending Sync',
+    description: 'Fetch top recently-updated manga from MangaDex',
+    icon: Icons.trending_up,
+    defaultCron: '0 0 2 * * *',
+    hasLimit: true,
+    defaultLimit: 20,
+  ),
+  _SyncJobDef(
+    jobType: 'CHAPTER_SYNC',
+    label: 'Chapter Sync',
+    description: 'Check for new chapters for all tracked manga',
+    icon: Icons.menu_book,
+    defaultCron: '0 0 */6 * * *',
+  ),
+  _SyncJobDef(
+    jobType: 'RATING_SYNC',
+    label: 'Rating Sync',
+    description: 'Fetch MangaDex ratings for manga missing ratings',
+    icon: Icons.star_outline,
+    defaultCron: '0 5 2 * * *',
+  ),
+  _SyncJobDef(
+    jobType: 'GENRE_SYNC',
+    label: 'Genre Sync',
+    description: 'Assign genres from MangaDex to manga without genres',
+    icon: Icons.category_outlined,
+    defaultCron: '',
+  ),
+];
 
 class SyncDashboardScreen extends ConsumerStatefulWidget {
   const SyncDashboardScreen({super.key});
@@ -63,7 +115,7 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
         children: [
           _buildOverviewSection(context, dashboard),
           const Gap(AppSpacing.xl),
-          _buildConfigsSection(context, dashboard.configs),
+          _buildJobsSection(context, dashboard.configs),
           const Gap(AppSpacing.xl),
           _buildLogsSection(context, dashboard.configs),
         ],
@@ -119,59 +171,39 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
             ),
           ],
         ),
-        if (dashboard.lastSyncStatus != null) ...[
-          const Gap(AppSpacing.md),
-          Row(
-            children: [
-              const Text(
-                'Status: ',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-              _StatusChip(status: dashboard.lastSyncStatus!),
-            ],
-          ),
-        ],
       ],
     );
   }
 
-  // ─── Configs Section ───
+  // ─── Jobs Section ───
 
-  Widget _buildConfigsSection(BuildContext context, List<SyncConfig> configs) {
+  Widget _buildJobsSection(BuildContext context, List<SyncConfig> configs) {
+    final configMap = {for (var c in configs) c.jobType: c};
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Sync Configurations',
+          'Sync Jobs',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
         ),
         const Gap(AppSpacing.lg),
-        if (configs.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              border: Border.all(color: AppColors.divider),
+        ..._allSyncJobs.map((job) {
+          final config = configMap[job.jobType];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            child: _SyncJobCard(
+              job: job,
+              config: config,
+              onTrigger: () => _showTriggerDialog(job, config),
+              onToggle: config != null
+                  ? (enabled) => _updateConfig(config, enabled)
+                  : null,
             ),
-            child: const Text(
-              'No sync configurations found.',
-              style: TextStyle(color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          )
-        else
-          ...configs.map((config) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: _SyncConfigCard(
-                  config: config,
-                  onToggle: (enabled) => _updateConfig(config, enabled),
-                  onTrigger: () => _triggerSync(config.jobType),
-                ),
-              )),
+          );
+        }),
       ],
     );
   }
@@ -180,8 +212,6 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
 
   Widget _buildLogsSection(BuildContext context, List<SyncConfig> configs) {
     final logsAsync = ref.watch(syncLogsProvider(_selectedJobTypeFilter));
-
-    final jobTypes = configs.map((c) => c.jobType).toSet().toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,13 +226,14 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
                     ),
               ),
             ),
-            _buildJobTypeFilter(jobTypes),
+            _buildJobTypeFilter(),
           ],
         ),
         const Gap(AppSpacing.lg),
         logsAsync.when(
           data: (logs) => _buildLogsList(logs),
-          loading: () => const LoadingSkeleton(width: double.infinity, height: 200),
+          loading: () =>
+              const LoadingSkeleton(width: double.infinity, height: 200),
           error: (e, _) => ErrorView(
             message: 'Failed to load sync logs.',
             onRetry: () =>
@@ -213,7 +244,7 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
     );
   }
 
-  Widget _buildJobTypeFilter(List<String> jobTypes) {
+  Widget _buildJobTypeFilter() {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -238,10 +269,10 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
               value: null,
               child: Text('All Jobs', style: TextStyle(fontSize: 13)),
             ),
-            ...jobTypes.map(
-              (type) => DropdownMenuItem<String?>(
-                value: type,
-                child: Text(type, style: const TextStyle(fontSize: 13)),
+            ..._allSyncJobs.map(
+              (job) => DropdownMenuItem<String?>(
+                value: job.jobType,
+                child: Text(job.label, style: const TextStyle(fontSize: 13)),
               ),
             ),
           ],
@@ -291,20 +322,33 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
 
   // ─── Actions ───
 
-  Future<void> _triggerSync(String jobType) async {
-    final confirmed = await ConfirmActionDialog.show(
-      context,
-      title: 'Trigger Sync',
-      message: 'Are you sure you want to trigger a "$jobType" sync now?',
-      confirmLabel: 'Trigger',
-      isDangerous: false,
+  void _showTriggerDialog(_SyncJobDef job, SyncConfig? config) {
+    showDialog(
+      context: context,
+      builder: (_) => _TriggerSyncDialog(
+        job: job,
+        config: config,
+        onConfirm: (cronExpression, enabled, limit) async {
+          if (config != null &&
+              (cronExpression != config.cronExpression ||
+                  enabled != config.enabled)) {
+            final repo = ref.read(adminRepositoryProvider);
+            await repo.updateSyncConfig(
+              jobType: job.jobType,
+              cronExpression: cronExpression,
+              enabled: enabled,
+            );
+          }
+          await _triggerSync(job.jobType, limit: limit);
+        },
+      ),
     );
+  }
 
-    if (!confirmed || !mounted) return;
-
+  Future<void> _triggerSync(String jobType, {int? limit}) async {
     try {
       final repo = ref.read(adminRepositoryProvider);
-      await repo.triggerSync(jobType);
+      await repo.triggerSync(jobType, limit: limit);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -346,6 +390,356 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
   }
 }
 
+// ─── Trigger Sync Dialog ───
+
+class _TriggerSyncDialog extends StatefulWidget {
+  const _TriggerSyncDialog({
+    required this.job,
+    required this.config,
+    required this.onConfirm,
+  });
+
+  final _SyncJobDef job;
+  final SyncConfig? config;
+  final Future<void> Function(String cronExpression, bool enabled, int? limit) onConfirm;
+
+  @override
+  State<_TriggerSyncDialog> createState() => _TriggerSyncDialogState();
+}
+
+class _TriggerSyncDialogState extends State<_TriggerSyncDialog> {
+  late final TextEditingController _cronController;
+  late final TextEditingController _limitController;
+  late bool _enabled;
+  bool _isRunning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _cronController = TextEditingController(
+      text: widget.config?.cronExpression ?? widget.job.defaultCron,
+    );
+    _limitController = TextEditingController(
+      text: widget.job.hasLimit ? '${widget.job.defaultLimit}' : '',
+    );
+    _enabled = widget.config?.enabled ?? true;
+  }
+
+  @override
+  void dispose() {
+    _cronController.dispose();
+    _limitController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onRun() async {
+    setState(() => _isRunning = true);
+    try {
+      final limit = widget.job.hasLimit
+          ? int.tryParse(_limitController.text.trim())
+          : null;
+      await widget.onConfirm(_cronController.text.trim(), _enabled, limit);
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isRunning = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lastRun = widget.config?.lastRunTime;
+    final dateFormat = DateFormat('MMM dd, yyyy HH:mm');
+
+    return AlertDialog(
+      backgroundColor: AppColors.surface,
+      title: Row(
+        children: [
+          Icon(widget.job.icon, color: AppColors.primary, size: 24),
+          const Gap(AppSpacing.sm),
+          Expanded(child: Text(widget.job.label)),
+        ],
+      ),
+      content: SizedBox(
+        width: 420,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.job.description,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            const Gap(AppSpacing.lg),
+
+            // Last run info
+            if (lastRun != null) ...[
+              _InfoRow(
+                label: 'Last Run',
+                value: dateFormat.format(lastRun.toLocal()),
+              ),
+              const Gap(AppSpacing.sm),
+            ],
+            if (widget.config?.lastRunStatus != null) ...[
+              _InfoRow(
+                label: 'Last Status',
+                value: widget.config!.lastRunStatus!.toUpperCase(),
+                valueColor: _colorForStatus(widget.config!.lastRunStatus!),
+              ),
+              const Gap(AppSpacing.lg),
+            ],
+
+            // Cron expression
+            const Text(
+              'Schedule (Cron Expression)',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+            ),
+            const Gap(AppSpacing.sm),
+            TextFormField(
+              controller: _cronController,
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                color: AppColors.textPrimary,
+              ),
+              decoration: InputDecoration(
+                hintText: '0 0 */6 * * *',
+                hintStyle: const TextStyle(color: AppColors.textSecondary),
+                filled: true,
+                fillColor: AppColors.surfaceAlt,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  borderSide: const BorderSide(color: AppColors.divider),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  borderSide: const BorderSide(color: AppColors.divider),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+              ),
+            ),
+            const Gap(AppSpacing.md),
+
+            // Limit field (only for jobs that support it)
+            if (widget.job.hasLimit) ...[
+              const Gap(AppSpacing.md),
+              const Text(
+                'Limit (number of items to fetch)',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                ),
+              ),
+              const Gap(AppSpacing.sm),
+              TextFormField(
+                controller: _limitController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  hintText: '${widget.job.defaultLimit}',
+                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  filled: true,
+                  fillColor: AppColors.surfaceAlt,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    borderSide: const BorderSide(color: AppColors.divider),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    borderSide: const BorderSide(color: AppColors.divider),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                ),
+              ),
+            ],
+            const Gap(AppSpacing.md),
+
+            // Enabled toggle
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Auto-schedule enabled',
+                    style: TextStyle(color: AppColors.textPrimary),
+                  ),
+                ),
+                Switch(
+                  value: _enabled,
+                  onChanged: (v) => setState(() => _enabled = v),
+                  activeColor: AppColors.primary,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isRunning ? null : () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton.icon(
+          onPressed: _isRunning ? null : _onRun,
+          icon: _isRunning
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                )
+              : const Icon(Icons.play_arrow, size: 18),
+          label: Text(_isRunning ? 'Running...' : 'Run Now'),
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value, this.valueColor});
+
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          '$label: ',
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: valueColor ?? AppColors.textPrimary,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Sync Job Card ───
+
+class _SyncJobCard extends StatelessWidget {
+  const _SyncJobCard({
+    required this.job,
+    required this.config,
+    required this.onTrigger,
+    required this.onToggle,
+  });
+
+  final _SyncJobDef job;
+  final SyncConfig? config;
+  final VoidCallback onTrigger;
+  final ValueChanged<bool>? onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final isEnabled = config?.enabled ?? false;
+    final lastRun = config?.lastRunTime;
+    final dateFormat = DateFormat('MMM dd, HH:mm');
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+            child: Icon(job.icon, color: AppColors.primary, size: 22),
+          ),
+          const Gap(AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      job.label,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    if (config?.lastRunStatus != null) ...[
+                      const Gap(AppSpacing.sm),
+                      _StatusChip(status: config!.lastRunStatus!),
+                    ],
+                  ],
+                ),
+                const Gap(AppSpacing.xs),
+                Text(
+                  job.description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (config != null) ...[
+                  const Gap(AppSpacing.xs),
+                  Text(
+                    'Schedule: ${config!.cronExpression.isNotEmpty ? config!.cronExpression : "Manual only"}  •  Last: ${lastRun != null ? dateFormat.format(lastRun.toLocal()) : "Never"}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                        ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (onToggle != null)
+            Switch(
+              value: isEnabled,
+              onChanged: onToggle,
+              activeColor: AppColors.primary,
+            ),
+          const Gap(AppSpacing.xs),
+          IconButton(
+            icon: const Icon(Icons.play_arrow, size: 22),
+            tooltip: 'Configure & Run',
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+              foregroundColor: AppColors.primary,
+            ),
+            onPressed: onTrigger,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ─── Overview Card ───
 
 class _OverviewCard extends StatelessWidget {
@@ -379,7 +773,7 @@ class _OverviewCard extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
             child: Icon(icon, color: color, size: 18),
@@ -406,92 +800,6 @@ class _OverviewCard extends StatelessWidget {
   }
 }
 
-// ─── Sync Config Card ───
-
-class _SyncConfigCard extends StatelessWidget {
-  const _SyncConfigCard({
-    required this.config,
-    required this.onToggle,
-    required this.onTrigger,
-  });
-
-  final SyncConfig config;
-  final ValueChanged<bool> onToggle;
-  final VoidCallback onTrigger;
-
-  @override
-  Widget build(BuildContext context) {
-    final dateFormat = DateFormat('MMM dd, HH:mm');
-    final lastRun = config.lastRunTime != null
-        ? dateFormat.format(config.lastRunTime!.toLocal())
-        : 'Never';
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: AppColors.divider),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      config.jobType,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    if (config.lastRunStatus != null) ...[
-                      const Gap(AppSpacing.sm),
-                      _StatusChip(status: config.lastRunStatus!),
-                    ],
-                  ],
-                ),
-                const Gap(AppSpacing.xs),
-                Text(
-                  'Cron: ${config.cronExpression}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                        fontFamily: 'monospace',
-                      ),
-                ),
-                const Gap(AppSpacing.xs),
-                Text(
-                  'Last run: $lastRun',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: config.enabled,
-            onChanged: onToggle,
-            activeColor: AppColors.primary,
-          ),
-          const Gap(AppSpacing.sm),
-          IconButton(
-            icon: const Icon(Icons.play_arrow, size: 20),
-            tooltip: 'Trigger Sync Now',
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.primary.withOpacity(0.15),
-              foregroundColor: AppColors.primary,
-            ),
-            onPressed: onTrigger,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ─── Sync Log Tile ───
 
 class _SyncLogTile extends StatelessWidget {
@@ -506,9 +814,8 @@ class _SyncLogTile extends StatelessWidget {
         ? dateFormat.format(log.startedAt!.toLocal())
         : '—';
 
-    final duration = log.durationMs != null
-        ? _formatDuration(log.durationMs!)
-        : '—';
+    final duration =
+        log.durationMs != null ? _formatDuration(log.durationMs!) : '—';
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -592,7 +899,7 @@ class _StatusChip extends StatelessWidget {
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
       ),
       child: Text(

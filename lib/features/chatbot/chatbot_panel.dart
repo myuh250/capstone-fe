@@ -396,21 +396,25 @@ class _TypingIndicatorState extends State<_TypingIndicator>
               animation: _controller,
               builder: (_, __) => Row(
                 mainAxisSize: MainAxisSize.min,
-                children: List.generate(
-                  3,
-                  (i) => Container(
-                    width: 6,
-                    height: 6,
-                    margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primary.withAlpha(
-                        ((_controller.value + i / 3) % 1 < 0.5 ? 200 : 80)
-                            .toInt(),
+                children: List.generate(3, (i) {
+                  final delay = i * 0.2;
+                  final t = ((_controller.value + delay) % 1.0);
+                  final scale = 0.6 + (t < 0.5 ? t : 1.0 - t) * 0.8;
+                  return Transform.scale(
+                    scale: scale,
+                    child: Container(
+                      width: 7,
+                      height: 7,
+                      margin: EdgeInsets.only(right: i < 2 ? 5 : 0),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.primary.withAlpha(
+                          (scale * 220).toInt(),
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                }),
               ),
             ),
           ),

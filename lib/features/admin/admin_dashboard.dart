@@ -186,9 +186,9 @@ class _QuickActionsGrid extends StatelessWidget {
         RouteNames.adminReports,
       ),
       (
-        'AI Moderation',
-        Icons.smart_toy_outlined,
-        RouteNames.adminAiModeration,
+        'Moderation',
+        Icons.shield_outlined,
+        RouteNames.adminModeration,
       ),
       (
         'Sync Dashboard',

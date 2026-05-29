@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../core/network/api_exceptions.dart';
 import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -71,9 +72,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           if (user != null) context.go(RouteNames.home);
         },
         error: (e, _) {
+          final message = e is ApiException ? e.message : 'Google Sign-In failed. Please try again.';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Google Sign-In failed: ${e.toString()}'),
+              content: Text(message),
               backgroundColor: AppColors.error,
             ),
           );
@@ -81,9 +83,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     } catch (e) {
       if (mounted) {
+        final message = e is ApiException ? e.message : 'Google Sign-In failed. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Google Sign-In failed: ${e.toString()}'),
+            content: Text(message),
             backgroundColor: AppColors.error,
           ),
         );
@@ -107,9 +110,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (user != null) context.go(RouteNames.home);
       },
       error: (e, _) {
+        final message = e is ApiException ? e.message : 'Sign in failed. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Sign in failed: ${e.toString()}'),
+            content: Text(message),
             backgroundColor: AppColors.error,
           ),
         );

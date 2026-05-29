@@ -227,8 +227,93 @@ class AdminRepository {
 
   // ─── Manga Management ───
 
+  Future<Map<String, dynamic>> createManga({
+    required String title,
+    required String description,
+    required String status,
+    String? coverUrl,
+    List<String>? genreNames,
+    List<String>? authorNames,
+  }) async {
+    final data = <String, dynamic>{
+      'title': title,
+      'description': description,
+      'status': status,
+    };
+    if (coverUrl != null) data['coverUrl'] = coverUrl;
+    if (genreNames != null) data['genreNames'] = genreNames;
+    if (authorNames != null) data['authorNames'] = authorNames;
+
+    final response = await _apiClient.post(ApiEndpoints.adminMangas, data: data);
+    final body = response.data;
+    if (body is Map<String, dynamic> && body.containsKey('data')) {
+      return body['data'] as Map<String, dynamic>;
+    }
+    return body as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> updateManga({
+    required String mangaId,
+    String? title,
+    String? description,
+    String? status,
+    String? coverUrl,
+  }) async {
+    final data = <String, dynamic>{};
+    if (title != null) data['title'] = title;
+    if (description != null) data['description'] = description;
+    if (status != null) data['status'] = status;
+    if (coverUrl != null) data['coverUrl'] = coverUrl;
+
+    final response = await _apiClient.put(
+      ApiEndpoints.adminMangaById(mangaId),
+      data: data,
+    );
+    final body = response.data;
+    if (body is Map<String, dynamic> && body.containsKey('data')) {
+      return body['data'] as Map<String, dynamic>;
+    }
+    return body as Map<String, dynamic>;
+  }
+
   Future<void> deleteManga(String mangaId) async {
     await _apiClient.delete(ApiEndpoints.adminMangaDelete(mangaId));
+  }
+
+  // ─── Chapter Management ───
+
+  Future<List<Map<String, dynamic>>> getChaptersByManga(String mangaId) async {
+    final response = await _apiClient.get(ApiEndpoints.chaptersByManga(mangaId));
+    final data = response.data;
+    if (data is List) {
+      return data.cast<Map<String, dynamic>>();
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>> createChapter({
+    required String mangaId,
+    required double chapterNumber,
+    String? title,
+    List<String>? imageUrls,
+  }) async {
+    final data = <String, dynamic>{
+      'mangaId': mangaId,
+      'chapterNumber': chapterNumber,
+    };
+    if (title != null && title.isNotEmpty) data['title'] = title;
+    if (imageUrls != null && imageUrls.isNotEmpty) data['imageUrls'] = imageUrls;
+
+    final response = await _apiClient.post(ApiEndpoints.chapters, data: data);
+    final body = response.data;
+    if (body is Map<String, dynamic> && body.containsKey('data')) {
+      return body['data'] as Map<String, dynamic>;
+    }
+    return body as Map<String, dynamic>;
+  }
+
+  Future<void> deleteChapter(String chapterId) async {
+    await _apiClient.delete(ApiEndpoints.chapterById(chapterId));
   }
 
   // ─── Sync Dashboard ───
@@ -274,9 +359,13 @@ class AdminRepository {
     return SyncConfig.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<SyncLog> triggerSync(String jobType) async {
+  Future<SyncLog> triggerSync(String jobType, {int? limit}) async {
+    final params = <String, dynamic>{};
+    if (limit != null) params['limit'] = limit;
+
     final response = await _apiClient.post(
       ApiEndpoints.adminSyncTrigger(jobType),
+      queryParameters: params.isNotEmpty ? params : null,
     );
     return SyncLog.fromJson(response.data as Map<String, dynamic>);
   }
@@ -311,6 +400,34 @@ class AdminRepository {
   Future<AiModerationStats> getAiModerationStats() async {
     final response = await _apiClient.get(ApiEndpoints.adminAiModerationStats);
     return AiModerationStats.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<List<AiModerationResult>> getAiModerationPending({
+    int page = 0,
+    int size = 20,
+  }) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.adminAiModerationPending,
+      queryParameters: {'page': page, 'size': size},
+    );
+    final data = response.data;
+    List<dynamic> list;
+    if (data is List) {
+      list = data;
+    } else {
+      list = (data as Map<String, dynamic>)['content'] as List<dynamic>? ?? [];
+    }
+    return list
+        .map((e) => AiModerationResult.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> approveAiFlag(int resultId) async {
+    await _apiClient.post(ApiEndpoints.adminAiModerationApprove(resultId));
+  }
+
+  Future<void> removeAiFlaggedContent(int resultId) async {
+    await _apiClient.post(ApiEndpoints.adminAiModerationRemove(resultId));
   }
 
   // ─── Moderation Actions ───

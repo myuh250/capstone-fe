@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/admin/admin_dashboard.dart';
-import '../../features/admin/ai_moderation_screen.dart';
+import '../../features/admin/ai_sync_screen.dart';
 import '../../features/admin/content_management_screen.dart';
+import '../../features/admin/chapter_management_screen.dart';
 import '../../features/admin/manga_edit_screen.dart';
 import '../../features/admin/moderation_screen.dart';
 import '../../features/admin/report_dashboard.dart';
@@ -278,14 +279,21 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
+            path: '/admin/content/manga/:mangaId/chapters',
+            name: 'adminMangaChapters',
+            builder: (context, state) => ChapterManagementScreen(
+              mangaId: state.pathParameters['mangaId']!,
+            ),
+          ),
+          GoRoute(
             path: RouteNames.adminModeration,
             name: 'adminModeration',
             builder: (_, __) => const ModerationScreen(),
           ),
           GoRoute(
-            path: RouteNames.adminAiModeration,
-            name: 'adminAiModeration',
-            builder: (_, __) => const AiModerationScreen(),
+            path: RouteNames.adminAiSync,
+            name: 'adminAiSync',
+            builder: (_, __) => const AiSyncScreen(),
           ),
           GoRoute(
             path: RouteNames.adminSync,

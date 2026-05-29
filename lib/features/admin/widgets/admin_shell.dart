@@ -101,8 +101,8 @@ class _AdminSidebarContent extends ConsumerWidget {
     _AdminNavItem(
       icon: Icons.smart_toy_outlined,
       selectedIcon: Icons.smart_toy,
-      label: 'AI Moderation',
-      path: RouteNames.adminAiModeration,
+      label: 'AI Assistant',
+      path: RouteNames.adminAiSync,
     ),
     _AdminNavItem(
       icon: Icons.sync_outlined,

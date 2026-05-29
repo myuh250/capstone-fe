@@ -224,6 +224,54 @@ class AdminMangaNotifier extends StateNotifier<AdminMangaState> {
     state = state.copyWith(searchQuery: query);
   }
 
+  Future<bool> createManga({
+    required String title,
+    required String description,
+    required String status,
+    String? coverUrl,
+    List<String>? genreNames,
+    List<String>? authorNames,
+  }) async {
+    try {
+      await _adminRepo.createManga(
+        title: title,
+        description: description,
+        status: status,
+        coverUrl: coverUrl,
+        genreNames: genreNames,
+        authorNames: authorNames,
+      );
+      await _load();
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: e);
+      return false;
+    }
+  }
+
+  Future<bool> updateManga({
+    required String mangaId,
+    String? title,
+    String? description,
+    String? status,
+    String? coverUrl,
+  }) async {
+    try {
+      await _adminRepo.updateManga(
+        mangaId: mangaId,
+        title: title,
+        description: description,
+        status: status,
+        coverUrl: coverUrl,
+      );
+      await _load();
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: e);
+      return false;
+    }
+  }
+
   Future<void> deleteManga(String mangaId) async {
     try {
       await _adminRepo.deleteManga(mangaId);
@@ -265,6 +313,12 @@ final aiModerationResultsProvider =
     FutureProvider.family<List<AiModerationResult>, bool>((ref, flaggedOnly) async {
   final repo = ref.read(adminRepositoryProvider);
   return repo.getAiModerationResults(flaggedOnly: flaggedOnly);
+});
+
+final aiModerationPendingProvider =
+    FutureProvider<List<AiModerationResult>>((ref) async {
+  final repo = ref.read(adminRepositoryProvider);
+  return repo.getAiModerationPending();
 });
 
 final aiModerationStatsProvider = FutureProvider<AiModerationStats>((ref) async {

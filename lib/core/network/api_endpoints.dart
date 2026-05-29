@@ -28,6 +28,7 @@ abstract class ApiEndpoints {
   static const String mangasRecent = '/mangas/recent';
 
   // Chapter
+  static const String chapters = '/chapters';
   static String chaptersByManga(String mangaId) => '/chapters/manga/$mangaId';
   static String chapterById(String id) => '/chapters/$id';
   static String chapterImages(String id) => '/chapters/$id/images';
@@ -106,12 +107,23 @@ abstract class ApiEndpoints {
 
   // Admin - Manga
   static const String adminMangas = '/mangas';
+  static String adminMangaById(String id) => '/mangas/$id';
   static String adminMangaDelete(String id) => '/mangas/$id';
+
+  // Admin - Upload
+  static const String uploadCover = '/upload/cover';
+  static const String uploadPages = '/upload/pages';
 
   // Admin - AI Moderation
   static const String adminAiModerationResults =
       '/admin/ai-moderation/results';
+  static const String adminAiModerationPending =
+      '/admin/ai-moderation/pending';
   static const String adminAiModerationStats = '/admin/ai-moderation/stats';
+  static String adminAiModerationApprove(int id) =>
+      '/admin/ai-moderation/$id/approve';
+  static String adminAiModerationRemove(int id) =>
+      '/admin/ai-moderation/$id/remove';
 
   // Admin - Stats
   static const String adminStats = '/admin/stats';
@@ -125,6 +137,7 @@ abstract class ApiEndpoints {
 
   // AI Chatbot
   static const String aiChat = '/ai/chat';
+  static const String aiAdminChat = '/ai/admin-chat';
   static const String aiSync = '/ai/sync';
   static String aiSyncJob(String jobId) => '/ai/sync/$jobId';
 

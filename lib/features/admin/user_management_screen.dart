@@ -275,6 +275,7 @@ class _UserCard extends StatelessWidget {
           border: Border.all(color: AppColors.divider),
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             UserAvatar(
               imageUrl: user.avatarUrl,
@@ -287,23 +288,12 @@ class _UserCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          user.displayName,
-                          style:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                          overflow: TextOverflow.ellipsis,
+                  Text(
+                    user.displayName,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
-                      ),
-                      const Gap(AppSpacing.sm),
-                      UserStatusBadge(status: user.status),
-                      const Gap(AppSpacing.xs),
-                      UserRoleBadge(role: user.role),
-                    ],
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -316,6 +306,10 @@ class _UserCard extends StatelessWidget {
                 ],
               ),
             ),
+            const Gap(AppSpacing.sm),
+            UserStatusBadge(status: user.status),
+            const Gap(AppSpacing.xs),
+            UserRoleBadge(role: user.role),
             if (!isSelf)
               IconButton(
                 icon: Icon(

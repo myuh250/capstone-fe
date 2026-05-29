@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/manga.dart';
+import '../../providers/admin_providers.dart';
 import '../../providers/manga_providers.dart';
 import '../../shared/widgets/cover_image.dart';
 import '../../shared/widgets/error_view.dart';
@@ -15,14 +18,21 @@ class MangaEditScreen extends ConsumerWidget {
 
   final String mangaId;
 
+  bool get isCreateMode => mangaId == 'new';
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (isCreateMode) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Add New Manga')),
+        body: const _MangaEditForm(manga: null),
+      );
+    }
+
     final mangaAsync = ref.watch(mangaDetailProvider(mangaId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(mangaId == 'new' ? 'Add New Manga' : 'Edit Manga'),
-      ),
+      appBar: AppBar(title: const Text('Edit Manga')),
       body: mangaAsync.when(
         data: (manga) => _MangaEditForm(manga: manga),
         loading: () => const Padding(
@@ -41,7 +51,7 @@ class MangaEditScreen extends ConsumerWidget {
 class _MangaEditForm extends ConsumerStatefulWidget {
   const _MangaEditForm({required this.manga});
 
-  final Manga manga;
+  final Manga? manga;
 
   @override
   ConsumerState<_MangaEditForm> createState() => _MangaEditFormState();
@@ -56,16 +66,19 @@ class _MangaEditFormState extends ConsumerState<_MangaEditForm> {
   late MangaStatus _status;
   bool _isSaving = false;
 
+  bool get isCreateMode => widget.manga == null;
+
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.manga.title);
+    _titleController = TextEditingController(text: widget.manga?.title ?? '');
     _descriptionController =
-        TextEditingController(text: widget.manga.description ?? '');
+        TextEditingController(text: widget.manga?.description ?? '');
     _authorController =
-        TextEditingController(text: widget.manga.author ?? '');
-    _coverUrlController = TextEditingController(text: widget.manga.coverUrl);
-    _status = widget.manga.status;
+        TextEditingController(text: widget.manga?.author ?? '');
+    _coverUrlController =
+        TextEditingController(text: widget.manga?.coverUrl ?? '');
+    _status = widget.manga?.status ?? MangaStatus.ongoing;
   }
 
   @override
@@ -80,15 +93,58 @@ class _MangaEditFormState extends ConsumerState<_MangaEditForm> {
   Future<void> _onSave() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
-    await Future.delayed(const Duration(milliseconds: 800));
+
+    final notifier = ref.read(adminMangaProvider.notifier);
+    final statusValue = _status.name.toUpperCase();
+    bool success;
+
+    if (isCreateMode) {
+      success = await notifier.createManga(
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        status: statusValue,
+        coverUrl: _coverUrlController.text.trim().isNotEmpty
+            ? _coverUrlController.text.trim()
+            : null,
+        authorNames: _authorController.text.trim().isNotEmpty
+            ? [_authorController.text.trim()]
+            : null,
+      );
+    } else {
+      success = await notifier.updateManga(
+        mangaId: widget.manga!.id,
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        status: statusValue,
+        coverUrl: _coverUrlController.text.trim().isNotEmpty
+            ? _coverUrlController.text.trim()
+            : null,
+      );
+    }
+
     if (!mounted) return;
     setState(() => _isSaving = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Saved successfully!'),
-        backgroundColor: AppColors.statusGreen,
-      ),
-    );
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isCreateMode
+              ? 'Manga created successfully!'
+              : 'Manga updated successfully!'),
+          backgroundColor: AppColors.statusGreen,
+        ),
+      );
+      if (isCreateMode) {
+        context.pop();
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to save. Please try again.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -105,8 +161,7 @@ class _MangaEditFormState extends ConsumerState<_MangaEditForm> {
             _FormField(
               controller: _coverUrlController,
               label: 'Cover Image URL',
-              validator: (v) =>
-                  v == null || v.isEmpty ? 'This field is required' : null,
+              hint: 'https://example.com/cover.jpg',
               enabled: !_isSaving,
             ),
             const Gap(AppSpacing.lg),
@@ -114,7 +169,7 @@ class _MangaEditFormState extends ConsumerState<_MangaEditForm> {
               controller: _titleController,
               label: 'Title',
               validator: (v) =>
-                  v == null || v.isEmpty ? 'This field is required' : null,
+                  v == null || v.trim().isEmpty ? 'Title is required' : null,
               enabled: !_isSaving,
             ),
             const Gap(AppSpacing.lg),
@@ -165,15 +220,35 @@ class _MangaEditFormState extends ConsumerState<_MangaEditForm> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text(
-                        'Save Changes',
-                        style: TextStyle(
+                    : Text(
+                        isCreateMode ? 'Create Manga' : 'Save Changes',
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
               ),
             ),
+            if (!isCreateMode) ...[
+              const Gap(AppSpacing.lg),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => context.push(
+                    RouteNames.adminMangaChapters(widget.manga!.id),
+                  ),
+                  icon: const Icon(Icons.menu_book_outlined),
+                  label: const Text('Manage Chapters'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 52),
+                    side: const BorderSide(color: AppColors.primary),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -188,6 +263,30 @@ class _CoverPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (imageUrl.isEmpty) {
+      return Center(
+        child: Container(
+          width: 120,
+          height: 170,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceAlt,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(color: AppColors.divider),
+          ),
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.image_outlined, size: 40, color: AppColors.textSecondary),
+              Gap(AppSpacing.xs),
+              Text(
+                'No cover',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return Center(
       child: SizedBox(
         width: 120,
@@ -201,6 +300,7 @@ class _FormField extends StatelessWidget {
   const _FormField({
     required this.controller,
     required this.label,
+    this.hint,
     this.validator,
     this.maxLines = 1,
     this.enabled = true,
@@ -208,6 +308,7 @@ class _FormField extends StatelessWidget {
 
   final TextEditingController controller;
   final String label;
+  final String? hint;
   final String? Function(String?)? validator;
   final int maxLines;
   final bool enabled;
@@ -222,7 +323,9 @@ class _FormField extends StatelessWidget {
       style: const TextStyle(color: AppColors.textPrimary),
       decoration: InputDecoration(
         labelText: label,
+        hintText: hint,
         labelStyle: const TextStyle(color: AppColors.textSecondary),
+        hintStyle: const TextStyle(color: AppColors.textSecondary),
         filled: true,
         fillColor: AppColors.surface,
         enabledBorder: OutlineInputBorder(
@@ -271,7 +374,7 @@ class _StatusSelector extends StatelessWidget {
           label: Text(_label(status)),
           selected: isSelected,
           onSelected: enabled ? (_) => onChanged(status) : null,
-          selectedColor: AppColors.primary.withOpacity(0.2),
+          selectedColor: AppColors.primary.withValues(alpha: 0.2),
           labelStyle: TextStyle(
             color: isSelected ? AppColors.primary : AppColors.textSecondary,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
