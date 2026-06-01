@@ -20,10 +20,12 @@ class ReaderScreen extends ConsumerWidget {
     super.key,
     required this.mangaSlug,
     required this.chapterSlug,
+    this.chapterId,
   });
 
   final String mangaSlug;
   final String chapterSlug;
+  final String? chapterId;
 
   double get _chapterNumber {
     final match = RegExp(r'chapter-(.+)').firstMatch(chapterSlug);
@@ -33,7 +35,11 @@ class ReaderScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final params = ReaderParams(mangaSlug: mangaSlug, chapterNumber: _chapterNumber);
+    final params = ReaderParams(
+      mangaSlug: mangaSlug,
+      chapterNumber: _chapterNumber,
+      chapterId: chapterId,
+    );
     final resolvedAsync = ref.watch(resolvedReaderProvider(params));
 
     return resolvedAsync.when(
@@ -119,6 +125,7 @@ class _ReaderContentState extends ConsumerState<_ReaderContent> {
     final adjacentParams = AdjacentChaptersParams(
       mangaId: widget.manga.id,
       chapterNumber: widget.chapter.number,
+      chapterId: widget.chapter.id,
     );
     final adjacentAsync = ref.watch(adjacentChaptersProvider(adjacentParams));
     final chapterListState = ref.watch(chapterListProvider(widget.manga.id));
@@ -145,7 +152,7 @@ class _ReaderContentState extends ConsumerState<_ReaderContent> {
               chapters: chapterListState.chapters,
               currentChapter: widget.chapter,
               onChapterSelected: (ch) => context.pushReplacement(
-                RouteNames.reader(widget.mangaSlug, ch.number),
+                RouteNames.reader(widget.mangaSlug, ch.number, cid: ch.id),
               ),
             )
           : null,
@@ -200,12 +207,20 @@ class _ReaderContentState extends ConsumerState<_ReaderContent> {
                           onPageChanged: _onPageChanged,
                           onPreviousChapter: adjacent.previous != null
                               ? () => context.pushReplacement(
-                                    RouteNames.reader(widget.mangaSlug, adjacent.previous!.number),
+                                    RouteNames.reader(
+                                      widget.mangaSlug,
+                                      adjacent.previous!.number,
+                                      cid: adjacent.previous!.id,
+                                    ),
                                   )
                               : null,
                           onNextChapter: adjacent.next != null
                               ? () => context.pushReplacement(
-                                    RouteNames.reader(widget.mangaSlug, adjacent.next!.number),
+                                    RouteNames.reader(
+                                      widget.mangaSlug,
+                                      adjacent.next!.number,
+                                      cid: adjacent.next!.id,
+                                    ),
                                   )
                               : null,
                         ),

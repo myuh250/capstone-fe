@@ -181,7 +181,7 @@ class _MangaDetailScreenState extends ConsumerState<MangaDetailScreen> {
 
   void _navigateToReader(BuildContext context, Chapter chapter, {required Manga manga}) {
     final slug = manga.slug ?? widget.mangaSlug;
-    context.push(RouteNames.reader(slug, chapter.number));
+    context.push(RouteNames.reader(slug, chapter.number, cid: chapter.id));
   }
 }
 

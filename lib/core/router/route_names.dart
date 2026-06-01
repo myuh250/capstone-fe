@@ -18,11 +18,13 @@ abstract class RouteNames {
   static String mangaDetailComments(String slug) =>
       '/manga/$slug?scrollTo=comments';
 
-  static String reader(String mangaSlug, double chapterNumber) {
+  static String reader(String mangaSlug, double chapterNumber, {String? cid}) {
     final chNum = chapterNumber == chapterNumber.truncateToDouble()
         ? 'chapter-${chapterNumber.toInt()}'
         : 'chapter-$chapterNumber';
-    return '/manga/$mangaSlug/$chNum';
+    final path = '/manga/$mangaSlug/$chNum';
+    if (cid != null) return '$path?cid=$cid';
+    return path;
   }
 
   /// Derive a URL slug from a title (client-side fallback when slug is not available)

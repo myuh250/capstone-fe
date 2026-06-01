@@ -13,18 +13,24 @@ final chapterRepositoryProvider = Provider<ChapterRepository>((ref) {
 });
 
 class ReaderParams {
-  const ReaderParams({required this.mangaSlug, required this.chapterNumber});
+  const ReaderParams({
+    required this.mangaSlug,
+    required this.chapterNumber,
+    this.chapterId,
+  });
   final String mangaSlug;
   final double chapterNumber;
+  final String? chapterId;
 
   @override
   bool operator ==(Object other) =>
       other is ReaderParams &&
       other.mangaSlug == mangaSlug &&
-      other.chapterNumber == chapterNumber;
+      other.chapterNumber == chapterNumber &&
+      other.chapterId == chapterId;
 
   @override
-  int get hashCode => Object.hash(mangaSlug, chapterNumber);
+  int get hashCode => Object.hash(mangaSlug, chapterNumber, chapterId);
 }
 
 class ResolvedReader {
@@ -38,10 +44,22 @@ final resolvedReaderProvider =
   final manga = await ref.watch(mangaBySlugProvider(params.mangaSlug).future);
   final repo = ref.watch(mangaRepositoryProvider);
   final chapters = await repo.getChapters(manga.id);
-  final chapter = chapters.firstWhere(
-    (c) => c.number == params.chapterNumber,
-    orElse: () => chapters.first,
-  );
+
+  Chapter chapter;
+  if (params.chapterId != null) {
+    chapter = chapters.firstWhere(
+      (c) => c.id == params.chapterId,
+      orElse: () => chapters.firstWhere(
+        (c) => c.number == params.chapterNumber,
+        orElse: () => chapters.first,
+      ),
+    );
+  } else {
+    chapter = chapters.firstWhere(
+      (c) => c.number == params.chapterNumber,
+      orElse: () => chapters.first,
+    );
+  }
   return ResolvedReader(manga: manga, chapter: chapter);
 });
 
@@ -54,19 +72,22 @@ class AdjacentChaptersParams {
   const AdjacentChaptersParams({
     required this.mangaId,
     required this.chapterNumber,
+    required this.chapterId,
   });
 
   final String mangaId;
   final double chapterNumber;
+  final String chapterId;
 
   @override
   bool operator ==(Object other) =>
       other is AdjacentChaptersParams &&
       other.mangaId == mangaId &&
-      other.chapterNumber == chapterNumber;
+      other.chapterNumber == chapterNumber &&
+      other.chapterId == chapterId;
 
   @override
-  int get hashCode => Object.hash(mangaId, chapterNumber);
+  int get hashCode => Object.hash(mangaId, chapterNumber, chapterId);
 }
 
 class AdjacentChapters {
@@ -82,10 +103,12 @@ final adjacentChaptersProvider = FutureProvider.family<AdjacentChapters,
   final prev = await repo.getPreviousChapter(
     params.mangaId,
     params.chapterNumber,
+    currentChapterId: params.chapterId,
   );
   final next = await repo.getNextChapter(
     params.mangaId,
     params.chapterNumber,
+    currentChapterId: params.chapterId,
   );
   return AdjacentChapters(previous: prev, next: next);
 });

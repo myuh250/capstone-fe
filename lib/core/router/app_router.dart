@@ -238,6 +238,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => ReaderScreen(
               mangaSlug: state.pathParameters['mangaSlug']!,
               chapterSlug: state.pathParameters['chapterSlug']!,
+              chapterId: state.uri.queryParameters['cid'],
             ),
           ),
         ],

@@ -5,8 +5,8 @@ import '../models/chapter_page.dart';
 
 abstract class ChapterRepository {
   Future<List<ChapterPage>> getPages(String chapterId);
-  Future<Chapter?> getPreviousChapter(String mangaId, double chapterNumber);
-  Future<Chapter?> getNextChapter(String mangaId, double chapterNumber);
+  Future<Chapter?> getPreviousChapter(String mangaId, double chapterNumber, {String? currentChapterId});
+  Future<Chapter?> getNextChapter(String mangaId, double chapterNumber, {String? currentChapterId});
   Future<void> saveReadingProgress(
     String mangaId,
     String chapterId,
@@ -55,27 +55,38 @@ class RealChapterRepository implements ChapterRepository {
     }).toList();
   }
 
-  @override
-  Future<Chapter?> getPreviousChapter(
-    String mangaId,
-    double chapterNumber,
-  ) async {
-    final response = await _apiClient.get(
-      ApiEndpoints.chaptersByManga(mangaId),
-    );
-    final data = response.data;
+  List<Chapter> _parseSortedChapters(dynamic data) {
     List<dynamic> list;
     if (data is List) {
       list = data;
     } else {
       list = (data as Map<String, dynamic>)['content'] as List<dynamic>? ?? [];
     }
-    final chapters = list
+    return list
         .map((e) => Chapter.fromJson(e as Map<String, dynamic>))
         .toList()
       ..sort((a, b) => a.number.compareTo(b.number));
+  }
 
-    final idx = chapters.indexWhere((c) => c.number == chapterNumber);
+  int _findCurrentIndex(List<Chapter> chapters, double chapterNumber, String? currentChapterId) {
+    if (currentChapterId != null) {
+      final idx = chapters.indexWhere((c) => c.id == currentChapterId);
+      if (idx >= 0) return idx;
+    }
+    return chapters.indexWhere((c) => c.number == chapterNumber);
+  }
+
+  @override
+  Future<Chapter?> getPreviousChapter(
+    String mangaId,
+    double chapterNumber, {
+    String? currentChapterId,
+  }) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.chaptersByManga(mangaId),
+    );
+    final chapters = _parseSortedChapters(response.data);
+    final idx = _findCurrentIndex(chapters, chapterNumber, currentChapterId);
     if (idx <= 0) return null;
     return chapters[idx - 1];
   }
@@ -83,24 +94,14 @@ class RealChapterRepository implements ChapterRepository {
   @override
   Future<Chapter?> getNextChapter(
     String mangaId,
-    double chapterNumber,
-  ) async {
+    double chapterNumber, {
+    String? currentChapterId,
+  }) async {
     final response = await _apiClient.get(
       ApiEndpoints.chaptersByManga(mangaId),
     );
-    final data = response.data;
-    List<dynamic> list;
-    if (data is List) {
-      list = data;
-    } else {
-      list = (data as Map<String, dynamic>)['content'] as List<dynamic>? ?? [];
-    }
-    final chapters = list
-        .map((e) => Chapter.fromJson(e as Map<String, dynamic>))
-        .toList()
-      ..sort((a, b) => a.number.compareTo(b.number));
-
-    final idx = chapters.indexWhere((c) => c.number == chapterNumber);
+    final chapters = _parseSortedChapters(response.data);
+    final idx = _findCurrentIndex(chapters, chapterNumber, currentChapterId);
     if (idx < 0 || idx >= chapters.length - 1) return null;
     return chapters[idx + 1];
   }
