@@ -212,22 +212,44 @@ class RealMangaRepository implements MangaRepository {
 
   @override
   Future<List<Manga>> getRelated(String mangaId) async {
+    const minItems = 12;
     final manga = await getById(mangaId);
+    final List<Manga> related = [];
+    final usedIds = <String>{mangaId};
+
     if (manga.tags.isNotEmpty) {
       final response = await _apiClient.get(
         ApiEndpoints.search,
         queryParameters: {'genres': manga.tags, 'size': 26},
       );
       final results = _parseMangaList(response.data);
-      final filtered = results.where((m) => m.id != mangaId).take(24).toList();
-      if (filtered.isNotEmpty) return filtered;
+      for (final m in results) {
+        if (!usedIds.contains(m.id)) {
+          related.add(m);
+          usedIds.add(m.id);
+        }
+        if (related.length >= 24) break;
+      }
     }
-    final response = await _apiClient.get(
-      ApiEndpoints.mangasTrending,
-      queryParameters: {'size': 26},
-    );
-    final all = _parseMangaList(response.data);
-    return all.where((m) => m.id != mangaId).take(24).toList();
+
+    if (related.length < minItems) {
+      try {
+        final response = await _apiClient.get(
+          ApiEndpoints.mangasTrending,
+          queryParameters: {'size': 26},
+        );
+        final trending = _parseMangaList(response.data);
+        for (final m in trending) {
+          if (!usedIds.contains(m.id)) {
+            related.add(m);
+            usedIds.add(m.id);
+          }
+          if (related.length >= minItems) break;
+        }
+      } catch (_) {}
+    }
+
+    return related;
   }
 
   @override
