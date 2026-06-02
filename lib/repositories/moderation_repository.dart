@@ -48,9 +48,8 @@ class RealModerationRepository implements ModerationRepository {
 
   @override
   Future<Report> getReportById(String id) async {
-    // BE doesn't have GET /reports/{id}; load from list and find
-    final all = await getReports();
-    return all.firstWhere((r) => r.id == id);
+    final response = await _apiClient.get('${ApiEndpoints.reports}/$id');
+    return Report.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
