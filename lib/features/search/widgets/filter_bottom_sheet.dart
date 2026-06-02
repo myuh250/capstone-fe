@@ -7,7 +7,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../models/manga.dart';
 import '../../../providers/search_providers.dart';
 
-class FilterBottomSheet extends ConsumerWidget {
+class FilterBottomSheet extends ConsumerStatefulWidget {
   const FilterBottomSheet({super.key});
 
   static Future<void> show(BuildContext context) {
@@ -25,9 +25,18 @@ class FilterBottomSheet extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FilterBottomSheet> createState() => _FilterBottomSheetState();
+}
+
+class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
+  bool _genresExpanded = false;
+  static const _collapsedCount = 12;
+
+  @override
+  Widget build(BuildContext context) {
     final filters = ref.watch(searchFiltersProvider);
     final notifier = ref.read(searchFiltersProvider.notifier);
+    final genresAsync = ref.watch(allGenresProvider);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.75,
@@ -73,38 +82,23 @@ class FilterBottomSheet extends ConsumerWidget {
                   const Gap(AppSpacing.xl),
                   _SectionLabel(label: 'Genre'),
                   const Gap(AppSpacing.md),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
-                    children: availableGenres.map((genre) {
-                      final isSelected = filters.genres.contains(genre);
-                      return FilterChip(
-                        label: Text(genre),
-                        selected: isSelected,
-                        onSelected: (_) => notifier.toggleGenre(genre),
-                        selectedColor: AppColors.primary.withOpacity(0.2),
-                        checkmarkColor: AppColors.primary,
-                        labelStyle: TextStyle(
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.w400,
-                        ),
-                        backgroundColor: AppColors.surfaceAlt,
-                        side: BorderSide(
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.divider,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.radiusFull,
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                  genresAsync.when(
+                    data: (genres) => _GenreSelector(
+                      genres: genres,
+                      selectedGenres: filters.genres,
+                      onToggle: notifier.toggleGenre,
+                      expanded: _genresExpanded,
+                      collapsedCount: _collapsedCount,
+                      onToggleExpand: () =>
+                          setState(() => _genresExpanded = !_genresExpanded),
+                    ),
+                    loading: () => const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(AppSpacing.lg),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                    error: (_, __) => const Text('Failed to load genres'),
                   ),
                   const Gap(AppSpacing.xl),
                   _SectionLabel(label: 'Sort'),
@@ -160,6 +154,88 @@ class FilterBottomSheet extends ConsumerWidget {
   }
 }
 
+class _GenreSelector extends StatelessWidget {
+  const _GenreSelector({
+    required this.genres,
+    required this.selectedGenres,
+    required this.onToggle,
+    required this.expanded,
+    required this.collapsedCount,
+    required this.onToggleExpand,
+  });
+
+  final List<String> genres;
+  final List<String> selectedGenres;
+  final void Function(String) onToggle;
+  final bool expanded;
+  final int collapsedCount;
+  final VoidCallback onToggleExpand;
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = expanded ? genres : genres.take(collapsedCount).toList();
+    final hasMore = genres.length > collapsedCount;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: visible.map((genre) {
+            final isSelected = selectedGenres.contains(genre);
+            return FilterChip(
+              label: Text(genre),
+              selected: isSelected,
+              onSelected: (_) => onToggle(genre),
+              selectedColor: AppColors.primary.withValues(alpha: 0.2),
+              checkmarkColor: AppColors.primary,
+              labelStyle: TextStyle(
+                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              ),
+              backgroundColor: AppColors.surfaceAlt,
+              side: BorderSide(
+                color: isSelected ? AppColors.primary : AppColors.divider,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              ),
+            );
+          }).toList(),
+        ),
+        if (hasMore) ...[
+          const Gap(AppSpacing.sm),
+          GestureDetector(
+            onTap: onToggleExpand,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  expanded ? Icons.expand_less : Icons.expand_more,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  expanded
+                      ? 'Show less'
+                      : 'Show all (${genres.length})',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _SheetHandle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -204,24 +280,34 @@ class _StatusFilterRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: [
         _StatusChip(
           label: 'All',
           isSelected: selected == null,
           onTap: () => onSelect(null),
         ),
-        const SizedBox(width: AppSpacing.sm),
         _StatusChip(
           label: 'Ongoing',
           isSelected: selected == MangaStatus.ongoing,
           onTap: () => onSelect(MangaStatus.ongoing),
         ),
-        const SizedBox(width: AppSpacing.sm),
         _StatusChip(
           label: 'Completed',
           isSelected: selected == MangaStatus.completed,
           onTap: () => onSelect(MangaStatus.completed),
+        ),
+        _StatusChip(
+          label: 'Hiatus',
+          isSelected: selected == MangaStatus.hiatus,
+          onTap: () => onSelect(MangaStatus.hiatus),
+        ),
+        _StatusChip(
+          label: 'Cancelled',
+          isSelected: selected == MangaStatus.cancelled,
+          onTap: () => onSelect(MangaStatus.cancelled),
         ),
       ],
     );

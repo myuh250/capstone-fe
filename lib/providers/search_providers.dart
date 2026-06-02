@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/network/api_client.dart';
+import '../core/network/api_endpoints.dart';
 import '../models/manga.dart';
 import '../repositories/manga_repository.dart';
 import 'manga_providers.dart';
@@ -86,25 +88,15 @@ final searchResultsProvider = FutureProvider<PaginatedResult<Manga>>((ref) async
   );
 });
 
-const availableGenres = [
-  'Action',
-  'Adventure',
-  'Comedy',
-  'Drama',
-  'Fantasy',
-  'Horror',
-  'Mystery',
-  'Romance',
-  'Sci-Fi',
-  'Slice of Life',
-  'Sports',
-  'Supernatural',
-  'Thriller',
-  'Historical',
-  'School Life',
-  'Martial Arts',
-  'Psychological',
-];
+final allGenresProvider = FutureProvider<List<String>>((ref) async {
+  final apiClient = ref.watch(apiClientProvider);
+  final response = await apiClient.get(ApiEndpoints.genres);
+  final list = response.data as List<dynamic>;
+  return list
+      .map((e) => (e as Map<String, dynamic>)['name'] as String)
+      .toList()
+    ..sort();
+});
 
 const sortOptions = [
   ('relevance', 'Most Relevant'),

@@ -28,30 +28,38 @@ class FilterChipBar extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         children: [
-          _FilterButton(
-            icon: Icons.tune,
-            label: 'Filter',
-            isActive: hasActiveFilters,
-            onTap: onFilterTap,
+          Center(
+            child: _FilterButton(
+              icon: Icons.tune,
+              label: 'Filter',
+              isActive: hasActiveFilters,
+              onTap: onFilterTap,
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          _FilterButton(
-            icon: Icons.sort,
-            label: _sortLabel(filters.sortBy),
-            isActive: filters.sortBy != 'relevance',
-            onTap: onSortTap,
+          Center(
+            child: _FilterButton(
+              icon: Icons.sort,
+              label: _sortLabel(filters.sortBy),
+              isActive: filters.sortBy != 'relevance',
+              onTap: onSortTap,
+            ),
           ),
           if (filters.status != null) ...[
             const SizedBox(width: AppSpacing.sm),
-            _ActiveFilterChip(
-              label: _statusLabel(filters.status!),
-              onRemove: null,
+            Center(
+              child: _ActiveFilterChip(
+                label: _statusLabel(filters.status!),
+                onRemove: null,
+              ),
             ),
           ],
           ...filters.genres.map((g) {
             return Padding(
               padding: const EdgeInsets.only(left: AppSpacing.sm),
-              child: _ActiveFilterChip(label: g, onRemove: null),
+              child: Center(
+                child: _ActiveFilterChip(label: g, onRemove: null),
+              ),
             );
           }),
         ],

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
+import '../../core/storage/local_storage.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 
@@ -56,14 +58,18 @@ class _ChatbotPanelState extends ConsumerState<ChatbotPanel> {
     'Short manga for quick reads',
   ];
 
+  String get _welcomeMessage => widget.initialContext != null
+      ? 'Hello! I can help you learn about "${widget.initialContext}" or suggest other manga. What would you like to know?'
+      : 'Hello! I\'m the AI assistant for MangaApp. I can help you find manga, answer questions about content, or give recommendations based on your preferences. How can I help?';
+
   @override
   void initState() {
     super.initState();
+    final storage = ref.read(localStorageProvider);
+    _sessionId = storage.getChatSessionId();
     _messages.add(ChatMessage(
       role: ChatRole.bot,
-      text: widget.initialContext != null
-          ? 'Hello! I can help you learn about "${widget.initialContext}" or suggest other manga. What would you like to know?'
-          : 'Hello! I\'m the AI assistant for MangaApp. I can help you find manga, answer questions about content, or give recommendations based on your preferences. How can I help?',
+      text: _welcomeMessage,
       timestamp: DateTime.now(),
     ));
   }
@@ -73,6 +79,20 @@ class _ChatbotPanelState extends ConsumerState<ChatbotPanel> {
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _resetSession() {
+    ref.read(localStorageProvider).clearChatSession();
+    setState(() {
+      _messages.clear();
+      _sessionId = null;
+      _isLoading = false;
+      _messages.add(ChatMessage(
+        role: ChatRole.bot,
+        text: _welcomeMessage,
+        timestamp: DateTime.now(),
+      ));
+    });
   }
 
   Future<void> _sendMessage(String text) async {
@@ -104,6 +124,9 @@ class _ChatbotPanelState extends ConsumerState<ChatbotPanel> {
 
       final data = response.data as Map<String, dynamic>;
       _sessionId = data['sessionId'] as String?;
+      if (_sessionId != null) {
+        ref.read(localStorageProvider).saveChatSessionId(_sessionId!);
+      }
       final reply = data['reply'] as String? ?? 'No response received.';
 
       setState(() {
@@ -155,7 +178,10 @@ class _ChatbotPanelState extends ConsumerState<ChatbotPanel> {
         ),
         child: Column(
           children: [
-            _Header(onClose: () => Navigator.of(context).pop()),
+            _Header(
+              onClose: () => Navigator.of(context).pop(),
+              onReset: _resetSession,
+            ),
             Expanded(
               child: ListView.builder(
                 controller: _scrollController,
@@ -193,9 +219,10 @@ class _ChatbotPanelState extends ConsumerState<ChatbotPanel> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.onClose});
+  const _Header({required this.onClose, required this.onReset});
 
   final VoidCallback onClose;
+  final VoidCallback onReset;
 
   @override
   Widget build(BuildContext context) {
@@ -253,6 +280,11 @@ class _Header extends StatelessWidget {
           ),
           const Spacer(),
           IconButton(
+            icon: const Icon(Icons.refresh, size: 20),
+            tooltip: 'New conversation',
+            onPressed: onReset,
+          ),
+          IconButton(
             icon: const Icon(Icons.close),
             onPressed: onClose,
           ),
@@ -306,25 +338,59 @@ class ChatBubble extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: isBot ? AppColors.surfaceAlt : AppColors.primary,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd).subtract(
-                  BorderRadius.only(
-                    topLeft: isBot
-                        ? const Radius.circular(AppSpacing.radiusMd)
-                        : Radius.zero,
-                    topRight: !isBot
-                        ? const Radius.circular(AppSpacing.radiusMd)
-                        : Radius.zero,
-                  ),
-                ),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isBot ? AppColors.textPrimary : Colors.white,
-                  height: 1.4,
-                ),
-              ),
+              child: isBot
+                  ? MarkdownBody(
+                      data: message.text,
+                      shrinkWrap: true,
+                      styleSheet: MarkdownStyleSheet(
+                        p: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                          height: 1.5,
+                        ),
+                        strong: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        listBullet: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                        ),
+                        h1: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        h2: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        h3: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        blockSpacing: 8,
+                        listIndent: 16,
+                        code: TextStyle(
+                          fontSize: 13,
+                          backgroundColor: AppColors.surface,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    )
+                  : Text(
+                      message.text,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                        height: 1.4,
+                      ),
+                    ),
             ),
           ),
         ],
