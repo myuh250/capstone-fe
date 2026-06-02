@@ -73,6 +73,33 @@ class _ChatbotPanelState extends ConsumerState<ChatbotPanel> {
       text: _welcomeMessage,
       timestamp: DateTime.now(),
     ));
+    if (_sessionId != null) {
+      _loadHistory();
+    }
+  }
+
+  Future<void> _loadHistory() async {
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      final response = await apiClient.get(
+        '/ai/chat/history',
+        queryParameters: {'sessionId': _sessionId!},
+      );
+      final list = response.data as List<dynamic>;
+      if (list.isEmpty) return;
+      if (!mounted) return;
+      setState(() {
+        for (final entry in list) {
+          final map = entry as Map<String, dynamic>;
+          _messages.add(ChatMessage(
+            role: map['role'] == 'user' ? ChatRole.user : ChatRole.bot,
+            text: map['content'] as String? ?? '',
+            timestamp: DateTime.now(),
+          ));
+        }
+      });
+      _scrollToBottom();
+    } catch (_) {}
   }
 
   @override
