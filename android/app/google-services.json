@@ -1,26 +1,36 @@
 {
   "project_info": {
-    "project_number": "555209984521",
-    "project_id": "capstone-aff7a",
-    "storage_bucket": "capstone-aff7a.firebasestorage.app"
+    "project_number": "668084052230",
+    "project_id": "mangacapstone-b202b",
+    "storage_bucket": "mangacapstone-b202b.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:555209984521:android:bc796de982af7dd5f446d8",
+        "mobilesdk_app_id": "1:668084052230:android:27385c853874279cfa3e87",
         "android_client_info": {
           "package_name": "com.example.frontend"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "668084052230-9qduui2cvk61fbgp96lmvlbofgonjn2g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDN83L8UsW-sGIV_B5xBUgalaWxt0Dh_PE"
+          "current_key": "AIzaSyA3CyJ1e63Rl33zFcFlbKUn_ePbfMmVOiY"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "668084052230-9qduui2cvk61fbgp96lmvlbofgonjn2g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

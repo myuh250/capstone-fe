@@ -36,7 +36,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   static const _googleClientId =
-      '41764157266-ucn2amkv1glm6jhg4c0jil8177g8e8qv.apps.googleusercontent.com';
+      '668084052230-9qduui2cvk61fbgp96lmvlbofgonjn2g.apps.googleusercontent.com';
 
   Future<void> _onGoogleSignIn() async {
     setState(() => _isGoogleLoading = true);

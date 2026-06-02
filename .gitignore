@@ -47,5 +47,5 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-google-services.json
 .metadata
+client_secret_41764157266-2o6msir032rlbk14hjip9fkpktmooen2.apps.googleusercontent.com.json
