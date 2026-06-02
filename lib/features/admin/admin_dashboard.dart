@@ -191,6 +191,11 @@ class _QuickActionsGrid extends StatelessWidget {
         RouteNames.adminModeration,
       ),
       (
+        'Payments',
+        Icons.payment_outlined,
+        RouteNames.adminPayments,
+      ),
+      (
         'Sync Dashboard',
         Icons.sync_outlined,
         RouteNames.adminSync,

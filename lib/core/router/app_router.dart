@@ -10,6 +10,7 @@ import '../../features/admin/manga_edit_screen.dart';
 import '../../features/admin/moderation_screen.dart';
 import '../../features/admin/report_dashboard.dart';
 import '../../features/admin/report_detail_screen.dart';
+import '../../features/admin/payment_history_screen.dart';
 import '../../features/admin/sync_dashboard_screen.dart';
 import '../../features/admin/user_detail_screen.dart';
 import '../../features/admin/user_management_screen.dart';
@@ -300,6 +301,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: RouteNames.adminSync,
             name: 'adminSync',
             builder: (_, __) => const SyncDashboardScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.adminPayments,
+            name: 'adminPayments',
+            builder: (_, __) => const AdminPaymentHistoryScreen(),
           ),
           GoRoute(
             path: RouteNames.adminReports,

@@ -308,6 +308,15 @@ final syncLogsProvider = FutureProvider.family<SyncLogsResult, (String?, int, in
   return repo.getSyncLogsPaged(jobType: jobType, page: page, size: size);
 });
 
+// ─── Admin Payments ───
+
+final adminPaymentsProvider = FutureProvider.family<AdminPaymentsResult, (String?, String?, int)>(
+    (ref, params) async {
+  final (status, search, page) = params;
+  final repo = ref.read(adminRepositoryProvider);
+  return repo.getPayments(status: status, search: search, page: page);
+});
+
 // ─── AI Moderation ───
 
 final aiModerationResultsProvider =

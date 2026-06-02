@@ -105,6 +105,12 @@ class _AdminSidebarContent extends ConsumerWidget {
       path: RouteNames.adminAiSync,
     ),
     _AdminNavItem(
+      icon: Icons.payment_outlined,
+      selectedIcon: Icons.payment,
+      label: 'Payments',
+      path: RouteNames.adminPayments,
+    ),
+    _AdminNavItem(
       icon: Icons.sync_outlined,
       selectedIcon: Icons.sync,
       label: 'Sync',

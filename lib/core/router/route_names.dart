@@ -70,5 +70,6 @@ abstract class RouteNames {
   static const String adminModeration = '/admin/moderation';
   static const String adminAiSync = '/admin/ai-sync';
   static const String adminSync = '/admin/sync';
+  static const String adminPayments = '/admin/payments';
   static String adminReportDetail(String id) => '/admin/reports/$id';
 }

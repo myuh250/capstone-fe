@@ -135,6 +135,70 @@ class SyncLogsResult {
   final int currentPage;
 }
 
+// ─── Payment Models ───
+
+class AdminPayment {
+  const AdminPayment({
+    required this.id,
+    required this.userId,
+    required this.username,
+    this.displayName,
+    required this.plan,
+    required this.method,
+    required this.status,
+    required this.amount,
+    this.transactionRef,
+    this.createdAt,
+    this.completedAt,
+  });
+
+  final int id;
+  final int userId;
+  final String username;
+  final String? displayName;
+  final String plan;
+  final String method;
+  final String status;
+  final int amount;
+  final String? transactionRef;
+  final DateTime? createdAt;
+  final DateTime? completedAt;
+
+  factory AdminPayment.fromJson(Map<String, dynamic> json) {
+    return AdminPayment(
+      id: json['id'] as int,
+      userId: json['userId'] as int,
+      username: json['username'] as String? ?? '',
+      displayName: json['displayName'] as String?,
+      plan: json['plan'] as String? ?? '',
+      method: json['method'] as String? ?? '',
+      status: json['status'] as String? ?? '',
+      amount: json['amount'] as int? ?? 0,
+      transactionRef: json['transactionRef'] as String?,
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'] as String)
+          : null,
+      completedAt: json['completedAt'] != null
+          ? DateTime.tryParse(json['completedAt'] as String)
+          : null,
+    );
+  }
+}
+
+class AdminPaymentsResult {
+  const AdminPaymentsResult({
+    required this.payments,
+    required this.totalPages,
+    required this.totalElements,
+    required this.currentPage,
+  });
+
+  final List<AdminPayment> payments;
+  final int totalPages;
+  final int totalElements;
+  final int currentPage;
+}
+
 class AiModerationResult {
   const AiModerationResult({
     required this.id,
@@ -412,6 +476,33 @@ class AdminRepository {
     final response = await _apiClient.post(ApiEndpoints.adminEmbeddingBackfill);
     final data = response.data as Map<String, dynamic>;
     return data.map((k, v) => MapEntry(k, v.toString()));
+  }
+
+  // ─── Admin Payments ───
+
+  Future<AdminPaymentsResult> getPayments({
+    String? status,
+    String? search,
+    int page = 0,
+    int size = 15,
+  }) async {
+    final params = <String, dynamic>{'page': page, 'size': size};
+    if (status != null) params['status'] = status;
+    if (search != null && search.isNotEmpty) params['search'] = search;
+
+    final response = await _apiClient.get(
+      ApiEndpoints.adminPayments,
+      queryParameters: params,
+    );
+    final data = response.data as Map<String, dynamic>;
+    final list = (data['content'] as List<dynamic>?) ?? [];
+
+    return AdminPaymentsResult(
+      payments: list.map((e) => AdminPayment.fromJson(e as Map<String, dynamic>)).toList(),
+      totalPages: data['totalPages'] as int? ?? 1,
+      totalElements: data['totalElements'] as int? ?? 0,
+      currentPage: page,
+    );
   }
 
   // ─── AI Moderation ───
