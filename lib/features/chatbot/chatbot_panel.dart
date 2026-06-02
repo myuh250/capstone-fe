@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
@@ -344,11 +345,21 @@ class ChatBubble extends StatelessWidget {
                   ? MarkdownBody(
                       data: message.text,
                       shrinkWrap: true,
+                      onTapLink: (text, href, title) {
+                        if (href != null) {
+                          launchUrl(Uri.parse(href), mode: LaunchMode.externalApplication);
+                        }
+                      },
                       styleSheet: MarkdownStyleSheet(
                         p: const TextStyle(
                           fontSize: 14,
                           color: AppColors.textPrimary,
                           height: 1.5,
+                        ),
+                        a: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.primary,
+                          decoration: TextDecoration.underline,
                         ),
                         strong: const TextStyle(
                           fontSize: 14,

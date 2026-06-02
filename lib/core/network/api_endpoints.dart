@@ -135,6 +135,9 @@ abstract class ApiEndpoints {
   static String adminSyncTrigger(String jobType) =>
       '/admin/sync/trigger/$jobType';
 
+  // Admin - Embedding
+  static const String adminEmbeddingBackfill = '/ai/embeddings/backfill';
+
   // AI Chatbot
   static const String aiChat = '/ai/chat';
   static const String aiAdminChat = '/ai/admin-chat';

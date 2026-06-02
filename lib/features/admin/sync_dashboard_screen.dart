@@ -73,6 +73,8 @@ class SyncDashboardScreen extends ConsumerStatefulWidget {
 
 class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
   String? _selectedJobTypeFilter;
+  int _currentPage = 0;
+  static const int _pageSize = 10;
 
   @override
   Widget build(BuildContext context) {
@@ -103,8 +105,9 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
   }
 
   void _refreshAll() {
+    setState(() => _currentPage = 0);
     ref.invalidate(syncDashboardProvider);
-    ref.invalidate(syncLogsProvider(_selectedJobTypeFilter));
+    ref.invalidate(syncLogsProvider((_selectedJobTypeFilter, 0, _pageSize)));
   }
 
   Widget _buildContent(BuildContext context, SyncDashboard dashboard) {
@@ -204,14 +207,45 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
             ),
           );
         }),
+        const Gap(AppSpacing.md),
+        _EmbeddingBackfillCard(onTrigger: _triggerEmbeddingBackfill),
       ],
     );
+  }
+
+  Future<void> _triggerEmbeddingBackfill() async {
+    try {
+      final repo = ref.read(adminRepositoryProvider);
+      final result = await repo.triggerEmbeddingBackfill();
+
+      if (!mounted) return;
+      final status = result['status'] ?? 'UNKNOWN';
+      final message = result['message'] ?? '';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('[$status] $message'),
+          backgroundColor: status == 'STARTED'
+              ? AppColors.statusGreen
+              : AppColors.statusBlue,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to trigger backfill: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   // ─── Logs Section ───
 
   Widget _buildLogsSection(BuildContext context, List<SyncConfig> configs) {
-    final logsAsync = ref.watch(syncLogsProvider(_selectedJobTypeFilter));
+    final logsAsync = ref.watch(
+      syncLogsProvider((_selectedJobTypeFilter, _currentPage, _pageSize)),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,14 +265,52 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
         ),
         const Gap(AppSpacing.lg),
         logsAsync.when(
-          data: (logs) => _buildLogsList(logs),
+          data: (result) => Column(
+            children: [
+              _buildLogsList(result.logs),
+              if (result.totalPages > 1) ...[
+                const Gap(AppSpacing.lg),
+                _buildPagination(result.totalPages),
+              ],
+            ],
+          ),
           loading: () =>
               const LoadingSkeleton(width: double.infinity, height: 200),
           error: (e, _) => ErrorView(
             message: 'Failed to load sync logs.',
-            onRetry: () =>
-                ref.invalidate(syncLogsProvider(_selectedJobTypeFilter)),
+            onRetry: () => ref.invalidate(
+              syncLogsProvider((_selectedJobTypeFilter, _currentPage, _pageSize)),
+            ),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPagination(int totalPages) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.chevron_left),
+          onPressed: _currentPage > 0
+              ? () => setState(() => _currentPage--)
+              : null,
+        ),
+        const Gap(AppSpacing.sm),
+        Text(
+          'Page ${_currentPage + 1} of $totalPages',
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 13,
+          ),
+        ),
+        const Gap(AppSpacing.sm),
+        IconButton(
+          icon: const Icon(Icons.chevron_right),
+          onPressed: _currentPage < totalPages - 1
+              ? () => setState(() => _currentPage++)
+              : null,
         ),
       ],
     );
@@ -277,7 +349,10 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
             ),
           ],
           onChanged: (value) {
-            setState(() => _selectedJobTypeFilter = value);
+            setState(() {
+              _selectedJobTypeFilter = value;
+              _currentPage = 0;
+            });
           },
         ),
       ),
@@ -733,6 +808,96 @@ class _SyncJobCard extends StatelessWidget {
               foregroundColor: AppColors.primary,
             ),
             onPressed: onTrigger,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Embedding Backfill Card ───
+
+class _EmbeddingBackfillCard extends StatefulWidget {
+  const _EmbeddingBackfillCard({required this.onTrigger});
+
+  final Future<void> Function() onTrigger;
+
+  @override
+  State<_EmbeddingBackfillCard> createState() => _EmbeddingBackfillCardState();
+}
+
+class _EmbeddingBackfillCardState extends State<_EmbeddingBackfillCard> {
+  bool _isRunning = false;
+
+  Future<void> _handleTrigger() async {
+    setState(() => _isRunning = true);
+    try {
+      await widget.onTrigger();
+    } finally {
+      if (mounted) setState(() => _isRunning = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+            child: const Icon(Icons.memory, color: Colors.deepPurple, size: 22),
+          ),
+          const Gap(AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Embedding Backfill',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const Gap(AppSpacing.xs),
+                Text(
+                  'Generate vector embeddings for all manga missing them (async)',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const Gap(AppSpacing.sm),
+          FilledButton.icon(
+            onPressed: _isRunning ? null : _handleTrigger,
+            icon: _isRunning
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.play_arrow, size: 18),
+            label: Text(_isRunning ? 'Running...' : 'Run Backfill'),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+            ),
           ),
         ],
       ),

@@ -121,6 +121,20 @@ class SyncLog {
   }
 }
 
+class SyncLogsResult {
+  const SyncLogsResult({
+    required this.logs,
+    required this.totalPages,
+    required this.totalElements,
+    required this.currentPage,
+  });
+
+  final List<SyncLog> logs;
+  final int totalPages;
+  final int totalElements;
+  final int currentPage;
+}
+
 class AiModerationResult {
   const AiModerationResult({
     required this.id,
@@ -326,6 +340,11 @@ class AdminRepository {
   }
 
   Future<List<SyncLog>> getSyncLogs({String? jobType, int page = 0, int size = 20}) async {
+    final result = await getSyncLogsPaged(jobType: jobType, page: page, size: size);
+    return result.logs;
+  }
+
+  Future<SyncLogsResult> getSyncLogsPaged({String? jobType, int page = 0, int size = 20}) async {
     final params = <String, dynamic>{'page': page, 'size': size};
     if (jobType != null) params['jobType'] = jobType;
 
@@ -335,14 +354,25 @@ class AdminRepository {
     );
     final data = response.data;
     List<dynamic> list;
+    int totalPages = 1;
+    int totalElements = 0;
+
     if (data is List) {
       list = data;
+      totalElements = list.length;
     } else {
-      list = (data as Map<String, dynamic>)['content'] as List<dynamic>? ?? [];
+      final map = data as Map<String, dynamic>;
+      list = map['content'] as List<dynamic>? ?? [];
+      totalPages = map['totalPages'] as int? ?? 1;
+      totalElements = map['totalElements'] as int? ?? list.length;
     }
-    return list
-        .map((e) => SyncLog.fromJson(e as Map<String, dynamic>))
-        .toList();
+
+    return SyncLogsResult(
+      logs: list.map((e) => SyncLog.fromJson(e as Map<String, dynamic>)).toList(),
+      totalPages: totalPages,
+      totalElements: totalElements,
+      currentPage: page,
+    );
   }
 
   Future<SyncConfig> updateSyncConfig({
@@ -374,6 +404,14 @@ class AdminRepository {
       ),
     );
     return SyncLog.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  // ─── Embedding Backfill ───
+
+  Future<Map<String, String>> triggerEmbeddingBackfill() async {
+    final response = await _apiClient.post(ApiEndpoints.adminEmbeddingBackfill);
+    final data = response.data as Map<String, dynamic>;
+    return data.map((k, v) => MapEntry(k, v.toString()));
   }
 
   // ─── AI Moderation ───

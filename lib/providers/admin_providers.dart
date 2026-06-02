@@ -301,10 +301,11 @@ final syncDashboardProvider = FutureProvider<SyncDashboard>((ref) async {
   return repo.getSyncDashboard();
 });
 
-final syncLogsProvider =
-    FutureProvider.family<List<SyncLog>, String?>((ref, jobType) async {
+final syncLogsProvider = FutureProvider.family<SyncLogsResult, (String?, int, int)>(
+    (ref, params) async {
+  final (jobType, page, size) = params;
   final repo = ref.read(adminRepositoryProvider);
-  return repo.getSyncLogs(jobType: jobType);
+  return repo.getSyncLogsPaged(jobType: jobType, page: page, size: size);
 });
 
 // ─── AI Moderation ───
