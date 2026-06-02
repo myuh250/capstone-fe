@@ -20,10 +20,7 @@ class ApiClient {
   final LocalStorage _storage;
 
   void _setupInterceptors() {
-    _dio.interceptors.addAll([
-      _AuthInterceptor(_storage),
-      _LoggerInterceptor(),
-    ]);
+    _dio.interceptors.add(_AuthInterceptor(_storage));
   }
 
   Future<Response<T>> get<T>(
@@ -153,54 +150,6 @@ class _AuthInterceptor extends Interceptor {
   }
 }
 
-class _LoggerInterceptor extends Interceptor {
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    final message = '''
-┌──────────────────────────────────────────────────────────────────────
-│ REQUEST
-├──────────────────────────────────────────────────────────────────────
-│ ${options.method} ${options.uri}
-│ Headers: ${options.headers}
-│ Body: ${options.data}
-└──────────────────────────────────────────────────────────────────────
-''';
-    // ignore: avoid_print
-    print(message);
-    handler.next(options);
-  }
-
-  @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
-    final message = '''
-┌──────────────────────────────────────────────────────────────────────
-│ RESPONSE [${response.statusCode}]
-├──────────────────────────────────────────────────────────────────────
-│ ${response.requestOptions.method} ${response.requestOptions.uri}
-│ Data: ${response.data}
-└──────────────────────────────────────────────────────────────────────
-''';
-    // ignore: avoid_print
-    print(message);
-    handler.next(response);
-  }
-
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    final message = '''
-┌──────────────────────────────────────────────────────────────────────
-│ ERROR [${err.response?.statusCode}]
-├──────────────────────────────────────────────────────────────────────
-│ ${err.requestOptions.method} ${err.requestOptions.uri}
-│ Message: ${err.message}
-│ Data: ${err.response?.data}
-└──────────────────────────────────────────────────────────────────────
-''';
-    // ignore: avoid_print
-    print(message);
-    handler.next(err);
-  }
-}
 
 @riverpod
 Dio dio(DioRef ref) {

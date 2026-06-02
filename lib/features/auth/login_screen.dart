@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +15,7 @@ import '../../core/utils/validators.dart';
 import '../../providers/auth_providers.dart';
 import 'widgets/auth_text_field.dart';
 import 'widgets/google_sign_in_button.dart';
+import 'widgets/web_google_sign_in_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -28,27 +31,68 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _rememberMe = false;
   bool _isGoogleLoading = false;
 
+  static const _googleClientId =
+      '668084052230-9qduui2cvk61fbgp96lmvlbofgonjn2g.apps.googleusercontent.com';
+
+  late final GoogleSignIn _googleSignIn;
+  StreamSubscription<GoogleSignInAccount?>? _googleUserSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _googleSignIn = GoogleSignIn(
+      clientId: kIsWeb ? _googleClientId : null,
+      serverClientId: kIsWeb ? null : _googleClientId,
+      scopes: kIsWeb ? const [] : const ['email'],
+    );
+
+    if (kIsWeb) {
+      _googleUserSub =
+          _googleSignIn.onCurrentUserChanged.listen(_onWebGoogleUser);
+    }
+  }
+
   @override
   void dispose() {
+    _googleUserSub?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  static const _googleClientId =
-      '668084052230-9qduui2cvk61fbgp96lmvlbofgonjn2g.apps.googleusercontent.com';
+  Future<void> _onWebGoogleUser(GoogleSignInAccount? account) async {
+    if (account == null) return;
+    setState(() => _isGoogleLoading = true);
+    try {
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null) {
+        throw Exception('Failed to get Google ID token.');
+      }
+
+      await ref.read(authStateProvider.notifier).googleLogin(idToken: idToken);
+
+      if (!mounted) return;
+      final authState = ref.read(authStateProvider);
+      authState.whenOrNull(
+        data: (user) {
+          if (user != null) context.go(RouteNames.home);
+        },
+        error: (e, _) {
+          _showError(e);
+        },
+      );
+    } catch (e) {
+      if (mounted) _showError(e);
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
+    }
+  }
 
   Future<void> _onGoogleSignIn() async {
     setState(() => _isGoogleLoading = true);
     try {
-      final googleSignIn = GoogleSignIn(
-        clientId: kIsWeb ? _googleClientId : null,
-        serverClientId: kIsWeb ? null : _googleClientId,
-        // On web, requesting OIDC scopes is required to reliably get an `idToken`.
-        // Empty scopes can result in `idToken == null`.
-        scopes: const ['openid', 'email', 'profile'],
-      );
-      final account = await googleSignIn.signIn();
+      final account = await _googleSignIn.signIn();
       if (account == null) {
         if (mounted) setState(() => _isGoogleLoading = false);
         return;
@@ -72,28 +116,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           if (user != null) context.go(RouteNames.home);
         },
         error: (e, _) {
-          final message = e is ApiException ? e.message : 'Google Sign-In failed. Please try again.';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          _showError(e);
         },
       );
     } catch (e) {
-      if (mounted) {
-        final message = e is ApiException ? e.message : 'Google Sign-In failed. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      if (mounted) _showError(e);
     } finally {
       if (mounted) setState(() => _isGoogleLoading = false);
     }
+  }
+
+  void _showError(Object e) {
+    final message =
+        e is ApiException ? e.message : 'Google Sign-In failed. Please try again.';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+      ),
+    );
   }
 
   Future<void> _onSubmit() async {
@@ -236,13 +277,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const Gap(AppSpacing.lg),
                         const _OrDivider(),
                         const Gap(AppSpacing.lg),
-                        GoogleSignInButton(
-                          onPressed:
-                              (isLoading || _isGoogleLoading)
-                                  ? null
-                                  : _onGoogleSignIn,
-                          isLoading: _isGoogleLoading,
-                        ),
+                        if (kIsWeb)
+                          const WebGoogleSignInButton()
+                        else
+                          GoogleSignInButton(
+                            onPressed:
+                                (isLoading || _isGoogleLoading)
+                                    ? null
+                                    : _onGoogleSignIn,
+                            isLoading: _isGoogleLoading,
+                          ),
                       ],
                     ),
                   ),

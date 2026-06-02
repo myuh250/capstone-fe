@@ -20,6 +20,28 @@
   <meta name="referrer" content="no-referrer">
   <meta name="google-signin-client_id" content="668084052230-9qduui2cvk61fbgp96lmvlbofgonjn2g.apps.googleusercontent.com">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    (function() {
+      var origLog = console.log;
+      var origWarn = console.warn;
+      var origDebug = console.debug;
+      var origError = console.error;
+      var blocked = ['GSI_LOGGER', 'Cross-Origin-Opener-Policy', 'aria-hidden',
+        'credential_button_library', 'DDC is about to load', 'Starting application from main'];
+      var shouldBlock = function(args) {
+        if (!args.length) return false;
+        var msg = String(args[0]);
+        for (var i = 0; i < blocked.length; i++) {
+          if (msg.indexOf(blocked[i]) !== -1) return true;
+        }
+        return false;
+      };
+      console.log = function() { if (!shouldBlock(arguments)) origLog.apply(console, arguments); };
+      console.warn = function() { if (!shouldBlock(arguments)) origWarn.apply(console, arguments); };
+      console.debug = function() { if (!shouldBlock(arguments)) origDebug.apply(console, arguments); };
+      console.error = function() { if (!shouldBlock(arguments)) origError.apply(console, arguments); };
+    })();
+  </script>
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
 
