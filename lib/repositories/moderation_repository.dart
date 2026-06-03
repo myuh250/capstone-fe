@@ -7,6 +7,12 @@ abstract class ModerationRepository {
   Future<Report> getReportById(String id);
   Future<void> resolveReport(String id, String resolution);
   Future<void> dismissReport(String id, String reason);
+  Future<void> submitReport({
+    required String type,
+    required String reason,
+    String? commentId,
+    String? mangaId,
+  });
 }
 
 class RealModerationRepository implements ModerationRepository {
@@ -66,5 +72,21 @@ class RealModerationRepository implements ModerationRepository {
       ApiEndpoints.reportReview(id),
       data: {'action': 'DISMISS', 'resolution': reason},
     );
+  }
+
+  @override
+  Future<void> submitReport({
+    required String type,
+    required String reason,
+    String? commentId,
+    String? mangaId,
+  }) async {
+    final data = <String, dynamic>{
+      'type': type,
+      'reason': reason,
+    };
+    if (commentId != null) data['commentId'] = commentId;
+    if (mangaId != null) data['mangaId'] = mangaId;
+    await _apiClient.post(ApiEndpoints.reports, data: data);
   }
 }

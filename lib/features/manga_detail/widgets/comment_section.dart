@@ -8,6 +8,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../models/comment.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/comment_providers.dart';
+import '../../../providers/moderation_providers.dart';
 import 'comment_card.dart';
 import 'comment_input.dart';
 import 'reply_thread.dart';
@@ -201,6 +202,14 @@ class _CommentItemState extends ConsumerState<_CommentItem> {
   }
 
   void _reportComment(BuildContext context) {
+    const reasons = [
+      ('SPAM', 'Spam'),
+      ('HARASSMENT', 'Harassment'),
+      ('INAPPROPRIATE_CONTENT', 'Inappropriate Content'),
+      ('SPOILER', 'Spoiler'),
+      ('OTHER', 'Other'),
+    ];
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -209,8 +218,20 @@ class _CommentItemState extends ConsumerState<_CommentItem> {
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         ),
         title: const Text('Report Comment'),
-        content: const Text(
-          'Are you sure you want to report this comment as inappropriate?',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Why are you reporting this comment?'),
+            const SizedBox(height: 12),
+            ...reasons.map((r) => ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(r.$2),
+                  leading: const Icon(Icons.flag_outlined, size: 18),
+                  onTap: () => _submitReport(context, ctx, r.$1),
+                )),
+          ],
         ),
         actions: [
           TextButton(
@@ -220,22 +241,38 @@ class _CommentItemState extends ConsumerState<_CommentItem> {
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Comment reported. Thank you.'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            style: FilledButton.styleFrom(backgroundColor: AppColors.warning),
-            child: const Text('Report'),
-          ),
         ],
       ),
     );
+  }
+
+  Future<void> _submitReport(
+      BuildContext context, BuildContext dialogCtx, String type) async {
+    Navigator.of(dialogCtx).pop();
+    try {
+      await ref.read(moderationRepositoryProvider).submitReport(
+            type: type,
+            reason: 'Reported by user',
+            commentId: widget.comment.id,
+          );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Comment reported. Thank you.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to report: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 }
 
