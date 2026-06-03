@@ -61,19 +61,7 @@ class MangaHeader extends StatelessWidget {
                 const Gap(AppSpacing.sm),
                 _StatusBadge(status: manga.status),
                 const Gap(AppSpacing.sm),
-                Row(
-                  children: [
-                    StarRating(rating: manga.averageRating, size: 16),
-                    const Gap(AppSpacing.xs),
-                    Text(
-                      manga.averageRating.toStringAsFixed(1),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.ratingYellow,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ],
-                ),
+                StarRating(rating: manga.averageRating, size: 16),
                 const Gap(AppSpacing.sm),
                 if (manga.tags.isNotEmpty)
                   _TagsRow(tags: manga.tags),
