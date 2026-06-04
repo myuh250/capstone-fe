@@ -458,8 +458,8 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Sync "$jobType" triggered successfully.'),
-          backgroundColor: AppColors.statusGreen,
+          content: Text('Sync "$jobType" started in background. Refresh to check status.'),
+          backgroundColor: AppColors.statusBlue,
         ),
       );
       _refreshAll();

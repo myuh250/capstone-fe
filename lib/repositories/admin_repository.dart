@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 
 import '../core/network/api_client.dart';
 import '../core/network/api_endpoints.dart';
@@ -470,10 +469,6 @@ class AdminRepository {
     final response = await _apiClient.post(
       ApiEndpoints.adminSyncTrigger(jobType),
       queryParameters: params.isNotEmpty ? params : null,
-      options: Options(
-        sendTimeout: const Duration(minutes: 5),
-        receiveTimeout: const Duration(minutes: 5),
-      ),
     );
     return SyncLog.fromJson(response.data as Map<String, dynamic>);
   }
