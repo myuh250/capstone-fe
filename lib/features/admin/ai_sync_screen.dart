@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
@@ -466,17 +468,83 @@ class _MessageBubbleState extends State<_MessageBubble>
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 border: isUser ? null : Border.all(color: AppColors.divider),
               ),
-              child: SelectableText(
-                widget.message.text,
-                style: TextStyle(
-                  color: widget.message.isError
-                      ? AppColors.error
-                      : isUser
-                          ? Colors.white
-                          : AppColors.textPrimary,
-                  fontSize: 14,
-                ),
-              ),
+              child: isUser || widget.message.isError
+                  ? SelectableText(
+                      widget.message.text,
+                      style: TextStyle(
+                        color: widget.message.isError
+                            ? AppColors.error
+                            : Colors.white,
+                        fontSize: 14,
+                      ),
+                    )
+                  : MarkdownBody(
+                      data: widget.message.text,
+                      shrinkWrap: true,
+                      selectable: true,
+                      onTapLink: (_, href, __) {
+                        if (href != null) {
+                          launchUrl(Uri.parse(href),
+                              mode: LaunchMode.externalApplication);
+                        }
+                      },
+                      styleSheet: MarkdownStyleSheet(
+                        p: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                          height: 1.5,
+                        ),
+                        a: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.primary,
+                          decoration: TextDecoration.underline,
+                        ),
+                        strong: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        listBullet: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                        ),
+                        h1: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        h2: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        h3: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        blockSpacing: 8,
+                        listIndent: 16,
+                        tableHead: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        tableBody: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textPrimary,
+                        ),
+                        tableBorder: TableBorder.all(
+                          color: AppColors.divider,
+                          width: 0.5,
+                        ),
+                        code: TextStyle(
+                          fontSize: 13,
+                          backgroundColor: AppColors.surfaceAlt,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
             ),
           ),
           if (isUser) const Gap(AppSpacing.sm),
