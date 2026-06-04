@@ -6,6 +6,7 @@ import '../models/reading_history.dart';
 abstract class LibraryRepository {
   Future<List<ReadingHistory>> getReadingHistory();
   Future<void> removeFromHistory(String historyId);
+  Future<void> clearAllHistory();
   Future<void> saveProgress({
     required String mangaId,
     required String mangaTitle,
@@ -43,6 +44,11 @@ class RealLibraryRepository implements LibraryRepository {
   @override
   Future<void> removeFromHistory(String historyId) async {
     await _apiClient.delete(ApiEndpoints.historyDelete(historyId));
+  }
+
+  @override
+  Future<void> clearAllHistory() async {
+    await _apiClient.delete(ApiEndpoints.historyDeleteAll);
   }
 
   @override

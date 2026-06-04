@@ -30,6 +30,7 @@ abstract class AuthRepository {
     required String currentPassword,
     required String newPassword,
   });
+  Future<void> deleteAccount();
 }
 
 class RealAuthRepository implements AuthRepository {
@@ -196,5 +197,11 @@ class RealAuthRepository implements AuthRepository {
         'newPassword': newPassword,
       },
     );
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    await _apiClient.delete(ApiEndpoints.deleteAccount);
+    await _storage.clearTokens();
   }
 }

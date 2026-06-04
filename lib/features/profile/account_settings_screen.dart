@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../providers/auth_providers.dart';
 import '../../providers/settings_providers.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
@@ -48,9 +50,18 @@ class _AccountSettingsScreenState
       ),
     );
     if (confirmed == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Feature not yet integrated')),
-      );
+      try {
+        await ref.read(authStateProvider.notifier).deleteAccount();
+        if (mounted) {
+          context.go(RouteNames.home);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete account: $e')),
+          );
+        }
+      }
     }
   }
 

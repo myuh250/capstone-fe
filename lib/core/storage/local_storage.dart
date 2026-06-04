@@ -13,6 +13,7 @@ class LocalStorage {
   static const _themeModeKey = 'theme_mode';
   static const _onboardingKey = 'onboarding_completed';
   static const _chatSessionKey = 'chat_session_id';
+  static const _adminChatSessionKey = 'admin_chat_session_id';
 
   Future<String?> getAccessToken() async {
     return _prefs.getString(_accessTokenKey);
@@ -34,6 +35,7 @@ class LocalStorage {
     await _prefs.remove(_accessTokenKey);
     await _prefs.remove(_refreshTokenKey);
     await _prefs.remove(_chatSessionKey);
+    await _prefs.remove(_adminChatSessionKey);
   }
 
   String? getChatSessionId() => _prefs.getString(_chatSessionKey);
@@ -44,6 +46,16 @@ class LocalStorage {
 
   Future<void> clearChatSession() async {
     await _prefs.remove(_chatSessionKey);
+  }
+
+  String? getAdminChatSessionId() => _prefs.getString(_adminChatSessionKey);
+
+  Future<void> saveAdminChatSessionId(String sessionId) async {
+    await _prefs.setString(_adminChatSessionKey, sessionId);
+  }
+
+  Future<void> clearAdminChatSession() async {
+    await _prefs.remove(_adminChatSessionKey);
   }
 
   Future<String?> getThemeMode() async {

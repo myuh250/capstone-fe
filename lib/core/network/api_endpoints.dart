@@ -19,6 +19,7 @@ abstract class ApiEndpoints {
   static const String profile = '/users/me';
   static const String updateProfile = '/users/me/profile';
   static const String changePassword = '/users/me/change-password';
+  static const String deleteAccount = '/users/me';
 
   // Manga
   static const String mangas = '/mangas';
@@ -56,6 +57,7 @@ abstract class ApiEndpoints {
   static String historyProgressByManga(String mangaId) =>
       '/history/progress/manga/$mangaId';
   static String historyDelete(String id) => '/history/$id';
+  static const String historyDeleteAll = '/history/user/me';
 
   // Ratings
   static String userRating(String userId, String mangaId) =>

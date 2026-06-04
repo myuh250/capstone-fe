@@ -116,6 +116,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     final updated = await _repository.removeAvatar();
     state = AsyncValue.data(updated);
   }
+
+  Future<void> deleteAccount() async {
+    await _repository.deleteAccount();
+    state = const AsyncValue.data(null);
+  }
 }
 
 final isLoggedInProvider = Provider<bool>((ref) {

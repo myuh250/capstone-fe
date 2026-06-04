@@ -29,6 +29,8 @@ class SyncConfig {
     required this.enabled,
     this.lastRunTime,
     this.lastRunStatus,
+    this.running = false,
+    this.runningStartedAt,
   });
 
   final String jobType;
@@ -36,6 +38,8 @@ class SyncConfig {
   final bool enabled;
   final DateTime? lastRunTime;
   final String? lastRunStatus;
+  final bool running;
+  final DateTime? runningStartedAt;
 
   factory SyncConfig.fromJson(Map<String, dynamic> json) {
     return SyncConfig(
@@ -46,6 +50,10 @@ class SyncConfig {
           ? DateTime.tryParse(json['lastRunTime'] as String)
           : null,
       lastRunStatus: json['lastRunStatus'] as String?,
+      running: json['running'] as bool? ?? false,
+      runningStartedAt: json['runningStartedAt'] != null
+          ? DateTime.tryParse(json['runningStartedAt'] as String)
+          : null,
     );
   }
 }

@@ -143,7 +143,7 @@ class ReadingHistoryScreen extends ConsumerWidget {
       ),
     );
     if (confirmed == true) {
-      // In a real app this would call a clearAll on the notifier
+      ref.read(readingHistoryProvider.notifier).clearAll();
     }
   }
 }

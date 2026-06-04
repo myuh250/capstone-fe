@@ -46,7 +46,7 @@ class ContentManagementScreen extends ConsumerWidget {
                 : state.error != null
                     ? ErrorView(
                         message: 'Failed to load manga list.',
-                        onRetry: () {},
+                        onRetry: () => ref.read(adminMangaProvider.notifier).refresh(),
                       )
                     : filteredManga.isEmpty
                         ? const EmptyState(

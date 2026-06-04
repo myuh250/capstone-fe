@@ -220,6 +220,11 @@ class AdminMangaNotifier extends StateNotifier<AdminMangaState> {
     }
   }
 
+  Future<void> refresh() async {
+    state = state.copyWith(isLoading: true, error: null);
+    await _load();
+  }
+
   void search(String query) {
     state = state.copyWith(searchQuery: query);
   }

@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
+import '../../core/storage/local_storage.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 
@@ -20,6 +21,41 @@ class _AiSyncScreenState extends ConsumerState<AiSyncScreen> {
   final _messages = <_ChatMessage>[];
   String? _sessionId;
   bool _isSending = false;
+  bool _isLoadingHistory = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final storage = ref.read(localStorageProvider);
+    _sessionId = storage.getAdminChatSessionId();
+    if (_sessionId != null) {
+      _loadHistory();
+    }
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() => _isLoadingHistory = true);
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      final response = await apiClient.get(
+        '/ai/chat/history',
+        queryParameters: {'sessionId': _sessionId!},
+      );
+      final list = response.data as List<dynamic>;
+      if (list.isEmpty || !mounted) return;
+      setState(() {
+        for (final entry in list) {
+          final map = entry as Map<String, dynamic>;
+          _messages.add(_ChatMessage(
+            text: map['content'] as String? ?? '',
+            isUser: map['role'] == 'user',
+          ));
+        }
+      });
+      _scrollToBottom();
+    } catch (_) {}
+    if (mounted) setState(() => _isLoadingHistory = false);
+  }
 
   @override
   void dispose() {
@@ -63,6 +99,9 @@ class _AiSyncScreenState extends ConsumerState<AiSyncScreen> {
 
       final reply = response.data['reply'] as String? ?? '';
       _sessionId = response.data['sessionId'] as String?;
+      if (_sessionId != null) {
+        ref.read(localStorageProvider).saveAdminChatSessionId(_sessionId!);
+      }
 
       setState(() {
         _messages.add(_ChatMessage(text: reply, isUser: false));
@@ -82,6 +121,7 @@ class _AiSyncScreenState extends ConsumerState<AiSyncScreen> {
   }
 
   void _clearChat() {
+    ref.read(localStorageProvider).clearAdminChatSession();
     setState(() {
       _messages.clear();
       _sessionId = null;
@@ -120,19 +160,21 @@ class _AiSyncScreenState extends ConsumerState<AiSyncScreen> {
 
           // Messages
           Expanded(
-            child: _messages.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    itemCount: _messages.length + (_isSending ? 1 : 0),
-                    itemBuilder: (_, i) {
-                      if (i == _messages.length) {
-                        return const _TypingIndicator();
-                      }
-                      return _MessageBubble(message: _messages[i]);
-                    },
-                  ),
+            child: _isLoadingHistory
+                ? const Center(child: CircularProgressIndicator())
+                : _messages.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        itemCount: _messages.length + (_isSending ? 1 : 0),
+                        itemBuilder: (_, i) {
+                          if (i == _messages.length) {
+                            return const _TypingIndicator();
+                          }
+                          return _MessageBubble(message: _messages[i]);
+                        },
+                      ),
           ),
 
           // Input

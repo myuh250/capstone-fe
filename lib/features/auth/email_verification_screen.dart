@@ -22,12 +22,35 @@ class _EmailVerificationScreenState
     extends ConsumerState<EmailVerificationScreen> {
   final _otpController = TextEditingController();
   bool _isVerifying = false;
+  bool _isResending = false;
   String? _errorMessage;
 
   @override
   void dispose() {
     _otpController.dispose();
     super.dispose();
+  }
+
+  Future<void> _resendOtp() async {
+    final user = ref.read(currentUserProvider);
+    if (user?.email == null) return;
+    setState(() => _isResending = true);
+    try {
+      await ref.read(authRepositoryProvider).sendRegistrationOtp(user!.email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('OTP resent successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to resend OTP: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isResending = false);
+    }
   }
 
   Future<void> _verify() async {
@@ -184,11 +207,22 @@ class _EmailVerificationScreenState
                   ),
                   const Gap(AppSpacing.lg),
                   TextButton(
-                    onPressed: _isVerifying ? null : () {},
-                    child: const Text(
-                      'Resend OTP',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
+                    onPressed: (_isVerifying || _isResending)
+                        ? null
+                        : _resendOtp,
+                    child: _isResending
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.textSecondary,
+                            ),
+                          )
+                        : const Text(
+                            'Resend OTP',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          ),
                   ),
                 ],
               ),

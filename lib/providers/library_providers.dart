@@ -36,6 +36,11 @@ class ReadingHistoryNotifier
     await _load();
   }
 
+  Future<void> clearAll() async {
+    await _repo.clearAllHistory();
+    state = const AsyncValue.data([]);
+  }
+
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     await _load();

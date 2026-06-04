@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -61,6 +63,13 @@ const _allSyncJobs = [
     icon: Icons.category_outlined,
     defaultCron: '',
   ),
+  _SyncJobDef(
+    jobType: 'ZERO_CHAPTER_SYNC',
+    label: 'Zero Chapter Cleanup',
+    description: 'Remove manga with no English chapters & blacklist them',
+    icon: Icons.cleaning_services_outlined,
+    defaultCron: '0 */30 * * * *',
+  ),
 ];
 
 class SyncDashboardScreen extends ConsumerStatefulWidget {
@@ -75,6 +84,25 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
   String? _selectedJobTypeFilter;
   int _currentPage = 0;
   static const int _pageSize = 10;
+  Timer? _pollTimer;
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startPollingIfRunning(SyncDashboard dashboard) {
+    final anyRunning = dashboard.configs.any((c) => c.running);
+    if (anyRunning && _pollTimer == null) {
+      _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+        ref.invalidate(syncDashboardProvider);
+      });
+    } else if (!anyRunning && _pollTimer != null) {
+      _pollTimer?.cancel();
+      _pollTimer = null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +139,8 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
   }
 
   Widget _buildContent(BuildContext context, SyncDashboard dashboard) {
+    _startPollingIfRunning(dashboard);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -715,7 +745,7 @@ class _InfoRow extends StatelessWidget {
 
 // ─── Sync Job Card ───
 
-class _SyncJobCard extends StatelessWidget {
+class _SyncJobCard extends StatefulWidget {
   const _SyncJobCard({
     required this.job,
     required this.config,
@@ -729,8 +759,57 @@ class _SyncJobCard extends StatelessWidget {
   final ValueChanged<bool>? onToggle;
 
   @override
+  State<_SyncJobCard> createState() => _SyncJobCardState();
+}
+
+class _SyncJobCardState extends State<_SyncJobCard> {
+  Timer? _elapsedTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimerIfRunning();
+  }
+
+  @override
+  void didUpdateWidget(covariant _SyncJobCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.config?.running != oldWidget.config?.running) {
+      _startTimerIfRunning();
+    }
+  }
+
+  @override
+  void dispose() {
+    _elapsedTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimerIfRunning() {
+    _elapsedTimer?.cancel();
+    if (widget.config?.running == true) {
+      _elapsedTimer = Timer.periodic(
+        const Duration(seconds: 1),
+        (_) => setState(() {}),
+      );
+    }
+  }
+
+  String _formatElapsed(DateTime startedAt) {
+    final elapsed = DateTime.now().difference(startedAt);
+    if (elapsed.inSeconds < 60) return '${elapsed.inSeconds}s';
+    if (elapsed.inMinutes < 60) {
+      return '${elapsed.inMinutes}m ${elapsed.inSeconds % 60}s';
+    }
+    return '${elapsed.inHours}h ${elapsed.inMinutes % 60}m';
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final config = widget.config;
+    final job = widget.job;
     final isEnabled = config?.enabled ?? false;
+    final isRunning = config?.running ?? false;
     final lastRun = config?.lastRunTime;
     final dateFormat = DateFormat('MMM dd, HH:mm');
 
@@ -739,7 +818,10 @@ class _SyncJobCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: AppColors.divider),
+        border: Border.all(
+          color: isRunning ? AppColors.statusBlue : AppColors.divider,
+          width: isRunning ? 1.5 : 1.0,
+        ),
       ),
       child: Row(
         children: [
@@ -747,10 +829,17 @@ class _SyncJobCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: isRunning
+                  ? AppColors.statusBlue.withValues(alpha: 0.1)
+                  : AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
-            child: Icon(job.icon, color: AppColors.primary, size: 22),
+            child: isRunning
+                ? const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  )
+                : Icon(job.icon, color: AppColors.primary, size: 22),
           ),
           const Gap(AppSpacing.md),
           Expanded(
@@ -765,25 +854,35 @@ class _SyncJobCard extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                           ),
                     ),
-                    if (config?.lastRunStatus != null) ...[
-                      const Gap(AppSpacing.sm),
+                    const Gap(AppSpacing.sm),
+                    if (isRunning)
+                      _StatusChip(status: 'RUNNING')
+                    else if (config?.lastRunStatus != null)
                       _StatusChip(status: config!.lastRunStatus!),
-                    ],
                   ],
                 ),
                 const Gap(AppSpacing.xs),
-                Text(
-                  job.description,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (config != null) ...[
+                if (isRunning && config?.runningStartedAt != null)
+                  Text(
+                    'Running for ${_formatElapsed(config!.runningStartedAt!)}...',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.statusBlue,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  )
+                else
+                  Text(
+                    job.description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                if (config != null && !isRunning) ...[
                   const Gap(AppSpacing.xs),
                   Text(
-                    'Schedule: ${config!.cronExpression.isNotEmpty ? config!.cronExpression : "Manual only"}  •  Last: ${lastRun != null ? dateFormat.format(lastRun.toLocal()) : "Never"}',
+                    'Schedule: ${config.cronExpression.isNotEmpty ? config.cronExpression : "Manual only"}  •  Last: ${lastRun != null ? dateFormat.format(lastRun.toLocal()) : "Never"}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary,
                           fontSize: 11,
@@ -793,10 +892,10 @@ class _SyncJobCard extends StatelessWidget {
               ],
             ),
           ),
-          if (onToggle != null)
+          if (widget.onToggle != null)
             Switch(
               value: isEnabled,
-              onChanged: onToggle,
+              onChanged: widget.onToggle,
               activeColor: AppColors.primary,
             ),
           const Gap(AppSpacing.xs),
@@ -807,7 +906,7 @@ class _SyncJobCard extends StatelessWidget {
               backgroundColor: AppColors.primary.withValues(alpha: 0.15),
               foregroundColor: AppColors.primary,
             ),
-            onPressed: onTrigger,
+            onPressed: isRunning ? null : widget.onTrigger,
           ),
         ],
       ),

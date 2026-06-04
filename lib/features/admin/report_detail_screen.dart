@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/report.dart';
+import '../../providers/admin_providers.dart';
 import '../../providers/moderation_providers.dart';
 import '../../shared/widgets/error_view.dart';
 import 'widgets/ai_flag_badge.dart';
@@ -89,6 +90,74 @@ class _ReportDetailContentState
     if (mounted) {
       setState(() => _isLoading = false);
       context.pop();
+    }
+  }
+
+  Future<void> _warnUser() async {
+    final note = await _showReasonDialog(
+      context,
+      title: 'Warn User',
+      hint: 'Enter warning message...',
+      submitLabel: 'Send Warning',
+      submitColor: AppColors.warning,
+    );
+    if (note == null) return;
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(adminRepositoryProvider).performModerationAction(
+            action: 'WARN_USER',
+            targetUserId: widget.report.targetId,
+            note: note,
+          );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Warning sent successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to warn user: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _banUser() async {
+    final note = await _showReasonDialog(
+      context,
+      title: 'Ban Account',
+      hint: 'Enter ban reason...',
+      submitLabel: 'Ban',
+      submitColor: AppColors.error,
+    );
+    if (note == null) return;
+    setState(() => _isLoading = true);
+    try {
+      final targetId = widget.report.targetId;
+      if (targetId != null) {
+        await ref.read(adminUsersProvider.notifier).toggleBan(targetId);
+        await ref.read(adminRepositoryProvider).performModerationAction(
+              action: 'BAN_USER',
+              targetUserId: targetId,
+              note: note,
+            );
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account banned successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to ban account: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -289,9 +358,9 @@ class _ReportDetailContentState
             onDismiss: _dismissReport,
             onWarn: report.type == ReportType.user ||
                     report.type == ReportType.comment
-                ? () {}
+                ? _warnUser
                 : null,
-            onBan: report.type == ReportType.user ? () {} : null,
+            onBan: report.type == ReportType.user ? _banUser : null,
             isLoading: _isLoading,
           ),
       ],
