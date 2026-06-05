@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -29,6 +30,30 @@ class _ProfileContent extends ConsumerWidget {
   const _ProfileContent({required this.user});
 
   final User user;
+
+  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      await ref.read(authStateProvider.notifier).logout();
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -112,6 +137,21 @@ class _ProfileContent extends ConsumerWidget {
               ),
             ],
           ),
+          if (!kIsWeb) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _SettingsSection(
+              items: [
+                _SettingsTile(
+                  icon: Icons.logout,
+                  label: 'Sign Out',
+                  iconColor: AppColors.error,
+                  labelColor: AppColors.error,
+                  trailing: const SizedBox.shrink(),
+                  onTap: () => _confirmLogout(context, ref),
+                ),
+              ],
+            ),
+          ],
           const Gap(AppSpacing.xl),
         ],
       ),
