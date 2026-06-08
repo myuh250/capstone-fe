@@ -50,3 +50,5 @@ app.*.map.json
 .metadata
 client_secret_41764157266-2o6msir032rlbk14hjip9fkpktmooen2.apps.googleusercontent.com.json
 google-services-old.json
+
+.env

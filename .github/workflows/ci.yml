@@ -74,6 +74,13 @@ jobs:
           echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" > .env
           echo "WS_URL=${{ secrets.WS_URL }}" >> .env
 
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
+          printf 'storeFile=upload-keystore.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "${{ secrets.KEYSTORE_PASSWORD }}" "${{ secrets.KEY_ALIAS }}" "${{ secrets.KEY_PASSWORD }}" \
+            > android/key.properties
+
       - name: Build APK
         run: flutter build apk --release
 

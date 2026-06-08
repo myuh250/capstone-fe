@@ -16,7 +16,15 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 final authStateProvider =
     StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((ref) {
-  return AuthNotifier(ref.read(authRepositoryProvider));
+  final notifier = AuthNotifier(ref.read(authRepositoryProvider));
+
+  ref.listen<int>(forceLogoutProvider, (prev, next) {
+    if (prev != next) {
+      notifier.forceLogout();
+    }
+  });
+
+  return notifier;
 });
 
 class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
@@ -74,6 +82,10 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
 
   Future<void> logout() async {
     await _repository.logout();
+    state = const AsyncValue.data(null);
+  }
+
+  void forceLogout() {
     state = const AsyncValue.data(null);
   }
 

@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../storage/local_storage.dart';
@@ -7,20 +10,32 @@ import 'api_exceptions.dart';
 
 part 'api_client.g.dart';
 
+class ForceLogoutNotifier extends StateNotifier<int> {
+  ForceLogoutNotifier() : super(0);
+
+  void trigger() => state++;
+}
+
+final forceLogoutProvider =
+    StateNotifierProvider<ForceLogoutNotifier, int>((ref) {
+  return ForceLogoutNotifier();
+});
+
 class ApiClient {
   ApiClient({
     required Dio dio,
     required LocalStorage storage,
+    VoidCallback? onForceLogout,
   })  : _dio = dio,
         _storage = storage {
-    _setupInterceptors();
+    _setupInterceptors(onForceLogout);
   }
 
   final Dio _dio;
   final LocalStorage _storage;
 
-  void _setupInterceptors() {
-    _dio.interceptors.add(_AuthInterceptor(_storage));
+  void _setupInterceptors(VoidCallback? onForceLogout) {
+    _dio.interceptors.add(_AuthInterceptor(_storage, onForceLogout: onForceLogout));
   }
 
   Future<Response<T>> get<T>(
@@ -95,9 +110,10 @@ class ApiClient {
 }
 
 class _AuthInterceptor extends Interceptor {
-  _AuthInterceptor(this._storage);
+  _AuthInterceptor(this._storage, {this.onForceLogout});
 
   final LocalStorage _storage;
+  final VoidCallback? onForceLogout;
 
   @override
   void onRequest(
@@ -142,8 +158,10 @@ class _AuthInterceptor extends Interceptor {
         }
 
         await _storage.clearTokens();
+        onForceLogout?.call();
       } catch (e) {
         await _storage.clearTokens();
+        onForceLogout?.call();
       }
     }
     handler.next(err);
@@ -170,5 +188,8 @@ ApiClient apiClient(ApiClientRef ref) {
   return ApiClient(
     dio: ref.watch(dioProvider),
     storage: ref.watch(localStorageProvider),
+    onForceLogout: () {
+      ref.read(forceLogoutProvider.notifier).trigger();
+    },
   );
 }

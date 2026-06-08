@@ -14,11 +14,19 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
 
-  await dotenv.load(fileName: '.env');
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    debugPrint('.env load failed: $e');
+  }
 
   if (!kIsWeb) {
-    await Firebase.initializeApp();
-    await FirebaseMessagingService.instance.initialize();
+    try {
+      await Firebase.initializeApp();
+      await FirebaseMessagingService.instance.initialize();
+    } catch (e) {
+      debugPrint('Firebase init failed: $e');
+    }
   }
 
   final prefs = await SharedPreferences.getInstance();
