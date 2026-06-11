@@ -19,10 +19,11 @@ class SubscriptionRepository {
     required SubscriptionPlan plan,
     required PaymentMethod method,
   }) async {
+    final planId = plan == SubscriptionPlan.monthly ? 1 : 2;
     final response = await _apiClient.post(
       '${ApiEndpoints.subscriptions}/payment',
       data: {
-        'plan': plan.name.toUpperCase(),
+        'planId': planId,
         'method': method.name.toUpperCase(),
       },
     );

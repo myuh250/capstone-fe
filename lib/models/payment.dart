@@ -90,9 +90,10 @@ class Transaction {
   final DateTime createdAt;
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
+    final planStr = json['planName'] as String? ?? json['plan'] as String? ?? 'monthly';
     return Transaction(
       id: json['id'].toString(),
-      plan: SubscriptionPlanExtension.fromString(json['plan'] as String),
+      plan: SubscriptionPlanExtension.fromString(planStr),
       method: PaymentMethodExtension.fromString(json['method'] as String),
       status: PaymentStatusExtension.fromString(json['status'] as String),
       amount: json['amount'] as int,
@@ -119,13 +120,14 @@ class SubscriptionInfo {
   final bool autoRenew;
 
   factory SubscriptionInfo.fromJson(Map<String, dynamic> json) {
+    final planStr = json['planName'] as String? ?? json['plan'] as String? ?? 'monthly';
     return SubscriptionInfo(
       id: json['id'] as int,
-      plan: SubscriptionPlanExtension.fromString(json['plan'] as String),
+      plan: SubscriptionPlanExtension.fromString(planStr),
       status: json['status'] as String,
       startDate: DateTime.parse(json['startDate'] as String),
       expiryDate: DateTime.parse(json['expiryDate'] as String),
-      autoRenew: json['autoRenew'] as bool? ?? true,
+      autoRenew: json['autoRenew'] as bool? ?? false,
     );
   }
 }
@@ -155,9 +157,10 @@ class PaymentResult {
   bool get requiresRedirect => redirectUrl != null && redirectUrl!.isNotEmpty;
 
   factory PaymentResult.fromJson(Map<String, dynamic> json) {
+    final planStr = json['planName'] as String? ?? json['plan'] as String? ?? 'monthly';
     return PaymentResult(
       id: json['id'] as int? ?? 0,
-      plan: SubscriptionPlanExtension.fromString(json['plan'] as String),
+      plan: SubscriptionPlanExtension.fromString(planStr),
       method: PaymentMethodExtension.fromString(json['method'] as String),
       status: PaymentStatusExtension.fromString(json['status'] as String),
       amount: json['amount'] as int,

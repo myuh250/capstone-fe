@@ -148,7 +148,7 @@ class _ReaderContentState extends ConsumerState<_ReaderContent> {
               },
               onSettings: () => _showSettings(context, readerKey),
               shareUrl:
-                  'https://mangahubs.link/manga/${widget.mangaSlug}/chapter-${widget.chapter.number.toInt()}',
+                  'https://mangahubs.link/manga/${widget.mangaSlug}/chapter-${widget.chapter.number.toInt()}?cid=${widget.chapter.id}',
               chapters: chapterListState.chapters,
               currentChapter: widget.chapter,
               onChapterSelected: (ch) => context.pushReplacement(
