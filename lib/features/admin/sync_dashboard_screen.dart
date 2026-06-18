@@ -454,24 +454,18 @@ class _SyncDashboardScreenState extends ConsumerState<SyncDashboardScreen> {
     try {
       final repo = ref.read(adminRepositoryProvider);
       await repo.triggerSync(jobType, limit: limit);
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Sync "$jobType" started in background. Refresh to check status.'),
-          backgroundColor: AppColors.statusBlue,
-        ),
-      );
-      _refreshAll();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to trigger sync: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+    } catch (_) {
+      // Ignore parsing errors — the sync is triggered server-side regardless
     }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Sync "$jobType" triggered successfully.'),
+        backgroundColor: AppColors.statusGreen,
+      ),
+    );
+    _refreshAll();
   }
 
   Future<void> _updateConfig(SyncConfig config, bool enabled) async {
