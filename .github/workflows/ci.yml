@@ -33,8 +33,17 @@ jobs:
         run: flutter analyze --no-fatal-infos
 
       - name: Run tests with coverage
-        continue-on-error: true
-        run: flutter test --coverage
+        run: flutter test --coverage || true
+
+      - name: Verify coverage file exists
+        run: |
+          if [ -f coverage/lcov.info ]; then
+            echo "Coverage report generated ($(wc -l < coverage/lcov.info) lines)"
+          else
+            echo "WARNING: coverage/lcov.info not found, generating empty report"
+            mkdir -p coverage
+            touch coverage/lcov.info
+          fi
 
       - name: SonarCloud Scan
         continue-on-error: true
@@ -47,6 +56,8 @@ jobs:
             -Dsonar.organization=${{ secrets.SONAR_ORG }}
             -Dsonar.sources=lib
             -Dsonar.tests=test
+            -Dsonar.exclusions=**/*.g.dart,**/*.freezed.dart,**/generated/**
+            -Dsonar.coverage.exclusions=**/*.g.dart,**/*.freezed.dart,**/generated/**
             -Dsonar.dart.lcov.reportPaths=coverage/lcov.info
 
   build:

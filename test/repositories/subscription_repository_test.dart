@@ -61,7 +61,7 @@ void main() {
       test('returns payment result with redirect URL', () async {
         when(() => mockApiClient.post(
               '${ApiEndpoints.subscriptions}/payment',
-              data: {'plan': 'MONTHLY', 'method': 'VNPAY'},
+              data: {'planId': 1, 'method': 'VNPAY'},
             )).thenAnswer((_) async => Response(
               data: {
                 'id': 10,

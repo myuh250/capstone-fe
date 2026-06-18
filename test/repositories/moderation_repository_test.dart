@@ -107,10 +107,9 @@ void main() {
     group('getReportById()', () {
       test('returns matching report', () async {
         when(() => mockApiClient.get(
-              ApiEndpoints.reports,
-              queryParameters: {},
+              '${ApiEndpoints.reports}/1',
             )).thenAnswer((_) async => Response(
-              data: [sampleReportJson],
+              data: sampleReportJson,
               statusCode: 200,
               requestOptions: RequestOptions(path: ''),
             ));

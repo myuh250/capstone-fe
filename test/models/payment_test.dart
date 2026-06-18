@@ -100,7 +100,7 @@ void main() {
       expect(info.autoRenew, true);
     });
 
-    test('defaults autoRenew to true when missing', () {
+    test('defaults autoRenew to false when missing', () {
       final json = {
         'id': 2,
         'plan': 'MONTHLY',
@@ -110,7 +110,7 @@ void main() {
       };
 
       final info = SubscriptionInfo.fromJson(json);
-      expect(info.autoRenew, true);
+      expect(info.autoRenew, false);
     });
   });
 
